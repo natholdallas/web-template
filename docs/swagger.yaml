@@ -1,0 +1,450 @@
+definitions:
+  Admin:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      password:
+        description: Password
+        type: string
+      updated_at:
+        type: string
+      username:
+        description: Username
+        type: string
+    type: object
+  AdminIn:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 4
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  Auth:
+    properties:
+      id:
+        type: integer
+      token:
+        type: string
+    type: object
+  AuthIn:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 4
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  Fail:
+    properties:
+      code:
+        description: Application-specific error code
+        type: string
+      message:
+        description: Human-readable error message
+        type: string
+      system:
+        description: Raw system error (only shown in debug mode)
+    type: object
+  RAuth:
+    properties:
+      id:
+        type: integer
+      token:
+        type: string
+    type: object
+  RAuthIn:
+    properties:
+      password:
+        maxLength: 20
+        minLength: 4
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  UUser:
+    properties:
+      username:
+        type: string
+    type: object
+  User:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      password:
+        description: Password
+        type: string
+      updated_at:
+        type: string
+      username:
+        description: Username
+        type: string
+    type: object
+  UserIn:
+    properties:
+      username:
+        minLength: 4
+        type: string
+    required:
+    - username
+    type: object
+info:
+  contact: {}
+  description: API Documentation
+  title: Webtplmst
+  version: "1.0"
+paths:
+  /admin/api/v1:
+    get:
+      consumes:
+      - application/json
+      operationId: list_admin
+      parameters:
+      - in: query
+        name: column
+        type: string
+      - in: query
+        name: desc
+        type: boolean
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/Admin'
+            type: array
+      summary: List Admins
+      tags:
+      - Admin
+    post:
+      consumes:
+      - application/json
+      operationId: create_admin
+      parameters:
+      - description: Admin object
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AdminIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Admin'
+      summary: Create Admin
+      tags:
+      - Admin
+  /admin/api/v1/{id}:
+    delete:
+      consumes:
+      - application/json
+      operationId: remove_admin
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses: {}
+      summary: Remove Admin
+      tags:
+      - Admin
+    get:
+      consumes:
+      - application/json
+      operationId: find_admin
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Admin'
+      summary: Find Admin by ID
+      tags:
+      - Admin
+    put:
+      consumes:
+      - application/json
+      operationId: update_admin
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Admin object
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AdminIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Update Admin
+      tags:
+      - Admin
+  /admin/api/v1/auth/in:
+    post:
+      consumes:
+      - application/json
+      description: Sign in with username and password
+      operationId: admin__auth
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/RAuthIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/RAuth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: Admin sign in
+      tags:
+      - Auth
+  /admin/api/v1/user:
+    get:
+      consumes:
+      - application/json
+      operationId: admin__list_user
+      parameters:
+      - in: query
+        name: column
+        type: string
+      - in: query
+        name: desc
+        type: boolean
+      - in: query
+        name: page
+        type: integer
+      - in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/User'
+            type: array
+      summary: List Users
+      tags:
+      - RUser
+    post:
+      consumes:
+      - application/json
+      operationId: admin__create_user
+      parameters:
+      - description: User object
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UserIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/User'
+      summary: Create User
+      tags:
+      - RUser
+  /admin/api/v1/user/{id}:
+    delete:
+      consumes:
+      - application/json
+      operationId: admin__remove_user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Remove User
+      tags:
+      - RUser
+    get:
+      consumes:
+      - application/json
+      operationId: admin__find_user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/User'
+      summary: Find User by ID
+      tags:
+      - RUser
+    put:
+      consumes:
+      - application/json
+      operationId: admin__update_user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User object
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UserIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Update User
+      tags:
+      - RUser
+  /user/api/v1:
+    get:
+      consumes:
+      - application/json
+      operationId: user__find_user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/UUser'
+      summary: Find User by ID
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      operationId: user__update_user
+      parameters:
+      - description: User object
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UserIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Update User
+      tags:
+      - User
+  /user/api/v1/auth/in:
+    post:
+      consumes:
+      - application/json
+      description: Sign in with username and password
+      operationId: user__auth
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AuthIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Auth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: User sign in
+      tags:
+      - Auth
+  /user/api/v1/user/reset/password:
+    post:
+      consumes:
+      - application/json
+      description: Reset current user's password
+      operationId: user__reset_password
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: Reset user password
+      tags:
+      - User
+swagger: "2.0"

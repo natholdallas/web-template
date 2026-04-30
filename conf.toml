@@ -1,0 +1,78 @@
+[app]
+name = "webtplmst"
+port = "8080"
+debug = true
+nginx = false
+
+
+[secret]
+root = ""
+user = ""
+
+
+[log]
+gorm = 2  # 1: slient; 2: error; 3: warn; 4: info
+fiber = 1 # 0: trace;  1: debug; 2: info; 3: warn; 4: error; 5: fatal; 6: panic
+
+
+[cors]
+dev = [
+  "http://127.0.0.1",
+  "http://localhost",
+  "https://127.0.0.1",
+  "https://localhost",
+]
+prd = ["https://www.example.com"]
+
+
+[resources]
+web = "web/apps/admin/dist"
+log = "logs"
+cache = "webtplmst"
+media = "media"
+
+
+[db]
+name = "webtplmst"
+host = "localhost"
+port = "3306"
+query = "charset=utf8mb4&parseTime=True&loc=Local"
+username = ""
+password = ""
+
+
+[redis]
+host = "localhost"
+port = "6379"
+index = 0
+
+
+[smtp]
+host = "smtp.qq.com"
+port = 587
+from = ""
+password = ""
+
+
+[wechat]
+site = "https://api.weixin.qq.com" # 微信 API 地址
+appid = ""                         # 微信应用 ID
+secret = ""                        # 微信应用 Secret
+
+
+[wechat.pay]
+webhook = ""     # 微信回调地址
+mch = ""         # 商户 ID
+cert = ""        # 证书序列号
+apiv2secret = "" # v2 私钥
+apiv3secret = "" # v3 私钥
+public-key = ""  # 公钥
+
+
+[wechat.pem]
+pub = "./assets/wechat/pub_key.pem"             # 微信 API 公钥证书文件
+apiclient = "./assets/wechat/apiclient_key.pem" # 微信 API 密钥证书文件
+
+
+[exchangerate]
+site = "https://v6.exchangerate-api.com/v6/{id}/latest"

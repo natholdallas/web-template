@@ -1,0 +1,6 @@
+/.vscode
+pnpm-lock.yaml
+
+**/app/components/ui
+**/tauri
+**/dist

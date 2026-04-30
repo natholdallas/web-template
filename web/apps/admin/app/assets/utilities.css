@@ -1,0 +1,12 @@
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.vhc {
+  --uno: 'fixed w-full h-full flex flex-col justify-center items-center';
+}
