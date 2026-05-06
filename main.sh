@@ -129,6 +129,7 @@ init() {
   # Check user input (defaults to No if empty)
   if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
     rm -rf .git
+    rm -rf web/packages/natholdallas
     rm .gitmodules
     git init
     git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
