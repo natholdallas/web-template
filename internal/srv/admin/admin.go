@@ -23,7 +23,7 @@ type AdminQueries struct {
 //	@Produce	json
 //	@Param		query	query	AdminQueries	false	"Query params"
 //	@Success	200		{array}	db.Admin
-//	@Router		/admin/api/v1 [get]
+//	@Router		/admin/api/v1/admin [get]
 func ListAdmin(c fiber.Ctx) error {
 	q, err := fext.QueryParser[AdminQueries](c)
 	if err != nil {
@@ -44,7 +44,7 @@ func ListAdmin(c fiber.Ctx) error {
 //	@Produce	json
 //	@Param		id	path		int	true	"Admin ID"
 //	@Success	200	{object}	db.Admin
-//	@Router		/admin/api/v1/{id} [get]
+//	@Router		/admin/api/v1/admin/{id} [get]
 func FindAdmin(c fiber.Ctx) error {
 	v := orms.IFirst[db.Admin](db.Tx)
 	return c.JSON(v)
@@ -71,7 +71,7 @@ func (s *AdminIn) Get() *db.Admin {
 //	@Produce	json
 //	@Param		body	body		AdminIn	true	"Admin object"
 //	@Success	200		{object}	db.Admin
-//	@Router		/admin/api/v1 [post]
+//	@Router		/admin/api/admin/v1 [post]
 func CreateAdmin(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[AdminIn](c)
 	if err != nil {
@@ -92,7 +92,7 @@ func CreateAdmin(c fiber.Ctx) error {
 //	@Param		id		path		int		true	"Admin ID"
 //	@Param		body	body		AdminIn	true	"Admin object"
 //	@Success	200		{object}	string	"OK"
-//	@Router		/admin/api/v1/{id} [put]
+//	@Router		/admin/api/v1/admin/{id} [put]
 func UpdateAdmin(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[AdminIn](c)
 	if err != nil {
@@ -111,7 +111,7 @@ func UpdateAdmin(c fiber.Ctx) error {
 //	@Accept		json
 //	@Produce	json
 //	@Param		id	path	int	true	"Admin ID"
-//	@Router		/admin/api/v1/{id} [delete]
+//	@Router		/admin/api/v1/admin/{id} [delete]
 func RemoveAdmin(c fiber.Ctx) error {
 	orms.Delete[db.Admin](db.Tx, c.Params("id"))
 	return nil

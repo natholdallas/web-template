@@ -23,5 +23,5 @@ func Setup(api fiber.Router) {
 	api.Group("/user", jwt.Middleware).
 		Get("/", FindUser).
 		Post("/reset/password", ResetPassword).
-		Put("/:id", UpdateUser)
+		Put("/", UpdateUser)
 }

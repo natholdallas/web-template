@@ -10,6 +10,7 @@ import (
 )
 
 type User struct {
+	orms.Model[uint]
 	Username string `json:"username"`
 } //	@name	UUser
 
@@ -21,7 +22,7 @@ type User struct {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	User
-//	@Router		/user/api/v1 [get]
+//	@Router		/user/api/v1/user [get]
 func FindUser(c fiber.Ctx) error {
 	claims := jwt.Claims(c)
 	v := orms.QM[User, db.User](db.Tx).IFirst(claims.ID)
@@ -47,7 +48,7 @@ func (s *UserIn) Get() *db.User {
 //	@Produce	json
 //	@Param		body	body	UserIn	true	"User object"
 //	@Success	200
-//	@Router		/user/api/v1 [put]
+//	@Router		/user/api/v1/user [put]
 func UpdateUser(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[UserIn](c)
 	if err != nil {
