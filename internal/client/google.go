@@ -10,7 +10,7 @@ type GoogleUser struct {
 	Picture       string `json:"picture"`
 }
 
-func GetGoogleUserInfo(token string) (GoogleUser, error) {
+func GoogleUserInfo(token string) (GoogleUser, error) {
 	result := GoogleUser{}
 	_, err := client.R().
 		SetQueryParam("access_token", token).

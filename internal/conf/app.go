@@ -71,8 +71,9 @@ type AppConf struct {
 	WxAPIClientKeyPem string
 	WxPubKeyPem       string
 
-	// rate
-	RateSite string
+	// exchangerate
+	RateSite       string
+	RateCurrencies []string
 }
 
 func (a *AppConf) DebugMiddleware(c fiber.Ctx) error {
@@ -109,7 +110,8 @@ func LoadApp() {
 	App.CorsPrd = vipers.StringSlice("cors.prd")
 	App.RWeb = strs.TrimEnd(vipers.Get("resources.web", "web"), strs.Slash)
 	App.RLog = strs.TrimEnd(vipers.Get("resources.log", "log"), strs.Slash)
-	App.RCache = strs.TrimEnd(vipers.Get("resources.cache", "webtplmst"), strs.Slash)
+	App.RCache = strs.TrimEnd(vipers.String("resources.cache"), strs.Slash)
+	App.RMedia = strs.TrimEnd(vipers.Get("resources.media", "media"), strs.Slash)
 	App.SMTPHost = vipers.String("smtp.host")
 	App.SMTPPort = vipers.Int("smtp.port")
 	App.SMTPFrom = vipers.String("smtp.from")
@@ -124,7 +126,6 @@ func LoadApp() {
 	App.RedisHost = vipers.Get("redis.host", "localhost")
 	App.RedisPort = vipers.Get("redis.port", "6379")
 	App.RedisIndex = vipers.Get("redis.index", 0)
-	App.RateSite = strs.TrimEnd(vipers.String("exchangerate.site"), strs.Slash)
 	App.WxSite = strs.TrimStart(vipers.String("wechat.site"), strs.Slash)
 	App.WxAppID = vipers.String("wechat.appid")
 	App.WxSecret = vipers.String("wechat.secret")
@@ -136,6 +137,8 @@ func LoadApp() {
 	App.WxPubKey = vipers.String("wechat.pay.public-key")
 	App.WxAPIClientKeyPem = vipers.String("wechat.pem.apiclient")
 	App.WxPubKeyPem = vipers.String("wechat.pem.pub")
+	App.RateSite = strs.TrimEnd(vipers.String("exchangerate.site"), strs.Slash)
+	App.RateCurrencies = vipers.StringSlice("exchangerate.currencies")
 	App.MkdirAll()
 	vipers.Validate(App)
 

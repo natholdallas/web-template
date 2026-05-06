@@ -24,7 +24,7 @@ var (
 	wechatHandler  *notify.Handler
 )
 
-func init() {
+func InitWechat() {
 	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
 	mchPrivateKey, err := utils.LoadPrivateKeyWithPath(conf.App.WxAPIClientKeyPem)
 	if err != nil {

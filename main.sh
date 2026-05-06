@@ -1,6 +1,6 @@
 #! /usr/bin/bash
 
-pname=webtplmst
+pname=
 host=xxx@xxx
 dir=tasks/$pname
 
@@ -94,17 +94,70 @@ deps() {
   go install github.com/silenceper/gowatch@latest
   go install github.com/gofiber/cli/fiber@latest
 
+  git submodule update --init
   go mod tidy
   run_in_dir "web" pnpm install
 }
 
+init() {
+  local old_name="webtplmst"
+  local new_name="$2"
+
+  if [ -z "$new_name" ]; then
+    echo "Missing second parameter."
+    exit 0
+  fi
+
+  # Define colors for output
+  local YELLOW='\033[1;33m'
+  local GREEN='\033[0;32m'
+  local RED='\033[0;31m'
+  local NC='\033[0m'
+
+  echo -e "${YELLOW}[WARNING] Project Initialization & Reset${NC}"
+  echo "--------------------------------------------------"
+  echo "This script will perform the following IRREVERSIBLE actions:"
+  echo -e "1. ${GREEN}GLOBAL REPLACE${NC}: All occurrences of '$old_name' will be changed to '$new_name'."
+  echo -e "2. ${RED}GIT RESET${NC}: The existing .git directory will be DELETED."
+  echo -e "3. ${YELLOW}RE-INIT${NC}: A new git repository will be initialized in this directory."
+  echo -e "4. ${GREEN}PROTECTION${NC}: 'main.sh' will be skipped during string replacement."
+  echo "--------------------------------------------------"
+
+  # Prompt for user confirmation
+  read -rp "Are you sure you want to proceed? (y/N): " confirm
+
+  # Check user input (defaults to No if empty)
+  if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
+    rm -rf .git
+    rm .gitmodules
+    git init
+    git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
+    find . \
+      \( -name ".git" \
+      -o -name "node_modules" \
+      -o -name ".nuxt" \
+      -o -name ".output" \
+      -o -name "dist" \
+      -o -name "docs" \
+      -o -name "bin" \) -prune \
+      -o -type f ! -name "main.sh" \
+      -exec sed -i "s/webtplmst/${new_name}/g" {} +
+    docs
+    echo -e "${GREEN}[SUCCESS] Project initialized successfully.${NC}"
+  else
+    echo -e "${RED}[CANCELLED] Operation aborted by user.${NC}"
+    exit 0
+  fi
+}
+
 case "$1" in
 dev) dev "$@" ;;
-docs) docs ;;
-build) build ;;
+docs) docs "$@" ;;
+build) build "$@" ;;
 deploy) deploy "$@" ;;
 synconf) synconf ;;
-deps) deps ;;
+deps) deps "$@" ;;
+init) init "$@" ;;
 *)
   echo "Usage:"
   echo "  dev:          Start local development environment (tmux) "
@@ -113,6 +166,7 @@ deps) deps ;;
   echo "  deploy:       Build, sync to server, and hot-reload via tmux "
   echo "  synconf:      Sync config to server "
   echo "  deps:         Install dependencies "
+  echo "  init:         Initialize project "
   exit 1
   ;;
 esac

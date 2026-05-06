@@ -3,7 +3,7 @@ module webtplmst
 require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gofiber/fiber/v3 v3.1.0
-	github.com/natholdallas/natools4go v1.24.0
+	github.com/natholdallas/natools4go v1.24.1
 	github.com/redis/go-redis/v9 v9.18.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shopspring/decimal v1.4.0

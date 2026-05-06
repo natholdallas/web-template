@@ -12,6 +12,10 @@ type Rate struct {
 	Rate     float64 `gorm:"column:rate;comment:Exchange rate" json:"rate"`                   // Exchange rate
 } //	@name	Rate
 
+func (Rate) TableName() string {
+	return "rates"
+}
+
 func ListRateByBaseCode(tx *gorm.DB, baseCode string) []Rate {
 	rates := []Rate{}
 	tx.Model(&Rate{}).Where("base_code = ?", baseCode).Find(&rates)

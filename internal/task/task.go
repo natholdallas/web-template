@@ -36,21 +36,18 @@ func Log() {
 }
 
 func Rate() {
-	db.Tx.Exec("truncate table rates")
-	rate("CNY")
-	rate("USD")
-}
-
-func rate(baseCode string) {
-	log.Infof("caching rates %s ...", baseCode)
-	rates, err := client.ExchangeRate(baseCode)
-	if err != nil {
-		log.Info("caching rates failed: ", err)
-		return
+	db.Tx.Exec("TRUNCATE TABLE ?", db.Rate{}.TableName())
+	for _, baseCode := range conf.App.RateCurrencies {
+		log.Infof("caching rates %s ...", baseCode)
+		rates, err := client.ExchangeRate(baseCode)
+		if err != nil {
+			log.Info("caching rates failed: ", err)
+			return
+		}
+		v := []db.Rate{}
+		for code, rate := range rates.Rates {
+			v = append(v, db.Rate{BaseCode: rates.Code, Code: code, Rate: rate})
+		}
+		db.Tx.Create(v)
 	}
-	r := []db.Rate{}
-	for k, v := range rates.Rates {
-		r = append(r, db.Rate{BaseCode: rates.Code, Code: k, Rate: v})
-	}
-	db.Tx.Create(r)
 }

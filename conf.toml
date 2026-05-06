@@ -6,7 +6,7 @@ nginx = false
 
 
 [secret]
-root = ""
+admin = ""
 user = ""
 
 
@@ -75,4 +75,5 @@ apiclient = "./assets/wechat/apiclient_key.pem" # 微信 API 密钥证书文件
 
 
 [exchangerate]
-site = "https://v6.exchangerate-api.com/v6/{id}/latest"
+site = "https://v6.exchangerate-api.com/v6/{id}/latest" # 需要申请 key, 参考 https://exchangerate-api.com
+currencies = []                                         # 币种, 比如 CNY, USD
