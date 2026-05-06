@@ -1,6 +1,6 @@
-#! /usr/bin/bash
+#! /usr/bin/env bash
 
-pname=
+pname=webtplmst
 host=xxx@xxx
 dir=tasks/$pname
 
@@ -99,8 +99,8 @@ deps() {
   run_in_dir "web" pnpm install
 }
 
-init() {
-  local old_name="webtplmst"
+renewal() {
+  local old_name="$pname"
   local new_name="$2"
 
   if [ -z "$new_name" ]; then
@@ -141,8 +141,8 @@ init() {
       -o -name "dist" \
       -o -name "docs" \
       -o -name "bin" \) -prune \
-      -o -type f ! -name "main.sh" \
-      -exec sed -i "s/webtplmst/${new_name}/g" {} +
+      -exec sed -i "s/${old_name}/${new_name}/g" {} +
+    # -o -type f ! -name "main.sh" \
     docs
     echo -e "${GREEN}[SUCCESS] Project initialized successfully.${NC}"
   else
@@ -158,7 +158,7 @@ build) build "$@" ;;
 deploy) deploy "$@" ;;
 synconf) synconf ;;
 deps) deps "$@" ;;
-init) init "$@" ;;
+renewal) renewal "$@" ;;
 *)
   echo "Usage:"
   echo "  dev:          Start local development environment (tmux) "
@@ -167,7 +167,7 @@ init) init "$@" ;;
   echo "  deploy:       Build, sync to server, and hot-reload via tmux "
   echo "  synconf:      Sync config to server "
   echo "  deps:         Install dependencies "
-  echo "  init:         Initialize project "
+  echo "  renewal:      Renewal project "
   exit 1
   ;;
 esac
