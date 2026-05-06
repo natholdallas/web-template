@@ -128,11 +128,11 @@ renewal() {
 
   # Check user input (defaults to No if empty)
   if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
+    # Reset git directory
     rm -rf .git
     rm -rf web/packages/natholdallas
     rm .gitmodules
-    git init
-    git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
+    # Replace all occurrences of old_name with new_name
     find . \
       \( -name ".git" \
       -o -name "node_modules" \
@@ -141,8 +141,13 @@ renewal() {
       -o -name "dist" \
       -o -name "docs" \
       -o -name "bin" \) -prune \
+      -o -type f \
       -exec sed -i "s/${old_name}/${new_name}/g" {} +
-    # -o -type f ! -name "main.sh" \
+    # Initialize git repository
+    git init
+    git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
+    git add -A
+    # Generate docs
     docs
     echo -e "${GREEN}[SUCCESS] Project initialized successfully.${NC}"
   else
