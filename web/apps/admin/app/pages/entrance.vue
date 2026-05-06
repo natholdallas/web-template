@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AuthIn, SignIn } from '~/sdk'
+import { AuthIn, SignIn } from '~/lib/sdk'
 
 definePageMeta({
   name: 'entrance',

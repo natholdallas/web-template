@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Language, languages } from '~/sdk'
+import { Locale, locales } from '~/lib/locale'
 
 const showLang = shallowRef(false)
 </script>
@@ -9,14 +9,14 @@ const showLang = shallowRef(false)
     <VBtn @click="showLang = true" icon="mdi-web" variant="flat" />
     <NModal v-model="showLang" :title="$t('switch.locale')">
       <VBtn
-        v-for="i in Language"
+        v-for="i in Locale"
         @click="
           () => {
             $i18n.setLocale(i)
             showLang = false
           }
         "
-        :text="$t(languages[i].k)"
+        :text="$t(locales[i].k)"
         flat
         block
       />

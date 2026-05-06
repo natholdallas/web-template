@@ -1,4 +1,4 @@
-import { Auth } from '~/sdk'
+import { Auth } from '~/lib/sdk'
 
 export const useAuth = defineStore('auth', {
   state: () => inst(Auth),

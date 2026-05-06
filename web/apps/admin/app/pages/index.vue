@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { BaseQueries, CreateUser, ListUser, Page, RemoveUser, UpdateUser, User } from '~/sdk'
+import { BaseQueries, CreateAdmin, ListAdmin, Page, RemoveAdmin, UpdateAdmin, Admin } from '~/lib/sdk'
 
 definePageMeta({
-  name: 'index',
+  name: 'admin',
   middleware: 'auth',
 })
 
 const queries = ref(inst(BaseQueries, { column: 'id', desc: true }))
 
 const { open } = useDialog()
-const { mi, mo, sc, su, reset } = useCrud(inst(User))
-const { loading, data, send } = useRequest(() => ListUser(queries.value), {
+const { mi, mo, sc, su, reset } = useCrud(inst(Admin))
+const { loading, data, send } = useRequest(() => ListAdmin(queries.value), {
   initialData: inst(Page),
 }).onSuccess(reset)
-const { loading: creating, send: create } = useRequest(() => CreateUser(mi.value), {
+const { loading: creating, send: create } = useRequest(() => CreateAdmin(mi.value), {
   immediate: false,
 }).onSuccess(send)
-const { loading: updating, send: update } = useRequest(() => UpdateUser(mo.value), {
+const { loading: updating, send: update } = useRequest(() => UpdateAdmin(mo.value), {
   immediate: false,
 }).onSuccess(send)
-const { loading: removing, send: remove } = useRequest(() => RemoveUser(mo.value.id), {
+const { loading: removing, send: remove } = useRequest(() => RemoveAdmin(mo.value.id), {
   immediate: false,
 }).onSuccess(send)
 
@@ -61,9 +61,7 @@ watch(queries, send, { deep: true })
             @click="
               () => {
                 mo = cpm(item)
-                open({
-                  confirm: remove,
-                })
+                open({ confirm: remove })
               }
             "
             icon="mdi-delete"

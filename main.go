@@ -10,7 +10,7 @@ import (
 	"github.com/natholdallas/natools4go/vipers"
 )
 
-// @title			Webtplmst
+// @title			webtplmst
 // @version		1.0
 // @description	API Documentation
 func main() {

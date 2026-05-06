@@ -28,7 +28,7 @@ function toggleSidebar() {
       <UiSheetContent side="left" class="w-72">
         <div class="flex flex-col h-full">
           <div class="flex items-center gap-2 px-4 py-4 border-b">
-            <span class="font-semibold text-lg">MarkSix</span>
+            <span class="font-semibold text-lg">{{ $t('app.name') }}</span>
           </div>
           <UiScrollArea class="flex-1 px-2">
             <nav class="space-y-1 py-2">
@@ -60,7 +60,7 @@ function toggleSidebar() {
       ]"
     >
       <div class="p-4 flex items-center justify-between border-b min-h-14">
-        <span v-if="isSidebarOpen" class="font-semibold text-lg">MarkSix</span>
+        <span v-if="isSidebarOpen" class="font-semibold text-lg">{{ $t('app.name') }}</span>
         <UiButton variant="ghost" size="icon" @click="toggleSidebar">
           <Menu class="w-4 h-4" />
         </UiButton>

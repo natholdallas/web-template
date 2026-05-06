@@ -1,14 +1,3 @@
-export enum Language {
-  EN_US = 'en-US', // 英语
-  ZH_CN = 'zh-CN', // 简中
-}
-
-export const languages = {
-  [Language.EN_US]: { k: 'locale.en.us', v: Language.EN_US },
-  [Language.ZH_CN]: { k: 'locale.zh.cn', v: Language.ZH_CN },
-}
-export const languageItems = Object.entries(languages).map(([k, v]) => ({ k, v }))
-
 export type IDModel = typeof IDModel
 export const IDModel = {
   id: 0,

@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { BaseQueries, CreateAdmin, ListAdmin, Page, RemoveAdmin, UpdateAdmin, Admin } from '~/sdk'
+import { BaseQueries, CreateUser, ListUser, Page, RemoveUser, UpdateUser, User } from '~/lib/sdk'
 
 definePageMeta({
-  name: 'admin',
+  name: 'index',
   middleware: 'auth',
 })
 
 const queries = ref(inst(BaseQueries, { column: 'id', desc: true }))
 
 const { open } = useDialog()
-const { mi, mo, sc, su, reset } = useCrud(inst(Admin))
-const { loading, data, send } = useRequest(() => ListAdmin(queries.value), {
+const { mi, mo, sc, su, reset } = useCrud(inst(User))
+const { loading, data, send } = useRequest(() => ListUser(queries.value), {
   initialData: inst(Page),
 }).onSuccess(reset)
-const { loading: creating, send: create } = useRequest(() => CreateAdmin(mi.value), {
+const { loading: creating, send: create } = useRequest(() => CreateUser(mi.value), {
   immediate: false,
 }).onSuccess(send)
-const { loading: updating, send: update } = useRequest(() => UpdateAdmin(mo.value), {
+const { loading: updating, send: update } = useRequest(() => UpdateUser(mo.value), {
   immediate: false,
 }).onSuccess(send)
-const { loading: removing, send: remove } = useRequest(() => RemoveAdmin(mo.value.id), {
+const { loading: removing, send: remove } = useRequest(() => RemoveUser(mo.value.id), {
   immediate: false,
 }).onSuccess(send)
 
@@ -44,7 +44,7 @@ watch(queries, send, { deep: true })
       class="h-full"
     >
       <template #top>
-        <TopTableBar v-model="sc" :text="$t('urls.admin')" />
+        <TopTableBar v-model="sc" :text="$t('urls.user')" />
       </template>
       <template #item.data-table-expand="{ internalItem, item, isExpanded, toggleExpand }">
         <div class="flex gap-2 items-center">

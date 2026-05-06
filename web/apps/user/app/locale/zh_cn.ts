@@ -3,6 +3,8 @@ import zh from '@natholdallas/i18n/locale/zh_cn'
 export default {
   ...zh,
 
+  'app.name': 'webtplmst',
+
   'user': '用户',
   'user.username': '用户名',
   'user.username.placeholder': '请输入用户名',

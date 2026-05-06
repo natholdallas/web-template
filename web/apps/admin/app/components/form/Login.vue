@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AuthIn } from '~/sdk'
+import type { AuthIn } from '~/lib/sdk'
 
 defineProps<{
   loading: boolean

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Admin } from '~/sdk'
+import type { Admin } from '~/lib/sdk'
 
 defineProps<{
   loading: boolean
@@ -20,7 +20,7 @@ const model = defineModel<Admin>({ required: true })
     :submit-text="submitText"
     :readonly="readonly"
   >
-    <VTextField v-model="model.username" :label="$t('user.username')" />
-    <NPasswdField v-model="model.password" :label="$t('user.password')" />
+    <VTextField v-model="model.username" :label="$t('admin.username')" />
+    <NPasswdField v-model="model.password" :label="$t('admin.password')" />
   </NForm>
 </template>

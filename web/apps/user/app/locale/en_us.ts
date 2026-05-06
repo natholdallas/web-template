@@ -3,6 +3,8 @@ import en from '@natholdallas/i18n/locale/en_us'
 export default {
   ...en,
 
+  'app.name': 'webtplmst',
+
   'user': 'User',
   'user.username': 'Username',
   'user.username.placeholder': 'Enter your username',

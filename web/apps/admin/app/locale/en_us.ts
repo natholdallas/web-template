@@ -5,16 +5,17 @@ export default {
   $vuetify,
   ...en,
 
-  // user
+  'admin': 'Admin',
+  'admin.username': 'Username',
+  'admin.password': 'Password',
+
   'user': 'User',
   'user.username': 'Username',
   'user.password': 'Password',
 
-  // locale
   'locale.en.us': 'English',
   'locale.zh.cn': 'Simplified Chinese',
 
-  // url
-  'urls.index': 'Users',
-  'urls.admin': 'Admin',
+  'urls.index': 'Admin',
+  'urls.user': 'Users',
 }

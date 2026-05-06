@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { User } from '~/sdk'
+import type { User } from '~/lib/sdk'
 
 defineProps<{
   loading: boolean

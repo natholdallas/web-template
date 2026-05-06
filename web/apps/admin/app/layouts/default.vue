@@ -2,6 +2,7 @@
 const { mdAndUp } = useDisplay()
 const { open } = useDialog()
 
+const auth = useAuth()
 const conf = useConf()
 const drawer = ref(mdAndUp.value)
 </script>
@@ -26,7 +27,7 @@ const drawer = ref(mdAndUp.value)
               prepend-icon="mdi-theme-light-dark"
             />
             <VListItem
-              @click="open({ confirm: () => {} })"
+              @click="open({ confirm: auth.$signOut })"
               :title="$t('sign.out')"
               prepend-icon="mdi-logout"
             />
@@ -43,15 +44,12 @@ const drawer = ref(mdAndUp.value)
     >
       <VList>
         <VListItem :title="$t('urls.index')" to="/" prepend-icon="mdi-account" />
-        <VListItem :title="$t('urls.admin')" to="/admin" prepend-icon="mdi-account-supervisor" />
+        <VListItem :title="$t('urls.user')" to="/user" prepend-icon="mdi-account-supervisor" />
       </VList>
     </VNavigationDrawer>
 
     <VMain class="size-full" name="main">
       <slot></slot>
     </VMain>
-
-    <ProviderDialog />
-    <ProviderSnackbar />
   </VApp>
 </template>
