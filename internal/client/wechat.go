@@ -25,7 +25,7 @@ var (
 )
 
 func InitWechat() {
-	// 使用 utils 提供的函数从本地文件中加载商户私钥，商户私钥会用来生成请求的签名
+	// Load merchant private key from local file using utils, used to sign requests
 	mchPrivateKey, err := utils.LoadPrivateKeyWithPath(conf.App.WxAPIClientKeyPem)
 	if err != nil {
 		log.Fatal("load merchant private key error: ", err)
@@ -36,7 +36,7 @@ func InitWechat() {
 		log.Fatal("load merchant public key error: ", err)
 		return
 	}
-	// 使用商户私钥等初始化 client，并使它具有自动定时获取微信支付平台证书的能力
+	// Initialize client with merchant private key, enabling automatic periodic fetching of WeChat Pay platform certificates
 	client, err := core.NewClient(context.Background(),
 		option.WithWechatPayPublicKeyAuthCipher(conf.App.WxMch, conf.App.WxCert, mchPrivateKey, conf.App.WxPubKey, wechatpayPublicKey),
 	)
@@ -45,8 +45,7 @@ func InitWechat() {
 		return
 	}
 	wechatInstance = client
-
-	// 初始化 notify.Handler
+	// Initialize notify.Handler
 	verifier := verifiers.NewSHA256WithRSAPubkeyVerifier(conf.App.WxPubKey, *wechatpayPublicKey)
 	wechatHandler = notify.NewNotifyHandler(conf.App.WxV3Sercret, verifier)
 }
@@ -157,7 +156,7 @@ func WxVerify(request *http.Request) (*payments.Transaction, error) {
 	return v, err
 }
 
-// WxAmount 传入的永远是美元, 会转换为人民币
+// WxAmount The input is always in USD, will be converted to CNY
 func WxAmount(amount decimal.Decimal, rate float64) int64 {
 	return amount.
 		Mul(decimal.NewFromFloat(rate)).

@@ -1,12 +1,37 @@
 #! /usr/bin/env bash
 
+# --- Configurations ---
+
 pname=webtplmst
 host=xxx@xxx
 dir=tasks/$pname
+use_rynsc=true
 
+# web_dir=web
+# directories
+# declare -A app_paths=(
+#   ["user"]="$web_dir/apps/user"
+#   ["admin"]="$web_dir/apps/admin"
+# )
+# specific dev commands
+# declare -A dev_cmds=(
+#   ["user"]="pnpm dev"
+#   ["admin"]="pnpm dev"
+# )
+# specific build/prod commands
+# declare -A build_cmds=(
+#   ["user"]="pnpm generate"
+#   ["admin"]="pnpm generate"
+# )
+
+# --- Helpers ---
+
+# Improved helper to run commands in a directory safely
 run_in_dir() {
   (cd "$1" && shift && "$@")
 }
+
+# --- Commands ---
 
 dev() {
   if [ "$2" = "--force" ]; then
@@ -35,7 +60,6 @@ dev() {
 build() {
   echo "Building backend..."
   go build -o bin/backend
-
   echo "Generating frontend static files..."
   run_in_dir "web/apps/admin" pnpm generate
   run_in_dir "web/apps/user" pnpm generate
@@ -59,23 +83,23 @@ deploy() {
   zip -r web.zip bin/backend web/apps/admin/dist
 
   # remote
-  rsync -avP web.zip $host:$dir
+  if $use_rynsc; then
+    echo "use rsync to sync files..."
+    rsync -avP web.zip $host:$dir
+  else
+    echo "use scp to sync files..."
+    scp web.zip $host:$dir
+  fi
   rm web.zip
 
   # remote shell
   echo "Restarting remote service..."
   ssh "$host" "bash -s" -- "$dir" "$pname" <<'EOF'
-        # 在远程环境获取参数
         REMOTE_DIR="$1"
         REMOTE_PNAME="$2"
-
         cd "$REMOTE_DIR" || { echo "Directory not found"; exit 1; }
-
-        # 清理旧会话并开启新会话
         tmux kill-session -t "$REMOTE_PNAME" 2>/dev/null
         tmux new-session -d -s "$REMOTE_PNAME" -n "server"
-        
-        # 发送解压与启动命令
         tmux send-keys -t "$REMOTE_PNAME" "unzip -qo web.zip && rm web.zip" C-m
         tmux send-keys -t "$REMOTE_PNAME" "chmod +x ./bin/backend && ./bin/backend" C-m
 EOF
@@ -86,14 +110,19 @@ synconf() {
   # prepare
   ssh $host mkdir -p $dir
   # remote
-  rsync -avP conf.toml $host:$dir
+  if $use_rynsc; then
+    echo "use rsync to sync config"
+    rsync -avP conf.toml $host:$dir
+  else
+    echo "use scp to sync config"
+    scp conf.toml $host:$dir
+  fi
 }
 
 deps() {
   go install github.com/swaggo/swag/cmd/swag@latest
   go install github.com/silenceper/gowatch@latest
   go install github.com/gofiber/cli/fiber@latest
-
   git submodule update --init
   go mod tidy
   run_in_dir "web" pnpm install
@@ -156,12 +185,13 @@ renewal() {
   fi
 }
 
+# case statement for commands
 case "$1" in
 dev) dev "$@" ;;
 docs) docs "$@" ;;
 build) build "$@" ;;
 deploy) deploy "$@" ;;
-synconf) synconf ;;
+synconf) synconf "$@" ;;
 deps) deps "$@" ;;
 renewal) renewal "$@" ;;
 *)
