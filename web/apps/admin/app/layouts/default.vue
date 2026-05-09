@@ -13,7 +13,7 @@ const drawer = ref(mdAndUp.value)
       <template #prepend>
         <VAppBarNavIcon @click="drawer = !drawer" />
       </template>
-      <VAppBarTitle text="picfans" />
+      <VAppBarTitle :text="$t('app.name')" />
       <template #append>
         <VMenu>
           <template #activator="{ props }">

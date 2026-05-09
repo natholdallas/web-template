@@ -26,7 +26,7 @@ prd = ["https://www.example.com"]
 
 
 [resources]
-web = "web/apps/admin/dist"
+web = "web/apps/admin/dist/public"
 log = "logs"
 cache = "webtplmst"
 media = "media"

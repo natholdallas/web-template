@@ -24,9 +24,9 @@ export default defineNuxtConfig({
     '@natholdallas/unocss',
   ],
 
+  ssr: false,
   build: { analyze: true },
   devServer: { port: 3001 },
-  routeRules: { ['/**']: { ssr: false, prerender: true } },
   app: {
     buildAssetsDir: 'static',
     rootAttrs: { id: 'root' },

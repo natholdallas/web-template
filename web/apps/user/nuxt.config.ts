@@ -24,9 +24,9 @@ export default defineNuxtConfig({
     '@natholdallas/tauri',
   ],
 
+  ssr: false,
   build: { analyze: true },
   devServer: { port: 3000 },
-  routeRules: { ['/**']: { ssr: false, prerender: true } },
   app: {
     buildAssetsDir: 'static',
     rootAttrs: { id: 'root' },

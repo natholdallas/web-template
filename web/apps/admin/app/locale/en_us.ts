@@ -5,6 +5,8 @@ export default {
   $vuetify,
   ...en,
 
+  'app.name': 'webtplmst',
+
   'admin': 'Admin',
   'admin.username': 'Username',
   'admin.password': 'Password',
