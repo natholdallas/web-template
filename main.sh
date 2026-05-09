@@ -172,12 +172,12 @@ renewal() {
       -o -name "bin" \) -prune \
       -o -type f \
       -exec sed -i "s/${old_name}/${new_name}/g" {} +
+    # Generate docs
+    docs
     # Initialize git repository
     git init
     git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
     git add -A
-    # Generate docs
-    docs
     echo -e "${GREEN}[SUCCESS] Project initialized successfully.${NC}"
   else
     echo -e "${RED}[CANCELLED] Operation aborted by user.${NC}"
