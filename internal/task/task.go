@@ -2,9 +2,6 @@
 package task
 
 import (
-	"io"
-	"os"
-
 	"webtplmst/internal/client"
 	"webtplmst/internal/conf"
 	"webtplmst/internal/db"
@@ -19,24 +16,12 @@ func Sync() {
 
 func Setup() {
 	schedule := cron.New(cron.WithSeconds())
-	schedule.AddFunc("0 0 0 * * ?", Log)
 	schedule.AddFunc("0 0 0,12 * * ?", Rate)
 	schedule.Start()
 }
 
-func Log() {
-	log.Info("setting up logger output...")
-	conf.App.MkdirAll()
-	stdout, err := os.OpenFile(conf.App.LogPath(), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o777)
-	if err != nil {
-		log.Error("set logger output failed: ", err)
-		return
-	}
-	log.SetOutput(io.MultiWriter(os.Stdout, stdout))
-}
-
 func Rate() {
-	db.Tx.Exec("TRUNCATE TABLE ?", db.Rate{}.TableName())
+	db.Tx.Exec("TRUNCATE TABLE rates")
 	for _, baseCode := range conf.App.RateCurrencies {
 		log.Infof("caching rates %s ...", baseCode)
 		rates, err := client.ExchangeRate(baseCode)

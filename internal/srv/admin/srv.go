@@ -2,22 +2,17 @@
 package admin
 
 import (
-	"time"
-
 	"webtplmst/internal/conf"
+	"webtplmst/internal/srv/internal"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/natholdallas/natools4go/fext"
 )
 
 var jwt = fext.NewJwt(conf.App.SecretAdmin)
 
 func Setup(api fiber.Router) {
-	api.Use(logger.New(logger.Config{
-		TimeFormat: time.DateTime,
-		Format:     "[Admin]" + fext.StdLogFmt,
-	}))
+	api.Use(internal.FastLogger("Admin"))
 	api.Group("/auth").
 		Post("/in", SignIn)
 	api.Group("/user", jwt.Middleware).

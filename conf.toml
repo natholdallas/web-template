@@ -6,8 +6,8 @@ nginx = false
 
 
 [secret]
-admin = ""
-user = ""
+admin = "fuck"
+user = "shit"
 
 
 [log]
@@ -37,8 +37,8 @@ name = "webtplmst"
 host = "localhost"
 port = "3306"
 query = "charset=utf8mb4&parseTime=True&loc=Local"
-username = ""
-password = ""
+username = "root"
+password = "ar1234"
 
 
 [redis]

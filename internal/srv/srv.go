@@ -8,9 +8,7 @@ import (
 	"webtplmst/internal/srv/base"
 	"webtplmst/internal/srv/user"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/log"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/natholdallas/natools4go/fext"
@@ -23,11 +21,6 @@ func Setup() {
 		AppName:      conf.App.Name,
 		ErrorHandler: fext.ErrorHandler,
 	})
-
-	fext.SetDebugMode(conf.App.Debug)
-	fext.SetErrorFunc(func(err error) { log.Error(err) })
-	fext.SetLogLevel(conf.App.LogLevelFiber)
-
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: AllowOriginsFunc,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
@@ -45,7 +38,6 @@ func Setup() {
 		FileContentString: docs.SwaggerInfo.ReadDoc(),
 		Title:             "API Documentation",
 	}))
-
 	base.Setup(app.Group("/api/v1"))
 	admin.Setup(app.Group("/admin/api/v1"))
 	user.Setup(app.Group("/user/api/v1"))
@@ -58,9 +50,4 @@ func AllowOriginsFunc(origin string) bool {
 	} else {
 		return strs.AnyPrefix(origin, conf.App.CorsPrd...)
 	}
-}
-
-func Reload(fsnotify.Event) {
-	fext.SetLogLevel(conf.App.LogLevelFiber)
-	fext.SetDebugMode(conf.App.Debug)
 }

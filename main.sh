@@ -185,6 +185,14 @@ renewal() {
   fi
 }
 
+clean() {
+  rm -rf bin
+  find . -name "node_modules" -type d -prune -exec rm -rf {} +
+  find . -name "dist" -type d -prune -exec rm -rf {} +
+  find . -name ".nuxt" -type d -prune -exec rm -rf {} +
+  find . -name ".output" -type d -prune -exec rm -rf {} +
+}
+
 # case statement for commands
 case "$1" in
 dev) dev "$@" ;;
@@ -194,6 +202,7 @@ deploy) deploy "$@" ;;
 synconf) synconf "$@" ;;
 deps) deps "$@" ;;
 renewal) renewal "$@" ;;
+clean) clean "$@" ;;
 *)
   echo "Usage:"
   echo "  dev:          Start local development environment (tmux) "
@@ -203,6 +212,7 @@ renewal) renewal "$@" ;;
   echo "  synconf:      Sync config to server "
   echo "  deps:         Install dependencies "
   echo "  renewal:      Renewal project "
+  echo "  clean:        Clean Project Cache "
   exit 1
   ;;
 esac

@@ -4,7 +4,6 @@ package db
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"webtplmst/internal/conf"
@@ -28,16 +27,21 @@ var (
 	Queries string = orms.Queries(conf.App.DBName, conf.App.DBQuery)
 )
 
-// database context initialize
+// autocreate database
 func init() {
 	orms.EnsureDB(conf.App.DBName, "mysql", Dsn)
+}
+
+// database context initialize
+func init() {
+	logconf := logger.Config{
+		SlowThreshold:             200 * time.Millisecond,
+		LogLevel:                  conf.App.LogLevelGorm,
+		IgnoreRecordNotFoundError: true,
+		Colorful:                  false,
+	}
 	Tx = orms.New(mysql.Open(Dsn+Queries), &gorm.Config{
-		Logger: logger.New(log.New(os.Stdout, "\r\n", log.LstdFlags), logger.Config{
-			SlowThreshold:             200 * time.Millisecond, // Slow SQL threshold
-			LogLevel:                  conf.App.LogLevelGorm,  // Log level
-			IgnoreRecordNotFoundError: true,                   // Ignore ErrRecordNotFound error for logger
-			Colorful:                  true,                   // Colorful Logging
-		}),
+		Logger: logger.New(log.New(conf.App.LogWriter(), "[DB] ", log.Ldate), logconf),
 	})
 	Migration()
 }
@@ -51,8 +55,8 @@ func Migration() {
 		AutoMigrate(
 			&Admin{},
 			&User{},
-			// &Rate{},
-			// &Media{},
+			&Rate{},
+			&Media{},
 		)
 }
 

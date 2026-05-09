@@ -15,6 +15,6 @@ func init() {
 	LoadApp()
 }
 
-func Reload(e fsnotify.Event) {
+func Reload(fsnotify.Event) {
 	LoadApp()
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"webtplmst/internal/conf"
+	"webtplmst/internal/db"
 	"webtplmst/internal/flag"
 	"webtplmst/internal/srv"
 	"webtplmst/internal/task"
@@ -15,7 +16,6 @@ import (
 // @description	API Documentation
 func main() {
 	flag.Setup()
-	vipers.NewUpdateEvent(srv.Reload, conf.Reload)
-	vipers.Watch()
+	vipers.Watch(conf.Reload, db.Reload)
 	concur.Run(srv.Setup, task.Setup)
 }

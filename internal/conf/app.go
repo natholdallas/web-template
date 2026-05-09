@@ -2,10 +2,12 @@ package conf
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"time"
 
+	"github.com/natefinch/lumberjack"
 	"github.com/natholdallas/natools4go/fext"
+	"github.com/natholdallas/natools4go/spew"
 	"github.com/natholdallas/natools4go/strs"
 	"github.com/natholdallas/natools4go/vipers"
 
@@ -87,8 +89,14 @@ func (a *AppConf) NginxMiddleware(c fiber.Ctx) bool {
 	return a.Nginx
 }
 
-func (a *AppConf) LogPath() string {
-	return a.RLog + "/" + fmt.Sprintf("%s.log", time.Now().Format("2006-01-02"))
+func (a *AppConf) LogWriter() io.Writer {
+	return io.MultiWriter(os.Stdout, &lumberjack.Logger{
+		Filename:   a.RLog + "/app.log",
+		MaxSize:    10,
+		MaxBackups: 7,
+		MaxAge:     28,
+		Compress:   true,
+	})
 }
 
 func (a *AppConf) MkdirAll() {
@@ -141,6 +149,13 @@ func LoadApp() {
 	App.RateCurrencies = vipers.StringSlice("exchangerate.currencies")
 	App.MkdirAll()
 	vipers.Validate(App)
+
+	// init
+	spew.SetPrinter(flog.Debugf)
+	flog.SetLevel(App.LogLevelFiber)
+	flog.SetOutput(App.LogWriter())
+	fext.SetDebugMode(App.Debug)
+	fext.SetErrorFunc(func(err error) { flog.Error(err) })
 
 	// xdg support
 	if dir, err := os.UserCacheDir(); err == nil {
