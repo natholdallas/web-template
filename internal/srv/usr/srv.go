@@ -1,5 +1,5 @@
 // Package user to setup user route
-package user
+package usr
 
 import (
 	"webtplmst/internal/conf"

@@ -1,5 +1,5 @@
 // Package admin to setup admin route
-package admin
+package adm
 
 import (
 	"webtplmst/internal/conf"

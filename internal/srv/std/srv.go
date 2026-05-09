@@ -1,5 +1,5 @@
 // Package base to setup base route
-package base
+package std
 
 import (
 	"github.com/gofiber/fiber/v3"

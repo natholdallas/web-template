@@ -1,4 +1,4 @@
-package admin
+package adm
 
 import (
 	"webtplmst/internal/db"

@@ -1,4 +1,4 @@
-package user
+package usr
 
 import (
 	"webtplmst/internal/db"

@@ -4,15 +4,16 @@ package srv
 import (
 	"webtplmst/docs"
 	"webtplmst/internal/conf"
-	"webtplmst/internal/srv/admin"
-	"webtplmst/internal/srv/base"
+	"webtplmst/internal/srv/adm"
 	"webtplmst/internal/srv/internal"
-	"webtplmst/internal/srv/user"
+	"webtplmst/internal/srv/std"
+	"webtplmst/internal/srv/usr"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/natholdallas/natools4go/fext"
+	"github.com/natholdallas/natools4go/strs"
 	"github.com/yokeTH/gofiber-scalar/scalar/v3"
 )
 
@@ -38,8 +39,8 @@ func Setup() {
 		FileContentString: docs.SwaggerInfo.ReadDoc(),
 		Title:             "API Documentation",
 	}))
-	base.Setup(app.Group("/api/v1").Use(internal.Recorder("Base")))
-	admin.Setup(app.Group("/admin/api/v1").Use(internal.Recorder("Admin")))
-	user.Setup(app.Group("/user/api/v1").Use(internal.Recorder("User")))
-	fext.Listen(app, ":"+conf.App.Port)
+	std.Setup(app.Group("/api/v1").Use(internal.Recorder("Base")))
+	adm.Setup(app.Group("/adm/api/v1").Use(internal.Recorder("Admin")))
+	usr.Setup(app.Group("/usr/api/v1").Use(internal.Recorder("User")))
+	fext.Listen(app, strs.ToStart(conf.App.Port, ":"))
 }

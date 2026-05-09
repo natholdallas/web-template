@@ -1,4 +1,4 @@
-package base
+package std
 
 import (
 	"webtplmst/internal/client"
