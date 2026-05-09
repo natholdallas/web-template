@@ -22,7 +22,7 @@ type User struct {
 //	@Accept		json
 //	@Produce	json
 //	@Success	200	{object}	User
-//	@Router		/user/api/v1/user [get]
+//	@Router		/usr/api/v1/user [get]
 func FindUser(c fiber.Ctx) error {
 	claims := jwt.Claims(c)
 	v := orms.QM[User, db.User](db.Tx).IFirst(claims.ID)
@@ -48,7 +48,7 @@ func (s *UserIn) Get() *db.User {
 //	@Produce	json
 //	@Param		body	body	UserIn	true	"User object"
 //	@Success	200
-//	@Router		/user/api/v1/user [put]
+//	@Router		/usr/api/v1/user [put]
 func UpdateUser(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[UserIn](c)
 	if err != nil {
@@ -75,7 +75,7 @@ type ResetPasswordIn struct {
 //	@Produce		json
 //	@Success		200
 //	@Failure		400	{object}	Fail
-//	@Router			/user/api/v1/user/reset/password [post]
+//	@Router			/usr/api/v1/user/reset/password [post]
 func ResetPassword(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[ResetPasswordIn](c)
 	if err != nil {

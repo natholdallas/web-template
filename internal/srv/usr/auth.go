@@ -30,7 +30,7 @@ type AuthIn struct {
 //	@Param			body	body		AuthIn	true	"Credentials"
 //	@Success		200		{object}	Auth
 //	@Failure		400		{object}	Fail
-//	@Router			/user/api/v1/auth/in [post]
+//	@Router			/usr/api/v1/auth/in [post]
 func SignIn(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[AuthIn](c)
 	if err != nil {

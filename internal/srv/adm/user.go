@@ -34,7 +34,7 @@ func (s *UserIn) Get() *db.User {
 //	@Produce	json
 //	@Param		query	query	UserQueries	false	"Query params"
 //	@Success	200		{array}	User
-//	@Router		/admin/api/v1/user [get]
+//	@Router		/adm/api/v1/user [get]
 func ListUser(c fiber.Ctx) error {
 	q, _ := fext.QueryParser[UserQueries](c)
 	v := orms.QE[db.User](db.Tx).
@@ -52,7 +52,7 @@ func ListUser(c fiber.Ctx) error {
 //	@Produce	json
 //	@Param		id	path		int	true	"User ID"
 //	@Success	200	{object}	User
-//	@Router		/admin/api/v1/user/{id} [get]
+//	@Router		/adm/api/v1/user/{id} [get]
 func FindUser(c fiber.Ctx) error {
 	v := orms.IFirst[db.User](db.Tx, c.Params("id"))
 	return c.JSON(v)
@@ -67,7 +67,7 @@ func FindUser(c fiber.Ctx) error {
 //	@Produce	json
 //	@Param		body	body		UserIn	true	"User object"
 //	@Success	200		{object}	db.User
-//	@Router		/admin/api/v1/user [post]
+//	@Router		/adm/api/v1/user [post]
 func CreateUser(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[UserIn](c)
 	if err != nil {
@@ -88,7 +88,7 @@ func CreateUser(c fiber.Ctx) error {
 //	@Param		id		path		int		true	"User ID"
 //	@Param		body	body		UserIn	true	"User object"
 //	@Success	200		{object}	string	"OK"
-//	@Router		/admin/api/v1/user/{id} [put]
+//	@Router		/adm/api/v1/user/{id} [put]
 func UpdateUser(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[UserIn](c)
 	if err != nil {
@@ -110,7 +110,7 @@ func UpdateUser(c fiber.Ctx) error {
 //	@Produce	json
 //	@Param		id	path		int		true	"User ID"
 //	@Success	200	{object}	string	"OK"
-//	@Router		/admin/api/v1/user/{id} [delete]
+//	@Router		/adm/api/v1/user/{id} [delete]
 func RemoveUser(c fiber.Ctx) error {
 	orms.Delete[db.User](db.Tx, c.Params("id"))
 	return nil

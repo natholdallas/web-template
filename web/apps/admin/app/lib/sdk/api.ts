@@ -1,7 +1,7 @@
 import type { Method } from 'alova'
 import { BaseQueries, Model, Page } from './etc'
 
-export const api = sneakyfetch(useRuntimeConfig().public.apiBase + '/admin/api/v1')
+export const api = sneakyfetch(useRuntimeConfig().public.apiBase + '/adm/api/v1')
 api.NewEvent(200, ok)
 api.NewEvent(401, unauthorized)
 api.NewEvent(-1, fallback)

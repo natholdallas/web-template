@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/api/v1": {
+        "/adm/api/v1": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -95,7 +95,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/api/v1/auth/in": {
+        "/adm/api/v1/auth/in": {
             "post": {
                 "description": "Sign in with username and password",
                 "consumes": [
@@ -136,7 +136,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/api/v1/user": {
+        "/adm/api/v1/user": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -216,7 +216,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/api/v1/user/{id}": {
+        "/adm/api/v1/user/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -317,7 +317,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/api/v1/{id}": {
+        "/adm/api/v1/{id}": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -411,7 +411,7 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/user/api/v1": {
+        "/usr/api/v1": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -463,7 +463,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/api/v1/auth/in": {
+        "/usr/api/v1/auth/in": {
             "post": {
                 "description": "Sign in with username and password",
                 "consumes": [
@@ -504,7 +504,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/api/v1/user/reset/password": {
+        "/usr/api/v1/user/reset/password": {
             "post": {
                 "description": "Reset current user's password",
                 "consumes": [

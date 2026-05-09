@@ -2,7 +2,7 @@ import type { Method } from 'alova'
 import { toast } from 'vue-sonner'
 import { Model } from './etc'
 
-export const api = sneakyfetch(useRuntimeConfig().public.apiBase + '/user/api/v1')
+export const api = sneakyfetch(useRuntimeConfig().public.apiBase + '/usr/api/v1')
 api.NewEvent(200, ok)
 api.NewEvent(401, unauthorized)
 api.NewEvent(-1, fallback)
