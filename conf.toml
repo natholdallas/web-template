@@ -37,8 +37,8 @@ name = "webtplmst"
 host = "localhost"
 port = "3306"
 query = "charset=utf8mb4&parseTime=True&loc=Local"
-username = "root"
-password = "ar1234"
+username = ""
+password = ""
 
 
 [redis]
