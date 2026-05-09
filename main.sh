@@ -1,37 +1,13 @@
 #! /usr/bin/env bash
 
-# --- Configurations ---
-
 pname=webtplmst
 host=xxx@xxx
 dir=tasks/$pname
 use_rynsc=true
 
-# web_dir=web
-# directories
-# declare -A app_paths=(
-#   ["user"]="$web_dir/apps/user"
-#   ["admin"]="$web_dir/apps/admin"
-# )
-# specific dev commands
-# declare -A dev_cmds=(
-#   ["user"]="pnpm dev"
-#   ["admin"]="pnpm dev"
-# )
-# specific build/prod commands
-# declare -A build_cmds=(
-#   ["user"]="pnpm generate"
-#   ["admin"]="pnpm generate"
-# )
-
-# --- Helpers ---
-
-# Improved helper to run commands in a directory safely
 run_in_dir() {
   (cd "$1" && shift && "$@")
 }
-
-# --- Commands ---
 
 dev() {
   if [ "$2" = "--force" ]; then
@@ -137,7 +113,6 @@ renewal() {
     exit 0
   fi
 
-  # Define colors for output
   local YELLOW='\033[1;33m'
   local GREEN='\033[0;32m'
   local RED='\033[0;31m'
@@ -152,16 +127,15 @@ renewal() {
   echo -e "4. ${GREEN}PROTECTION${NC}: 'main.sh' will be skipped during string replacement."
   echo "--------------------------------------------------"
 
-  # Prompt for user confirmation
+  # prompt for user confirmation
   read -rp "Are you sure you want to proceed? (y/N): " confirm
 
-  # Check user input (defaults to No if empty)
   if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
-    # Reset git directory
+    # reset git directory
     rm -rf .git
     rm -rf web/packages/natholdallas
     rm .gitmodules
-    # Replace all occurrences of old_name with new_name
+    # replace all occurrences of old_name with new_name
     find . \
       \( -name ".git" \
       -o -name "node_modules" \
@@ -172,9 +146,9 @@ renewal() {
       -o -name "bin" \) -prune \
       -o -type f \
       -exec sed -i "s/${old_name}/${new_name}/g" {} +
-    # Generate docs
+    # generate docs
     docs
-    # Initialize git repository
+    # initialize git repository
     git init
     git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
     git add -A
@@ -193,7 +167,6 @@ clean() {
   find . -name ".output" -type d -prune -exec rm -rf {} +
 }
 
-# case statement for commands
 case "$1" in
 dev) dev "$@" ;;
 docs) docs "$@" ;;
