@@ -71,7 +71,7 @@ func (s *AdminIn) Get() *db.Admin {
 //	@Produce	json
 //	@Param		body	body		AdminIn	true	"Admin object"
 //	@Success	200		{object}	db.Admin
-//	@Router		/admin/api/admin/v1 [post]
+//	@Router		/adm/api/v1/admin [post]
 func CreateAdmin(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[AdminIn](c)
 	if err != nil {

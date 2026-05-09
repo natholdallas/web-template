@@ -77,6 +77,12 @@ definitions:
     type: object
   UUser:
     properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
       username:
         type: string
     type: object
@@ -106,10 +112,10 @@ definitions:
 info:
   contact: {}
   description: API Documentation
-  title: Webtplmst
+  title: webtplmst
   version: "1.0"
 paths:
-  /adm/api/v1:
+  /adm/api/v1/admin:
     get:
       consumes:
       - application/json
@@ -160,7 +166,7 @@ paths:
       summary: Create Admin
       tags:
       - Admin
-  /adm/api/v1/{id}:
+  /adm/api/v1/admin/{id}:
     delete:
       consumes:
       - application/json
@@ -368,7 +374,53 @@ paths:
       summary: Update User
       tags:
       - RUser
-  /usr/api/v1:
+  /api/v1/rate/{code}:
+    get:
+      consumes:
+      - application/json
+      description: Get exchange rates by currency code
+      operationId: find_rate
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              format: float64
+              type: number
+            type: object
+      summary: Get exchange rates
+      tags:
+      - Rate
+  /usr/api/v1/auth/in:
+    post:
+      consumes:
+      - application/json
+      description: Sign in with username and password
+      operationId: user__auth
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AuthIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Auth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: User sign in
+      tags:
+      - Auth
+  /usr/api/v1/user:
     get:
       consumes:
       - application/json
@@ -402,33 +454,6 @@ paths:
       summary: Update User
       tags:
       - User
-  /usr/api/v1/auth/in:
-    post:
-      consumes:
-      - application/json
-      description: Sign in with username and password
-      operationId: user__auth
-      parameters:
-      - description: Credentials
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/AuthIn'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Auth'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Fail'
-      summary: User sign in
-      tags:
-      - Auth
   /usr/api/v1/user/reset/password:
     post:
       consumes:

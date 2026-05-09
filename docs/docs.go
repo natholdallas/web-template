@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/adm/api/v1": {
+        "/adm/api/v1/admin": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -93,6 +93,100 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/adm/api/v1/admin/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Find Admin by ID",
+                "operationId": "find_admin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Admin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Admin"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Update Admin",
+                "operationId": "update_admin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Admin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Admin object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdminIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Remove Admin",
+                "operationId": "remove_admin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Admin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {}
             }
         },
         "/adm/api/v1/auth/in": {
@@ -317,8 +411,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/adm/api/v1/{id}": {
+        "/api/v1/rate/{code}": {
             "get": {
+                "description": "Get exchange rates by currency code",
                 "consumes": [
                     "application/json"
                 ],
@@ -326,29 +421,27 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin"
+                    "Rate"
                 ],
-                "summary": "Find Admin by ID",
-                "operationId": "find_admin",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Admin ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Get exchange rates",
+                "operationId": "find_rate",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Admin"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "number",
+                                "format": "float64"
+                            }
                         }
                     }
                 }
-            },
-            "put": {
+            }
+        },
+        "/usr/api/v1/auth/in": {
+            "post": {
+                "description": "Sign in with username and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -356,25 +449,18 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Admin"
+                    "Auth"
                 ],
-                "summary": "Update Admin",
-                "operationId": "update_admin",
+                "summary": "User sign in",
+                "operationId": "user__auth",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Admin ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Admin object",
+                        "description": "Credentials",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AdminIn"
+                            "$ref": "#/definitions/AuthIn"
                         }
                     }
                 ],
@@ -382,36 +468,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/Auth"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
                         }
                     }
                 }
-            },
-            "delete": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Admin"
-                ],
-                "summary": "Remove Admin",
-                "operationId": "remove_admin",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Admin ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {}
             }
         },
-        "/usr/api/v1": {
+        "/usr/api/v1/user": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -459,47 +528,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK"
-                    }
-                }
-            }
-        },
-        "/usr/api/v1/auth/in": {
-            "post": {
-                "description": "Sign in with username and password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "User sign in",
-                "operationId": "user__auth",
-                "parameters": [
-                    {
-                        "description": "Credentials",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/AuthIn"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/Auth"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/Fail"
-                        }
                     }
                 }
             }
@@ -647,6 +675,15 @@ const docTemplate = `{
         "UUser": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
                 "username": {
                     "type": "string"
                 }
@@ -695,7 +732,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Webtplmst",
+	Title:            "webtplmst",
 	Description:      "API Documentation",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
