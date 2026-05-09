@@ -89,6 +89,14 @@ func (a *AppConf) NginxMiddleware(c fiber.Ctx) bool {
 	return a.Nginx
 }
 
+func (a *AppConf) AllowOriginsFunc(origin string) bool {
+	if a.Debug {
+		return strs.AnyPrefix(origin, a.CorsDev...)
+	} else {
+		return strs.AnyPrefix(origin, a.CorsPrd...)
+	}
+}
+
 func (a *AppConf) LogWriter() io.Writer {
 	return io.MultiWriter(os.Stdout, &lumberjack.Logger{
 		Filename:   a.RLog + "/app.log",

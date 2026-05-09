@@ -6,13 +6,13 @@ import (
 	"webtplmst/internal/conf"
 	"webtplmst/internal/srv/admin"
 	"webtplmst/internal/srv/base"
+	"webtplmst/internal/srv/internal"
 	"webtplmst/internal/srv/user"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/static"
 	"github.com/natholdallas/natools4go/fext"
-	"github.com/natholdallas/natools4go/strs"
 	"github.com/yokeTH/gofiber-scalar/scalar/v3"
 )
 
@@ -22,7 +22,7 @@ func Setup() {
 		ErrorHandler: fext.ErrorHandler,
 	})
 	app.Use(cors.New(cors.Config{
-		AllowOriginsFunc: AllowOriginsFunc,
+		AllowOriginsFunc: conf.App.AllowOriginsFunc,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -38,16 +38,8 @@ func Setup() {
 		FileContentString: docs.SwaggerInfo.ReadDoc(),
 		Title:             "API Documentation",
 	}))
-	base.Setup(app.Group("/api/v1"))
-	admin.Setup(app.Group("/admin/api/v1"))
-	user.Setup(app.Group("/user/api/v1"))
+	base.Setup(app.Group("/api/v1").Use(internal.Recorder("Base")))
+	admin.Setup(app.Group("/admin/api/v1").Use(internal.Recorder("Admin")))
+	user.Setup(app.Group("/user/api/v1").Use(internal.Recorder("User")))
 	fext.Listen(app, ":"+conf.App.Port)
-}
-
-func AllowOriginsFunc(origin string) bool {
-	if conf.App.Debug {
-		return strs.AnyPrefix(origin, conf.App.CorsDev...)
-	} else {
-		return strs.AnyPrefix(origin, conf.App.CorsPrd...)
-	}
 }

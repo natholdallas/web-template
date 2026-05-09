@@ -19,7 +19,7 @@ func FasthttpToHTTP(context *fasthttp.RequestCtx) (*http.Request, error) {
 	return &v, err
 }
 
-func FastLogger(prefix string) fiber.Handler {
+func Recorder(prefix string) fiber.Handler {
 	return logger.New(logger.Config{
 		TimeFormat: time.DateTime,
 		Format:     "[" + prefix + "]" + fext.StdLogFmt,

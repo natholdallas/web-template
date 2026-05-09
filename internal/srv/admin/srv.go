@@ -3,7 +3,6 @@ package admin
 
 import (
 	"webtplmst/internal/conf"
-	"webtplmst/internal/srv/internal"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/natholdallas/natools4go/fext"
@@ -12,7 +11,6 @@ import (
 var jwt = fext.NewJwt(conf.App.SecretAdmin)
 
 func Setup(api fiber.Router) {
-	api.Use(internal.FastLogger("Admin"))
 	api.Group("/auth").
 		Post("/in", SignIn)
 	api.Group("/user", jwt.Middleware).
