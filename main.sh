@@ -21,14 +21,14 @@ dev() {
   fi
 
   tmux new-session -d -s "$pname" -n "backend"
-  tmux new-window -t "$pname:1" -n "admin"
-  tmux new-window -t "$pname:2" -n "user"
+  tmux new-window -t "$pname:1" -n "adm"
+  tmux new-window -t "$pname:2" -n "usr"
 
   sleep 0.2
 
   tmux send-keys -t "$pname:0" 'gowatch -o bin/backend' C-m
-  tmux send-keys -t "$pname:1" 'cd web/apps/admin && pnpm dev' C-m
-  tmux send-keys -t "$pname:2" 'cd web/apps/user && pnpm dev' C-m
+  tmux send-keys -t "$pname:1" 'cd web/apps/adm && pnpm dev' C-m
+  tmux send-keys -t "$pname:2" 'cd web/apps/usr && pnpm dev' C-m
 
   echo "Dev environment started in tmux session: $pname"
 }
@@ -37,8 +37,8 @@ build() {
   echo "Building backend..."
   go build -o bin/backend
   echo "Generating frontend static files..."
-  run_in_dir "web/apps/admin" pnpm generate
-  run_in_dir "web/apps/user" pnpm generate
+  run_in_dir "web/apps/adm" pnpm generate
+  run_in_dir "web/apps/usr" pnpm generate
 }
 
 docs() {
@@ -56,7 +56,7 @@ deploy() {
 
   # package
   echo "Packaging..."
-  zip -r web.zip bin/backend web/apps/admin/dist
+  zip -r web.zip bin/backend web/apps/adm/dist
 
   # remote
   if $use_rynsc; then

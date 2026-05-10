@@ -9,8 +9,8 @@ import (
 type FlagConf struct {
 	ConfPath  string
 	ConfName  string
-	AdminAdd  bool
-	UserAdd   bool
+	Adm       bool
+	Usr       bool
 	RstDB     bool
 	Migration bool
 	Sync      bool
@@ -20,8 +20,8 @@ type FlagConf struct {
 func LoadFlag() {
 	flag.StringVar(&Flag.ConfPath, "conf", ".", "define config path")
 	flag.StringVar(&Flag.ConfName, "confname", "conf", "define config name")
-	flag.BoolVar(&Flag.AdminAdd, "adminadd", false, "add admin")
-	flag.BoolVar(&Flag.UserAdd, "useradd", false, "add user")
+	flag.BoolVar(&Flag.Adm, "adm", false, "add admin")
+	flag.BoolVar(&Flag.Usr, "usr", false, "add user")
 	flag.BoolVar(&Flag.RstDB, "rstdb", false, "reset database, if exists will be clear to default")
 	flag.BoolVar(&Flag.Migration, "migration", false, "run migration script")
 	flag.BoolVar(&Flag.Sync, "sync", false, "sync data in database")

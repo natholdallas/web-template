@@ -16,8 +16,8 @@ import (
 func Setup() {
 	flags.Run(conf.Flag.RstDB, RstDB)
 	flags.Run(conf.Flag.Migration, Migration)
-	flags.Run(conf.Flag.AdminAdd, AdminAdd)
-	flags.Run(conf.Flag.UserAdd, UserAdd)
+	flags.Run(conf.Flag.Adm, Adm)
+	flags.Run(conf.Flag.Usr, Usr)
 	flags.Run(conf.Flag.Sync, Sync)
 	flags.Run(conf.Flag.Mock, Mock)
 }
@@ -32,7 +32,7 @@ func Migration() {
 	db.Migration()
 }
 
-func UserAdd() {
+func Usr() {
 	fmt.Println("add user script")
 	username := ask.Read[string]("username")
 	password := ask.Read[string]("password")
@@ -44,7 +44,7 @@ func UserAdd() {
 	}
 }
 
-func AdminAdd() {
+func Adm() {
 	fmt.Println("add admin script")
 	username := ask.Read[string]("username")
 	password := ask.Read[string]("password")
