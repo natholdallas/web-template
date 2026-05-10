@@ -2,3 +2,8 @@ packages:
   - apps/*
   - packages/*
   - packages/natholdallas/*
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  maplibre-gl: true
+  vue-demi: true

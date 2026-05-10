@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
-	"github.com/natholdallas/natools4go/jsons"
+	"github.com/natholdallas/natools4go/spew"
 )
 
 func WechatWebhook(c fiber.Ctx) error {
@@ -21,9 +21,6 @@ func WechatWebhook(c fiber.Ctx) error {
 		log.Warn("wechat verify signature failed: ", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Failed", "code": "200"})
 	}
-	// logging
-	log.Debug(jsons.IString(d, true))
-
-	// add your logic here
+	spew.Dump(d)
 	return c.Next()
 }

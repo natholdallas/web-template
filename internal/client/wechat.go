@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/natholdallas/natools4go/jsons"
+	"github.com/natholdallas/natools4go/spew"
 	"github.com/shopspring/decimal"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/auth/verifiers"
@@ -36,18 +37,22 @@ func InitWechat() {
 		log.Fatal("load merchant public key error: ", err)
 		return
 	}
-	// Initialize client with merchant private key, enabling automatic periodic fetching of WeChat Pay platform certificates
-	client, err := core.NewClient(context.Background(),
-		option.WithWechatPayPublicKeyAuthCipher(conf.App.WxMch, conf.App.WxCert, mchPrivateKey, conf.App.WxPubKey, wechatpayPublicKey),
-	)
+	client, err := core.NewClient(context.Background(), option.WithWechatPayPublicKeyAuthCipher(
+		conf.App.WxMch,
+		conf.App.WxCert,
+		mchPrivateKey,
+		conf.App.WxPubKey,
+		wechatpayPublicKey,
+	))
 	if err != nil {
 		log.Fatal("new wechat pay client err: %s", err)
 		return
 	}
 	wechatInstance = client
-	// Initialize notify.Handler
-	verifier := verifiers.NewSHA256WithRSAPubkeyVerifier(conf.App.WxPubKey, *wechatpayPublicKey)
-	wechatHandler = notify.NewNotifyHandler(conf.App.WxV3Sercret, verifier)
+	wechatHandler = notify.NewNotifyHandler(
+		conf.App.WxV3Sercret,
+		verifiers.NewSHA256WithRSAPubkeyVerifier(conf.App.WxPubKey, *wechatpayPublicKey),
+	)
 }
 
 type WxLoginRes struct {
@@ -145,8 +150,7 @@ func WxPay(openid string, amount int64, tradeNo string) (*jsapi.PrepayWithReques
 		Payer:       &jsapi.Payer{Openid: core.String(openid)},
 	}
 	resp, _, err := svc.PrepayWithRequestPayment(context.Background(), req)
-	log.Debug(jsons.IString(resp, true))
-	log.Debug(jsons.IString(req, true))
+	spew.Dump(resp, req)
 	return resp, err
 }
 

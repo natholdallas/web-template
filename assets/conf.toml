@@ -6,8 +6,8 @@ nginx = false
 
 
 [secret]
-admin = "fuck"
-user = "shit"
+adm = ""
+usr = ""
 
 
 [log]

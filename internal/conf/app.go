@@ -23,8 +23,8 @@ type AppConf struct {
 	Nginx bool
 
 	// jwt
-	SecretAdmin string `validate:"required"`
-	SecretUser  string `validate:"required"`
+	SecretAdm string `validate:"required"`
+	SecretUsr string `validate:"required"`
 
 	// log
 	LogLevelGorm  glog.LogLevel
@@ -118,8 +118,8 @@ func LoadApp() {
 	App.Port = vipers.Get("app.port", "8080")
 	App.Debug = vipers.Get("app.debug", false)
 	App.Nginx = vipers.Get("app.nginx", false)
-	App.SecretAdmin = vipers.String("secret.admin")
-	App.SecretUser = vipers.String("secret.user")
+	App.SecretAdm = vipers.String("secret.adm")
+	App.SecretUsr = vipers.String("secret.usr")
 	App.LogLevelFiber = flog.Level(vipers.Get("loglevel.fiber", int(flog.LevelTrace)))
 	App.LogLevelGorm = glog.LogLevel(vipers.Get("loglevel.gorm", int(glog.Warn)))
 	App.CorsDev = vipers.StringSlice("cors.dev")

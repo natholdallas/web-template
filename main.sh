@@ -95,11 +95,12 @@ synconf() {
   fi
 }
 
-deps() {
+init() {
+  cp ./assets/conf.toml ./conf.toml
   go install github.com/swaggo/swag/cmd/swag@latest
   go install github.com/silenceper/gowatch@latest
   go install github.com/gofiber/cli/fiber@latest
-  git submodule update --init
+  git submodule update --init --recursive
   go mod tidy
   run_in_dir "web" pnpm install
 }
@@ -143,6 +144,7 @@ renewal() {
       -o -name ".output" \
       -o -name "dist" \
       -o -name "docs" \
+      -o -name "assets" \
       -o -name "bin" \) -prune \
       -o -type f \
       -exec sed -i "s/${old_name}/${new_name}/g" {} +
@@ -173,7 +175,7 @@ docs) docs "$@" ;;
 build) build "$@" ;;
 deploy) deploy "$@" ;;
 synconf) synconf "$@" ;;
-deps) deps "$@" ;;
+init) init "$@" ;;
 renewal) renewal "$@" ;;
 clean) clean "$@" ;;
 *)
@@ -183,7 +185,7 @@ clean) clean "$@" ;;
   echo "  build:        Compile Go backend and generate static sites "
   echo "  deploy:       Build, sync to server, and hot-reload via tmux "
   echo "  synconf:      Sync config to server "
-  echo "  deps:         Install dependencies "
+  echo "  init:         Init Project & Install dependencies "
   echo "  renewal:      Renewal project "
   echo "  clean:        Clean Project Cache "
   exit 1
