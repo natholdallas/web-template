@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/srv/http/webtplmst
-ExecStart=./bin/backend
+ExecStart=bin/backend
 RestartSec=3
 Restart=on-failure
 

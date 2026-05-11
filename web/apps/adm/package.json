@@ -1,16 +1,15 @@
 {
-  "name": "webtplmst-admin",
+  "name": "webtplmst-adm",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate --dotenv .env.production",
+    "generate:dev": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "analyze": "nuxt analyze",
-    "gen": "nuxt generate --dotenv .env.production",
-    "gen:api": "alova gen -f"
+    "analyze": "nuxt analyze"
   },
   "dependencies": {
     "@natholdallas/alova": "workspace:^",

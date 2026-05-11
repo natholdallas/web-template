@@ -9,6 +9,10 @@ run_in_dir() {
   (cd "$1" && shift && "$@")
 }
 
+success() {
+  echo -e "\033[0;32m[SUCCESS]\033[0m $1"
+}
+
 info() {
   echo -e "\033[1;36m[INFO]\033[0m $1"
 }
@@ -105,14 +109,16 @@ synconf() {
 }
 
 init() {
+  if [ "$2" != "--skip-install" ]; then
+    go install github.com/swaggo/swag/cmd/swag@latest
+    go install github.com/silenceper/gowatch@latest
+    go install github.com/gofiber/cli/fiber@latest
+  fi
   cp ./assets/conf.toml ./conf.toml
-  cp ./assets/.env web/apps/adm/.env
-  cp ./assets/.env web/apps/adm/.env.production
-  cp ./assets/.env web/apps/usr/.env
-  cp ./assets/.env web/apps/usr/.env.production
-  go install github.com/swaggo/swag/cmd/swag@latest
-  go install github.com/silenceper/gowatch@latest
-  go install github.com/gofiber/cli/fiber@latest
+  cp ./assets/nuxt.env web/apps/adm/.env
+  cp ./assets/nuxt.env web/apps/adm/.env.production
+  cp ./assets/nuxt.env web/apps/usr/.env
+  cp ./assets/nuxt.env web/apps/usr/.env.production
   git submodule update --init --recursive
   go mod tidy
   run_in_dir "web" pnpm install
@@ -132,7 +138,7 @@ renewal() {
   local RED='\033[0;31m'
   local NC='\033[0m'
 
-  warn "Project Initialization & Reset"
+  echo -e "${YELLOW}Project Initialization & Reset${NC}"
   echo "--------------------------------------------------"
   echo "This script will perform the following IRREVERSIBLE actions:"
   echo -e "1. ${GREEN}GLOBAL REPLACE${NC}: All occurrences of '$old_name' will be changed to '$new_name'."
@@ -143,7 +149,6 @@ renewal() {
 
   # prompt for user confirmation
   read -rp "Are you sure you want to proceed? (y/N): " confirm
-
   if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
     # reset git directory
     rm -rf .git
@@ -169,10 +174,9 @@ renewal() {
     git init
     git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
     git add -A
-    echo -e "${GREEN}[SUCCESS] Project initialized successfully.${NC}"
+    success "Project initialized successfully."
   else
-    echo -e "${RED}[CANCELLED] Operation aborted by user.${NC}"
-    exit 0
+    error "Operation aborted by user."
   fi
 }
 

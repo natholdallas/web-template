@@ -1,5 +1,5 @@
 {
-  "name": "webtplmst-user",
+  "name": "webtplmst-usr",
   "private": true,
   "type": "module",
   "version": "1.0.0",
@@ -8,11 +8,10 @@
     "dev": "nuxt dev",
     "dev:tauri": "tauri dev",
     "generate": "nuxt generate --dotenv .env.production",
+    "generate:dev": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "analyze": "nuxt analyze",
-    "gen": "nuxt generate --dotenv .env.production",
-    "gen:api": "alova gen -f",
     "package": "NO_STRIP=true tauri build",
     "package:debug": "NO_STRIP=true tauri build --debug"
   },
