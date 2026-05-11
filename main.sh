@@ -5,27 +5,11 @@ host=xxx@xxx
 dir=tasks/$pname
 use_rynsc=true
 
-run_in_dir() {
-  (cd "$1" && shift && "$@")
-}
-
-success() {
-  echo -e "\033[0;32m[SUCCESS]\033[0m $1"
-}
-
-info() {
-  echo -e "\033[1;36m[INFO]\033[0m $1"
-}
-
-warn() {
-  echo -e "\033[1;33m[WARN]\033[0m $1"
-}
-
-error() {
-  echo -e "\033[0;31m[ERROR]\033[0m $1"
-  exit 1
-}
-
+run_in_dir() { (cd "$1" && shift && "$@"); }
+success() { echo -e "\033[0;32m[SUCCESS]\033[0m $1"; }
+info() { echo -e "\033[1;36m[INFO]\033[0m $1"; }
+warn() { echo -e "\033[1;33m[WARN]\033[0m $1"; }
+error() { echo -e "\033[0;31m[ERROR]\033[0m $1"; }
 remote_util() {
   if $use_rynsc; then
     info "use rsync to sync files..."
@@ -132,18 +116,13 @@ renewal() {
     exit 0
   fi
 
-  local YELLOW='\033[1;33m'
-  local GREEN='\033[0;32m'
-  local RED='\033[0;31m'
-  local NC='\033[0m'
-
-  echo -e "${YELLOW}Project Initialization & Reset${NC}"
+  echo -e "Project Initialization & Reset"
   echo "--------------------------------------------------"
   echo "This script will perform the following IRREVERSIBLE actions:"
-  echo -e "1. ${GREEN}GLOBAL REPLACE${NC}: All occurrences of '$old_name' will be changed to '$new_name'."
-  echo -e "2. ${RED}GIT RESET${NC}: The existing .git directory will be DELETED."
-  echo -e "3. ${YELLOW}RE-INIT${NC}: A new git repository will be initialized in this directory."
-  echo -e "4. ${GREEN}PROTECTION${NC}: 'main.sh' will be skipped during string replacement."
+  echo -e "1. GLOBAL REPLACE: All occurrences of '$old_name' will be changed to '$new_name'."
+  echo -e "2. GIT RESET: The existing .git directory will be DELETED."
+  echo -e "3. RE-INIT: A new git repository will be initialized in this directory."
+  echo -e "4. PROTECTION: 'main.sh' will be skipped during string replacement."
   echo "--------------------------------------------------"
 
   # prompt for user confirmation
@@ -174,13 +153,10 @@ renewal() {
     git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
     git add -A
     success "Project initialized successfully."
-  else
-    error "Operation aborted by user."
   fi
 }
 
 clean() {
-  rm -rf bin
   find . -name "node_modules" -type d -prune -exec rm -rf {} +
   find . -name "dist" -type d -prune -exec rm -rf {} +
   find . -name ".nuxt" -type d -prune -exec rm -rf {} +
