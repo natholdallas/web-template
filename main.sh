@@ -66,7 +66,6 @@ build() {
   run_in_dir "web/apps/adm" pnpm generate &
   run_in_dir "web/apps/usr" pnpm generate &
   wait
-  info "Done"
 }
 
 docs() {
@@ -109,16 +108,16 @@ synconf() {
 }
 
 init() {
-  if [ "$2" != "--skip-install" ]; then
-    go install github.com/swaggo/swag/cmd/swag@latest
-    go install github.com/silenceper/gowatch@latest
-    go install github.com/gofiber/cli/fiber@latest
+  if [ "$2" = "--copy-file" ]; then
+    cp ./assets/conf.toml ./conf.toml
+    cp ./assets/nuxt.env web/apps/adm/.env
+    cp ./assets/nuxt.env web/apps/adm/.env.production
+    cp ./assets/nuxt.env web/apps/usr/.env
+    cp ./assets/nuxt.env web/apps/usr/.env.production
   fi
-  cp ./assets/conf.toml ./conf.toml
-  cp ./assets/nuxt.env web/apps/adm/.env
-  cp ./assets/nuxt.env web/apps/adm/.env.production
-  cp ./assets/nuxt.env web/apps/usr/.env
-  cp ./assets/nuxt.env web/apps/usr/.env.production
+  go install github.com/swaggo/swag/cmd/swag@latest
+  go install github.com/silenceper/gowatch@latest
+  go install github.com/gofiber/cli/fiber@latest
   git submodule update --init --recursive
   go mod tidy
   run_in_dir "web" pnpm install
