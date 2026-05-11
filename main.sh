@@ -152,7 +152,7 @@ renewal() {
       -o -name "media" \
       -o -name "bin" \) -prune \
       -o -type f \
-      -exec sed -i "${SED_CMD[@]}" "s/${old_name}/${new_name}/g" {} +
+      -exec "${SED_CMD[@]}" "s/${old_name}/${new_name}/g" {} +
     # generate docs
     docs
     # initialize git repository
