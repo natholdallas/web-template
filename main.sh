@@ -133,6 +133,13 @@ renewal() {
     rm -rf web/packages/natholdallas
     rm .gitmodules
     # replace all occurrences of old_name with new_name
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      # macOS 语法
+      SED_CMD=(sed -i "")
+    else
+      # Linux 语法
+      SED_CMD=(sed -i)
+    fi
     find . \
       \( -name ".git" \
       -o -name "node_modules" \
@@ -145,7 +152,7 @@ renewal() {
       -o -name "media" \
       -o -name "bin" \) -prune \
       -o -type f \
-      -exec sed -i "s/${old_name}/${new_name}/g" {} +
+      -exec sed -i "${SED_CMD[@]}" "s/${old_name}/${new_name}/g" {} +
     # generate docs
     docs
     # initialize git repository
