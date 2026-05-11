@@ -155,6 +155,13 @@ func LoadApp() {
 	App.WxPubKeyPem = vipers.String("wechat.pem.pub")
 	App.RateSite = strs.TrimEnd(vipers.String("exchangerate.site"), strs.Slash)
 	App.RateCurrencies = vipers.StringSlice("exchangerate.currencies")
+
+	// xdg support
+	if dir, err := os.UserCacheDir(); err == nil {
+		App.RCache = dir + strs.ToStart(App.RCache, strs.Slash)
+	}
+
+	// mkdir & validate
 	App.MkdirAll()
 	vipers.Validate(App)
 
@@ -164,9 +171,4 @@ func LoadApp() {
 	flog.SetOutput(App.LogWriter())
 	fext.SetDebugMode(App.Debug)
 	fext.SetErrorFunc(func(err error) { flog.Error(err) })
-
-	// xdg support
-	if dir, err := os.UserCacheDir(); err == nil {
-		App.RCache = dir + strs.ToStart(App.RCache, strs.Slash)
-	}
 }
