@@ -3,6 +3,7 @@
 pname=webtplmst
 host=xxx@xxx
 dir=tasks/$pname
+# srv=/http/srv/$pname
 use_rynsc=true
 
 run_in_dir() { (cd "$1" && shift && "$@"); }
