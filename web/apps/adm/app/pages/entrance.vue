@@ -2,6 +2,7 @@
 import { AuthIn, SignIn } from '~/lib/sdk'
 
 definePageMeta({
+  layout: 'minimal',
   name: 'entrance',
   middleware: 'entrance',
 })
