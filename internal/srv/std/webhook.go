@@ -13,7 +13,7 @@ func WechatWebhook(c fiber.Ctx) error {
 	log.Info("wechat webhooking...")
 	stdReq, err := internal.FasthttpToHTTP(c.RequestCtx())
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Failed", "code": "200"})
 	}
 	// verify signature
 	d, err := client.WxVerify(stdReq)
@@ -22,5 +22,5 @@ func WechatWebhook(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Failed", "code": "200"})
 	}
 	spew.Dump(d)
-	return c.Next()
+	return nil
 }
