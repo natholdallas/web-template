@@ -1,0 +1,27 @@
+{
+  "name": "usr",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "dev:tauri": "tauri dev",
+    "generate": "nuxt generate --dotenv .env.production",
+    "generate:dev": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "analyze": "nuxt analyze",
+    "package": "NO_STRIP=true tauri build",
+    "package:debug": "NO_STRIP=true tauri build --debug"
+  },
+  "dependencies": {
+    "@natholdallas/alova": "workspace:^",
+    "@natholdallas/i18n": "workspace:^",
+    "@natholdallas/infra": "workspace:^",
+    "@natholdallas/pinia": "workspace:^",
+    "@natholdallas/shadcn": "workspace:^",
+    "@natholdallas/tauri": "workspace:^",
+    "@natholdallas/tailwindcss": "workspace:^"
+  }
+}

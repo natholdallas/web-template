@@ -1,0 +1,7 @@
+/.vscode
+pnpm-lock.yaml
+pnpm-workspace.yaml
+
+**/app/components/ui
+**/tauri
+**/dist

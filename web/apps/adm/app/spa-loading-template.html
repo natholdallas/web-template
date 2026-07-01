@@ -1,0 +1,117 @@
+<div class="loading-container">
+  <div class="v-progress-circular">
+    <svg viewBox="22.8 22.8 45.6 45.6" style="transform: rotate(0deg)">
+      <circle
+        class="v-progress-circular__overlay"
+        cx="45.6"
+        cy="45.6"
+        r="20"
+        fill="none"
+        stroke-width="4"
+        stroke-dasharray="125.664"
+        stroke-dashoffset="125.6635px"
+      ></circle>
+    </svg>
+  </div>
+</div>
+
+<style>
+  :root {
+    --loader-primary-color: #1867c0;
+    --loader-bg-color: rgba(255, 255, 255, 0.85);
+  }
+
+  :root.dark {
+    --loader-primary-color: #2196f3;
+    --loader-bg-color: rgba(18, 18, 18, 0.85);
+  }
+
+  html,
+  body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .loading-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--loader-bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(2px);
+    transition: background-color 0.3s ease;
+  }
+
+  .v-progress-circular {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    width: 48px;
+    height: 48px;
+    color: var(--loader-primary-color);
+  }
+
+  .v-progress-circular svg {
+    animation: v-progress-circular-rotate 1.4s linear infinite;
+    transform-origin: center center;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    margin: auto;
+  }
+
+  .v-progress-circular__overlay {
+    stroke: currentColor;
+    stroke-linecap: round;
+    transition: all 0.6s ease-in-out;
+    animation: v-progress-circular-dash 1.4s cubic-bezier(0.25, 0.8, 0.5, 1) infinite;
+  }
+
+  @keyframes v-progress-circular-rotate {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes v-progress-circular-dash {
+    0% {
+      stroke-dasharray: 1, 125.664;
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dasharray: 100, 125.664;
+      stroke-dashoffset: -15px;
+    }
+    100% {
+      stroke-dasharray: 100, 125.664;
+      stroke-dashoffset: -125.664px;
+    }
+  }
+</style>
+<script>
+  ;(function () {
+    const m = localStorage.getItem('conf') || 'auto'
+    const { theme } = JSON.parse(m)
+    if (m === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark')
+    } else if (theme === 'light') {
+      document.documentElement.classList.remove('dark')
+    } else if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    }
+  })()
+</script>

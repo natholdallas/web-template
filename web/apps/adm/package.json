@@ -1,0 +1,23 @@
+{
+  "name": "adm",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate --dotenv .env.production",
+    "generate:dev": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "analyze": "nuxt analyze"
+  },
+  "dependencies": {
+    "@natholdallas/alova": "workspace:^",
+    "@natholdallas/i18n": "workspace:^",
+    "@natholdallas/infra": "workspace:^",
+    "@natholdallas/unocss": "workspace:^",
+    "@natholdallas/pinia": "workspace:^",
+    "@natholdallas/vuetify": "workspace:^"
+  }
+}

@@ -1,0 +1,73 @@
+[app]
+name = "webtplmst"
+port = "8080"
+debug = true
+nginx = false
+
+[secret]
+adm = ""
+usr = ""
+
+[loglevel]
+gorm = 2  # 1: slient; 2: error; 3: warn; 4: info
+fiber = 1  # 0: trace;  1: debug; 2: info; 3: warn; 4: error; 5: fatal; 6: panic
+
+[cors]
+dev = [
+  "http://127.0.0.1",
+  "http://localhost",
+  "https://127.0.0.1",
+  "https://localhost",
+]
+prd = [
+  "http://www.example.com",
+  "http://example.com",
+  "https://www.example.com",
+  "https://example.com",
+]
+
+[resources]
+web = "web/apps/usr/dist"
+log = "logs"
+cache = "webtplmst"
+media = "media"
+
+[db]
+name = "webtplmst"
+host = "localhost"
+port = "3306"
+query = "charset=utf8mb4&parseTime=True&loc=Local"
+username = ""
+password = ""
+
+[redis]
+host = "localhost"
+port = "6379"
+index = 0
+
+[smtp]
+host = "smtp.qq.com"
+port = 587
+from = ""
+password = ""
+
+[wechat]
+site = "https://api.weixin.qq.com"  # WeChat API address
+appid = ""  # WeChat App ID
+secret = ""  # WeChat App Secret
+
+[wechat.pay]
+webhook = ""  # WeChat callback URL
+mch = ""  # Merchant ID
+cert = ""  # Certificate serial number
+apiv2secret = ""  # v2 private key
+apiv3secret = ""  # v3 private key
+public-key = ""  # Public key
+
+[wechat.pem]
+pub = "./assets/wechat/pub_key.pem"  # WeChat API public key certificate file
+apiclient = "./assets/wechat/apiclient_key.pem"  # WeChat API private key certificate file
+
+[exchangerate]
+site = "https://v6.exchangerate-api.com/v6/{id}/latest"  # Requires API key, see https://exchangerate-api.com
+currencies = []  # Currencies, e.g. CNY, USD
