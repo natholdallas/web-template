@@ -22,5 +22,8 @@ const conf = useConf()
     <VMain class="size-full" name="main">
       <slot></slot>
     </VMain>
+
+    <ProviderDialog />
+    <ProviderSnackbar />
   </VApp>
 </template>

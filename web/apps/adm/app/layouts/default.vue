@@ -42,5 +42,8 @@ const drawer = ref(mdAndUp.value)
     <VMain class="size-full" name="main">
       <slot></slot>
     </VMain>
+
+    <ProviderDialog />
+    <ProviderSnackbar />
   </VApp>
 </template>
