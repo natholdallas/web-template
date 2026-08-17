@@ -1,0 +1,37 @@
+{
+  "name": "usr",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "dev:tauri": "tauri dev",
+    "generate": "nuxt generate --dotenv .env.production",
+    "generate:dev": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "analyze": "nuxt analyze",
+    "package": "NO_STRIP=true tauri build",
+    "package:debug": "NO_STRIP=true tauri build --debug"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.123",
+    "@lucide/vue": "^1.31.0",
+    "@natholdallas/alova": "workspace:^",
+    "@natholdallas/i18n": "workspace:^",
+    "@natholdallas/infra": "workspace:^",
+    "@natholdallas/pinia": "workspace:^",
+    "@natholdallas/shadcn": "workspace:^",
+    "@natholdallas/tailwindcss": "workspace:^",
+    "@natholdallas/tauri": "workspace:^",
+    "@vee-validate/zod": "^4.15.1",
+    "@vueuse/core": "^14.4.0",
+    "embla-carousel-vue": "^8.6.0",
+    "reka-ui": "^2.10.3",
+    "vee-validate": "^4.15.1",
+    "vue-input-otp": "^0.3.2",
+    "vue-sonner": "^2.0.9",
+    "zod": "3.25.76"
+  }
+}
