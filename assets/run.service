@@ -1,0 +1,13 @@
+[Unit]
+Description=@PNAME@
+After=network.service
+
+[Service]
+Type=simple
+WorkingDirectory=@SRV_DIR@
+ExecStart=@SRV_DIR@/bin/backend
+RestartSec=3
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

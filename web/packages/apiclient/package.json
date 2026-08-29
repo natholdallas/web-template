@@ -1,0 +1,9 @@
+{
+  "name": "@sdk/apiclient",
+  "version": "1.0.0",
+  "main": "alova.config.ts",
+  "description": "alova openapi codegen config & plugins — generates the typed API SDK (Apis proxy, models, alova runtime) for the usr and adm Nuxt apps from the backend swagger doc",
+  "dependencies": {
+    "@alova/wormhole": "^1.5.2"
+  }
+}

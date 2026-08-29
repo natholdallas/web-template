@@ -1,0 +1,1047 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API Documentation",
+        "title": "webtplmst",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/adm/api/v1/admin": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "List Admins",
+                "operationId": "admListAdmins",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "column",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "desc",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AdmAdminsPage"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Create Admin",
+                "operationId": "admCreateAdmin",
+                "parameters": [
+                    {
+                        "description": "Admin object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmAdminIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Admin"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/admin/password": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Reset current admin password",
+                "operationId": "admResetPassword",
+                "parameters": [
+                    {
+                        "description": "Password object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmResetPasswordIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/admin/profile": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Update current admin profile",
+                "operationId": "admUpdateProfile",
+                "parameters": [
+                    {
+                        "description": "Profile object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmProfileIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/admin/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Find Admin by ID",
+                "operationId": "admFindAdmin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Admin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Admin"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Update Admin",
+                "operationId": "admUpdateAdmin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Admin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Admin object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmAdminIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Remove Admin",
+                "operationId": "admDeleteAdmin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Admin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/auth/in": {
+            "post": {
+                "description": "Sign in with username and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAuth"
+                ],
+                "summary": "Admin sign in",
+                "operationId": "admSignIn",
+                "parameters": [
+                    {
+                        "description": "Credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmAuthIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AdmAuth"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/stat": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Get system stats",
+                "operationId": "admGetStats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AdmStats"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/user": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admUser"
+                ],
+                "summary": "List Users",
+                "operationId": "admListUsers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "column",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "name": "desc",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AdmUsersPage"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admUser"
+                ],
+                "summary": "Create User",
+                "operationId": "admCreateUser",
+                "parameters": [
+                    {
+                        "description": "User object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmUserIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/user/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admUser"
+                ],
+                "summary": "Find User by ID",
+                "operationId": "admFindUser",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admUser"
+                ],
+                "summary": "Update User",
+                "operationId": "admUpdateUser",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "User object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmUserIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admUser"
+                ],
+                "summary": "Remove User",
+                "operationId": "admDeleteUser",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/v1/rate/{code}": {
+            "get": {
+                "description": "Get exchange rates by currency code",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Rate"
+                ],
+                "summary": "Get exchange rates",
+                "operationId": "findRate",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Currency code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "number",
+                                "format": "float64"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/usr/api/v1/auth/in": {
+            "post": {
+                "description": "Sign in with username and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usrAuth"
+                ],
+                "summary": "User sign in",
+                "operationId": "usrSignIn",
+                "parameters": [
+                    {
+                        "description": "Credentials",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UsrAuthIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/UsrAuth"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/usr/api/v1/user": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usrUser"
+                ],
+                "summary": "Find User by ID",
+                "operationId": "usrFindUser",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/UsrUser"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usrUser"
+                ],
+                "summary": "Update User",
+                "operationId": "usrUpdateUser",
+                "parameters": [
+                    {
+                        "description": "User object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UsrUserIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/usr/api/v1/user/reset/password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Reset current user's password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usrUser"
+                ],
+                "summary": "Reset user password",
+                "operationId": "usrResetPassword",
+                "parameters": [
+                    {
+                        "description": "Password object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UsrResetPasswordIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "AdmAdminIn": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 4
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "AdmAdminsPage": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Admin"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "AdmAuth": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "AdmAuthIn": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 4
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "AdmProfileIn": {
+            "type": "object",
+            "required": [
+                "username"
+            ],
+            "properties": {
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "AdmResetPasswordIn": {
+            "type": "object",
+            "required": [
+                "new",
+                "old"
+            ],
+            "properties": {
+                "new": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 4
+                },
+                "old": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 4
+                }
+            }
+        },
+        "AdmStats": {
+            "type": "object",
+            "properties": {
+                "admins": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "integer"
+                }
+            }
+        },
+        "AdmUserIn": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 4
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "AdmUsersPage": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/User"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "Admin": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "description": "Password",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Username",
+                    "type": "string"
+                }
+            }
+        },
+        "Fail": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Application-specific error code",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "Human-readable error message",
+                    "type": "string"
+                },
+                "system": {
+                    "description": "Raw system error (only shown in debug mode)"
+                }
+            }
+        },
+        "User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "description": "Password",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Username",
+                    "type": "string"
+                }
+            }
+        },
+        "UsrAuth": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "UsrAuthIn": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "minLength": 4
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "UsrResetPasswordIn": {
+            "type": "object",
+            "required": [
+                "new",
+                "old"
+            ],
+            "properties": {
+                "new": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 4
+                },
+                "old": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 4
+                }
+            }
+        },
+        "UsrUser": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "UsrUserIn": {
+            "type": "object",
+            "required": [
+                "username"
+            ],
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "minLength": 4
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

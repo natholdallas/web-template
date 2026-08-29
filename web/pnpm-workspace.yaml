@@ -1,0 +1,19 @@
+packages:
+  - apps/*
+  - packages/*
+  - packages/natholdallas/*
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  maplibre-gl: true
+  unrs-resolver: true
+  vue-demi: true
+minimumReleaseAgeExclude:
+  - '@nuxt/icon@2.5.1'
+  - '@nuxtjs/seo@5.3.14'
+  - nuxtseo-shared@5.3.14
+  - eslint@10.9.1
+publicHoistPattern: '*'
+overrides:
+  cac: 6.7.14
+  oxc-parser: 0.140.0

@@ -1,0 +1,21 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unused
+  settings:
+    revive:
+      rules:
+        - name: use-any
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
