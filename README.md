@@ -25,21 +25,21 @@
 
 ## 🏗️ Architecture
 
-|          Layer          | Stack                          | Purpose                         |
-| :---------------------: | :----------------------------- | :------------------------------ |
-|     ⚙️ **Backend**      | Go 1.25 + Fiber v3             | High-performance HTTP framework |
-|       🗄️ **ORM**        | GORM + MySQL/MariaDB           | Auto-migration & query builder  |
-|      ⚡ **Cache**       | Redis v9                       | Session & hot data caching      |
-| 🎨 **Frontend (User)**  | Nuxt 3 + Tailwind + shadcn-vue | Modern UI components            |
-| 🖥️ **Frontend (Admin)** | Nuxt 3 + UnoCSS + Vuetify      | Material Design                 |
-|      📦 **State**       | Pinia + Alova                  | Reactive state & request hooks  |
-|       🔐 **Auth**       | JWT (golang-jwt/v5)            | Dual-secret system (user/admin) |
-|      📧 **Email**       | SMTP (QQ/Gmail)                | HTML verification templates     |
-|    💰 **WeChat Pay**    | wechatpay-go v3                | Payment callbacks               |
-|     📝 **API Docs**     | Swaggo + Scalar UI             | Auto-generated OpenAPI          |
-|     🖥️ **Desktop**      | Tauri v2                       | Cross-platform desktop client   |
-|    ⏰ **Scheduler**     | robfig/cron v3                 | Background jobs (rate sync)     |
-|      🚢 **Deploy**      | Systemd + tmux                 | One-click deployment script     |
+|          Layer          | Stack                             | Purpose                         |
+| :---------------------: | :-------------------------------- | :------------------------------ |
+|     ⚙️ **Backend**      | Go 1.25 + Fiber v3                | High-performance HTTP framework |
+|       🗄️ **ORM**        | GORM + MySQL/MariaDB              | Auto-migration & query builder  |
+|      ⚡ **Cache**       | Redis (go-redis/v9)               | Session & hot data caching      |
+| 🎨 **Frontend (User)**  | Nuxt 3 + Tailwind + shadcn-vue    | Modern UI components            |
+| 🖥️ **Frontend (Admin)** | Nuxt 3 + TailwindCSS v4 + Vuetify | Material Design + utility CSS   |
+|      📦 **State**       | Pinia + Alova                     | Reactive state & request hooks  |
+|       🔐 **Auth**       | JWT (golang-jwt/v5)               | Dual-secret system (user/admin) |
+|      📧 **Email**       | SMTP (QQ/Gmail)                   | HTML verification templates     |
+|    💰 **WeChat Pay**    | wechatpay-go v3                   | Payment callbacks               |
+|     📝 **API Docs**     | Swaggo + Scalar UI                | Auto-generated OpenAPI          |
+|     🖥️ **Desktop**      | Tauri v2                          | Cross-platform desktop client   |
+|    ⏰ **Scheduler**     | robfig/cron v3                    | Background jobs (rate sync)     |
+|      🚢 **Deploy**      | Systemd (default) / tmux          | One-click deployment script     |
 
 ---
 
@@ -47,7 +47,7 @@
 
 ```
 🛡️  JWT Authentication   ──  Dual-channel auth for users & admins
-👥  User Management      ──  Sign-up, sign-in, reset password, profile
+👥  User Management      ──  Sign-in, reset password, profile
 🛠️  Admin Panel          ──  CRUD for users & admins
 💱  Exchange Rates       ──  Scheduled sync + API query
 📤  File Upload          ──  Image & video media management
@@ -75,7 +75,17 @@
 ```bash
 # First-time setup (install dependencies, init submodules)
 ./main.sh init
+
+# Copy config/env templates into place (conf.toml is gitignored)
+./main.sh copyfile
 ```
+
+> ⚠️ **Before running:** edit `conf.toml` and fill in `secret.adm` / `secret.usr`
+> (32-char strings, required — the app won't start without them). Generate them with:
+>
+> ```bash
+> ./bin/backend --remake-secret
+> ```
 
 ### Scaffold a New Project
 
@@ -103,9 +113,32 @@
 ### Build & Deploy
 
 ```bash
-./main.sh build          # Build everything
-./main.sh docs           # Generate API docs
-./main.sh deploy         # One-click deploy to remote
+./main.sh build                # Build backend + both frontends (SSG)
+./main.sh docs                 # Regenerate Swagger + frontend SDK (alova/wormhole)
+./main.sh deploy               # Build, sync & (re)start the remote service
+./main.sh deploy --skip-build  # Deploy without rebuilding
+./main.sh deploy --force-service # Overwrite an existing systemd service file
+```
+
+> 🚢 `deploy` targets **Systemd by default** (into `/srv/http/<name>`, registered as a
+> service) — set `deploy_mode="tmux"` at the top of `main.sh` to switch to the
+> tmux-based deploy. Both are triggered through the single `deploy` command.
+
+### Workflow
+
+```
+init → copyfile → (edit conf.toml) → dev
+build → deploy
+```
+
+### More Commands
+
+```bash
+./main.sh synconf        # Sync conf.toml to the server
+./main.sh serverlog      # Tail remote service logs (journalctl -f)
+./main.sh serverlog once # Print the log once, then exit
+./main.sh clean          # Remove node_modules / dist / .nuxt / .output
+./main.sh push "message" # Commit & push everything
 ```
 
 ---
@@ -115,34 +148,34 @@
 ```
 web-templates/
 ├── 📄 main.go                  # Backend entry point
-├── 📄 conf.toml                # App configuration (TOML)
+├── 📄 conf.toml                # App configuration (TOML, gitignored)
 ├── 📄 main.sh                  # Unified management script ⭐
 ├── 📁 internal/                # Backend Go source
 │   ├── 📁 srv/                 #  HTTP routes & handlers
 │   │   ├── 📁 std/             #   Public endpoints (rate, webhook)
 │   │   ├── 📁 usr/             #   User endpoints (JWT)
-│   │   └── 📁 adm/             #   Admin endpoints (JWT)
-│   ├── 📁 db/                  #  Database models (GORM)
-│   ├── 📁 client/              #  External API clients
-│   │   ├── wechat.go           #   WeChat login/payment
-│   │   ├── google.go           #   Google OAuth
-│   │   └── rate.go             #   Exchange rate API
-│   ├── 📁 task/                #  Scheduled tasks (cron)
-│   ├── 📁 mail/                #  Email service
+│   │   ├── 📁 adm/             #   Admin endpoints (JWT)
+│   │   └── 📁 swg/             #   Scalar UI doc server
+│   ├── 📁 db/                  #  Database connection & models (GORM)
+│   ├── 📁 client/              #  External API clients (WeChat/Google/Rate)
+│   ├── 📁 task/                #  Scheduled tasks (cron: rate sync)
+│   ├── 📁 mail/                #  SMTP mailer + HTML templates
+│   ├── 📁 flag/                #  CLI flag scripts (--adm/--usr/--mock/...)
 │   └── 📁 conf/                #  Config loader (Viper)
 ├── 📁 web/                     # Frontend monorepo (pnpm)
 │   ├── 📁 apps/
-│   │   ├── 📁 usr/             #  User portal (Nuxt 3)
-│   │   │   ├── 📁 app/         #    Pages, components, stores
-│   │   │   └── 📁 tauri/       #    Desktop app (Tauri v2)
-│   │   └── 📁 adm/             #  Admin portal (Nuxt 3)
-│   │       └── 📁 app/         #    Pages, components, stores
-│   └── 📁 packages/            # Shared packages
-├── 📁 assets/                  # Static assets & systemd
-│   ├── run.service             # Systemd service unit
+│   │   ├── 📁 usr/             #  User portal (Nuxt 3 + shadcn-vue + Tauri)
+│   │   │   └── 📁 app/         #    Pages, components, stores, lib/sdk
+│   │   └── 📁 adm/             #  Admin portal (Nuxt 3 + Vuetify + Tailwind v4)
+│   │       └── 📁 app/         #    Pages, components, stores, lib/sdk
+│   └── 📁 packages/            # Shared workspace packages
+│       ├── 📁 apiclient/       #  alova/wormhole SDK generator (swagger → SDK)
+│       └── 📁 natholdallas/    #  Git submodule of shared Nuxt modules
+├── 📁 assets/                  # Templates & service units
+│   ├── run.service             # Systemd service unit template
 │   ├── conf.toml               # Default config template
-│   └── nuxt.env                # Default env vars
-└── 📁 docs/                    # Swagger docs
+│   └── nuxt.env                # Default frontend env vars
+└── 📁 docs/                    # Swagger docs (swagger.json)
 ```
 
 ---
@@ -168,13 +201,15 @@ web-templates/
 
 ## 📡 API Endpoints
 
-| Group         | Prefix         | Auth | Sample Endpoints              |
-| :------------ | :------------- | :--: | :---------------------------- |
-| 🔓 **Public** | `/api/v1/`     |  —   | `GET /rate/:code`             |
-| 👤 **User**   | `/usr/api/v1/` | JWT  | `POST /auth/in`, `GET /user`  |
-| 🛡️ **Admin**  | `/adm/api/v1/` | JWT  | `POST /auth/in`, `CRUD /user` |
+| Group         | Prefix         | Auth | Sample Endpoints                                                       |
+| :------------ | :------------- | :--: | :--------------------------------------------------------------------- |
+| 🔓 **Public** | `/api/v1/`     |  —   | `GET /rate/:code`, `ALL /webhook/wechat`                               |
+| 👤 **User**   | `/usr/api/v1/` | JWT  | `POST /auth/in`, `GET /user`, `PUT /user`, `POST /user/reset/password` |
+| 🛡️ **Admin**  | `/adm/api/v1/` | JWT  | `POST /auth/in`, `CRUD /user`, `CRUD /admin`, `GET /stat`              |
 
-> 📖 API docs are served via Scalar UI at `/docs/*`. Run `./main.sh docs` to generate.
+> 📖 The interactive API docs (Scalar UI) are served at `/swg/doc/v1` — only when
+> `app.swagger = true` in `conf.toml`. The spec is still written to `docs/` regardless,
+> and `./main.sh docs` regenerates both the docs **and** the frontend SDK.
 
 ---
 

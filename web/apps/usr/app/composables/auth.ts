@@ -1,4 +1,4 @@
-import { Auth } from '~/lib/sdk'
+import { Auth } from '~/lib/sdk/gen/models'
 
 function loadAuth(): Auth {
   if (typeof window === 'undefined') return inst(Auth)

@@ -562,7 +562,6 @@ paths:
           description: OK
           schema:
             additionalProperties:
-              format: float64
               type: number
             type: object
       summary: Get exchange rates
