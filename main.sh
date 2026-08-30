@@ -325,12 +325,12 @@ renewal() {
       -o -name "*.tsx" -o -name "*.vue" -o -name "*.nuxtrc" \
       -o -name "*.env" -o -name ".gitmodules" \) \
       -exec "${SED_CMD[@]}" "s/${pname_esc}/${new_name_esc}/g" {} +
-    # generate docs
-    docs
     # initialize git repository
     git init
     git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
     git add -A
+    # generate docs
+    docs
     success "Project initialized successfully."
   fi
 }
