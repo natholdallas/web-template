@@ -3,6 +3,7 @@ package internal
 import (
 	"net/http"
 	"time"
+
 	"webtplmst/internal/conf"
 
 	"github.com/gofiber/fiber/v3"

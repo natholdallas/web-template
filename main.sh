@@ -258,9 +258,8 @@ copyfile() {
 }
 
 init() {
-  go install github.com/swaggo/swag/cmd/swag@v1.16.6
+  go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5
   go install github.com/silenceper/gowatch@latest
-  go install github.com/gofiber/cli/fiber@latest
   git submodule update --init --recursive
   go mod tidy
   run_in_dir "web" pnpm install
