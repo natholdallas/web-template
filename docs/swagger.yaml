@@ -24,9 +24,11 @@ definitions:
     type: object
   AdmAuth:
     properties:
+      accessToken:
+        type: string
       id:
         type: integer
-      token:
+      refreshToken:
         type: string
     type: object
   AdmAuthIn:
@@ -48,6 +50,18 @@ definitions:
     required:
     - username
     type: object
+  AdmRefreshIn:
+    properties:
+      refreshToken:
+        type: string
+    required:
+    - refreshToken
+    type: object
+  AdmResetAdminPassword:
+    properties:
+      password:
+        type: string
+    type: object
   AdmResetPasswordIn:
     properties:
       new:
@@ -61,6 +75,11 @@ definitions:
     required:
     - new
     - old
+    type: object
+  AdmResetUserPassword:
+    properties:
+      password:
+        type: string
     type: object
   AdmStats:
     properties:
@@ -98,9 +117,6 @@ definitions:
         type: string
       id:
         type: integer
-      password:
-        description: Password
-        type: string
       updated_at:
         type: string
       username:
@@ -124,9 +140,6 @@ definitions:
         type: string
       id:
         type: integer
-      password:
-        description: Password
-        type: string
       updated_at:
         type: string
       username:
@@ -135,9 +148,11 @@ definitions:
     type: object
   UsrAuth:
     properties:
+      accessToken:
+        type: string
       id:
         type: integer
-      token:
+      refreshToken:
         type: string
     type: object
   UsrAuthIn:
@@ -152,6 +167,32 @@ definitions:
     - password
     - username
     type: object
+  UsrProfile:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  UsrProfileIn:
+    properties:
+      username:
+        minLength: 4
+        type: string
+    required:
+    - username
+    type: object
+  UsrRefreshIn:
+    properties:
+      refreshToken:
+        type: string
+    required:
+    - refreshToken
+    type: object
   UsrResetPasswordIn:
     properties:
       new:
@@ -165,25 +206,6 @@ definitions:
     required:
     - new
     - old
-    type: object
-  UsrUser:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      updated_at:
-        type: string
-      username:
-        type: string
-    type: object
-  UsrUserIn:
-    properties:
-      username:
-        minLength: 4
-        type: string
-    required:
-    - username
     type: object
 info:
   contact: {}
@@ -321,7 +343,153 @@ paths:
       summary: Update Admin
       tags:
       - admAdmin
-  /adm/api/v1/admin/password:
+  /adm/api/v1/admin/{id}/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset an admin password to a new random one, returned once
+      operationId: admResetAdminPassword
+      parameters:
+      - description: Admin ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AdmResetAdminPassword'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      security:
+      - ApiKeyAuth: []
+      summary: Reset Admin password
+      tags:
+      - admAdmin
+  /adm/api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Sign in with username and password, returns access and refresh
+        tokens
+      operationId: admSignIn
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AdmAuthIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AdmAuth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: Admin sign in
+      tags:
+      - admAuth
+  /adm/api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revoke the given refresh token so it can no longer be used
+      operationId: admLogout
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AdmRefreshIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: Revoke admin refresh token
+      tags:
+      - admAuth
+  /adm/api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchange a valid refresh token for a new access/refresh pair
+      operationId: admRefresh
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AdmRefreshIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AdmAuth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: Rotate admin tokens
+      tags:
+      - admAuth
+  /adm/api/v1/profile/me:
+    get:
+      consumes:
+      - application/json
+      operationId: admFindProfile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Admin'
+      security:
+      - ApiKeyAuth: []
+      summary: Current admin profile
+      tags:
+      - admProfile
+    put:
+      consumes:
+      - application/json
+      operationId: admUpdateProfile
+      parameters:
+      - description: Profile object
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/AdmProfileIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      security:
+      - ApiKeyAuth: []
+      summary: Update current admin profile
+      tags:
+      - admProfile
+  /adm/api/v1/profile/password:
     put:
       consumes:
       - application/json
@@ -346,56 +514,7 @@ paths:
       - ApiKeyAuth: []
       summary: Reset current admin password
       tags:
-      - admAdmin
-  /adm/api/v1/admin/profile:
-    put:
-      consumes:
-      - application/json
-      operationId: admUpdateProfile
-      parameters:
-      - description: Profile object
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/AdmProfileIn'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-      security:
-      - ApiKeyAuth: []
-      summary: Update current admin profile
-      tags:
-      - admAdmin
-  /adm/api/v1/auth/in:
-    post:
-      consumes:
-      - application/json
-      description: Sign in with username and password
-      operationId: admSignIn
-      parameters:
-      - description: Credentials
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/AdmAuthIn'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AdmAuth'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/Fail'
-      summary: Admin sign in
-      tags:
-      - admAuth
+      - admProfile
   /adm/api/v1/stat:
     get:
       consumes:
@@ -543,6 +662,34 @@ paths:
       summary: Update User
       tags:
       - admUser
+  /adm/api/v1/user/{id}/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset a user password to a new random one, returned once
+      operationId: admResetUserPassword
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AdmResetUserPassword'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      security:
+      - ApiKeyAuth: []
+      summary: Reset User password
+      tags:
+      - admUser
   /api/v1/rate/{code}:
     get:
       consumes:
@@ -567,11 +714,12 @@ paths:
       summary: Get exchange rates
       tags:
       - Rate
-  /usr/api/v1/auth/in:
+  /usr/api/v1/auth/login:
     post:
       consumes:
       - application/json
-      description: Sign in with username and password
+      description: Sign in with username and password, returns access and refresh
+        tokens
       operationId: usrSignIn
       parameters:
       - description: Credentials
@@ -594,34 +742,86 @@ paths:
       summary: User sign in
       tags:
       - usrAuth
-  /usr/api/v1/user:
-    get:
+  /usr/api/v1/auth/logout:
+    post:
       consumes:
       - application/json
-      operationId: usrFindUser
+      description: Revoke the given refresh token so it can no longer be used
+      operationId: usrLogout
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UsrRefreshIn'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: Revoke user refresh token
+      tags:
+      - usrAuth
+  /usr/api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchange a valid refresh token for a new access/refresh pair
+      operationId: usrRefresh
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UsrRefreshIn'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/UsrUser'
+            $ref: '#/definitions/UsrAuth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Fail'
+      summary: Rotate user tokens
+      tags:
+      - usrAuth
+  /usr/api/v1/profile/me:
+    get:
+      consumes:
+      - application/json
+      operationId: usrFindProfile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/UsrProfile'
       security:
       - ApiKeyAuth: []
-      summary: Find User by ID
+      summary: Current user profile
       tags:
-      - usrUser
+      - usrProfile
     put:
       consumes:
       - application/json
-      operationId: usrUpdateUser
+      operationId: usrUpdateProfile
       parameters:
-      - description: User object
+      - description: Profile object
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/UsrUserIn'
+          $ref: '#/definitions/UsrProfileIn'
       produces:
       - application/json
       responses:
@@ -633,11 +833,11 @@ paths:
             $ref: '#/definitions/Fail'
       security:
       - ApiKeyAuth: []
-      summary: Update User
+      summary: Update current user profile
       tags:
-      - usrUser
-  /usr/api/v1/user/reset/password:
-    post:
+      - usrProfile
+  /usr/api/v1/profile/password:
+    put:
       consumes:
       - application/json
       description: Reset current user's password
@@ -660,9 +860,9 @@ paths:
             $ref: '#/definitions/Fail'
       security:
       - ApiKeyAuth: []
-      summary: Reset user password
+      summary: Reset current user password
       tags:
-      - usrUser
+      - usrProfile
 securityDefinitions:
   ApiKeyAuth:
     in: header

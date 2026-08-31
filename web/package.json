@@ -7,8 +7,6 @@
     "fmt:check": "prettier --check .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
     "check": "run-p lint format:check",
     "gen:api": "pnpm --dir packages/apiclient exec alova gen -f"
   },

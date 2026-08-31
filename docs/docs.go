@@ -109,84 +109,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/adm/api/v1/admin/password": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admAdmin"
-                ],
-                "summary": "Reset current admin password",
-                "operationId": "admResetPassword",
-                "parameters": [
-                    {
-                        "description": "Password object",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/AdmResetPasswordIn"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/Fail"
-                        }
-                    }
-                }
-            }
-        },
-        "/adm/api/v1/admin/profile": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "admAdmin"
-                ],
-                "summary": "Update current admin profile",
-                "operationId": "admUpdateProfile",
-                "parameters": [
-                    {
-                        "description": "Profile object",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/AdmProfileIn"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    }
-                }
-            }
-        },
         "/adm/api/v1/admin/{id}": {
             "get": {
                 "security": [
@@ -303,9 +225,53 @@ const docTemplate = `{
                 }
             }
         },
-        "/adm/api/v1/auth/in": {
+        "/adm/api/v1/admin/{id}/reset-password": {
             "post": {
-                "description": "Sign in with username and password",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Reset an admin password to a new random one, returned once",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAdmin"
+                ],
+                "summary": "Reset Admin password",
+                "operationId": "admResetAdminPassword",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Admin ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AdmResetAdminPassword"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/auth/login": {
+            "post": {
+                "description": "Sign in with username and password, returns access and refresh tokens",
                 "consumes": [
                     "application/json"
                 ],
@@ -334,6 +300,189 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/AdmAuth"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/auth/logout": {
+            "post": {
+                "description": "Revoke the given refresh token so it can no longer be used",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAuth"
+                ],
+                "summary": "Revoke admin refresh token",
+                "operationId": "admLogout",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmRefreshIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/auth/refresh": {
+            "post": {
+                "description": "Exchange a valid refresh token for a new access/refresh pair",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admAuth"
+                ],
+                "summary": "Rotate admin tokens",
+                "operationId": "admRefresh",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmRefreshIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AdmAuth"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/profile/me": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admProfile"
+                ],
+                "summary": "Current admin profile",
+                "operationId": "admFindProfile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Admin"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admProfile"
+                ],
+                "summary": "Update current admin profile",
+                "operationId": "admUpdateProfile",
+                "parameters": [
+                    {
+                        "description": "Profile object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmProfileIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/adm/api/v1/profile/password": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admProfile"
+                ],
+                "summary": "Reset current admin password",
+                "operationId": "admResetPassword",
+                "parameters": [
+                    {
+                        "description": "Password object",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AdmResetPasswordIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -581,6 +730,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/adm/api/v1/user/{id}/reset-password": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Reset a user password to a new random one, returned once",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admUser"
+                ],
+                "summary": "Reset User password",
+                "operationId": "admResetUserPassword",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AdmResetUserPassword"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/rate/{code}": {
             "get": {
                 "description": "Get exchange rates by currency code",
@@ -617,9 +810,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/usr/api/v1/auth/in": {
+        "/usr/api/v1/auth/login": {
             "post": {
-                "description": "Sign in with username and password",
+                "description": "Sign in with username and password, returns access and refresh tokens",
                 "consumes": [
                     "application/json"
                 ],
@@ -658,7 +851,86 @@ const docTemplate = `{
                 }
             }
         },
-        "/usr/api/v1/user": {
+        "/usr/api/v1/auth/logout": {
+            "post": {
+                "description": "Revoke the given refresh token so it can no longer be used",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usrAuth"
+                ],
+                "summary": "Revoke user refresh token",
+                "operationId": "usrLogout",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UsrRefreshIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/usr/api/v1/auth/refresh": {
+            "post": {
+                "description": "Exchange a valid refresh token for a new access/refresh pair",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "usrAuth"
+                ],
+                "summary": "Rotate user tokens",
+                "operationId": "usrRefresh",
+                "parameters": [
+                    {
+                        "description": "Refresh token",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UsrRefreshIn"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/UsrAuth"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/Fail"
+                        }
+                    }
+                }
+            }
+        },
+        "/usr/api/v1/profile/me": {
             "get": {
                 "security": [
                     {
@@ -672,15 +944,15 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "usrUser"
+                    "usrProfile"
                 ],
-                "summary": "Find User by ID",
-                "operationId": "usrFindUser",
+                "summary": "Current user profile",
+                "operationId": "usrFindProfile",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/UsrUser"
+                            "$ref": "#/definitions/UsrProfile"
                         }
                     }
                 }
@@ -698,18 +970,18 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "usrUser"
+                    "usrProfile"
                 ],
-                "summary": "Update User",
-                "operationId": "usrUpdateUser",
+                "summary": "Update current user profile",
+                "operationId": "usrUpdateProfile",
                 "parameters": [
                     {
-                        "description": "User object",
+                        "description": "Profile object",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UsrUserIn"
+                            "$ref": "#/definitions/UsrProfileIn"
                         }
                     }
                 ],
@@ -726,8 +998,8 @@ const docTemplate = `{
                 }
             }
         },
-        "/usr/api/v1/user/reset/password": {
-            "post": {
+        "/usr/api/v1/profile/password": {
+            "put": {
                 "security": [
                     {
                         "ApiKeyAuth": []
@@ -741,9 +1013,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "usrUser"
+                    "usrProfile"
                 ],
-                "summary": "Reset user password",
+                "summary": "Reset current user password",
                 "operationId": "usrResetPassword",
                 "parameters": [
                     {
@@ -808,10 +1080,13 @@ const docTemplate = `{
         "AdmAuth": {
             "type": "object",
             "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "token": {
+                "refreshToken": {
                     "type": "string"
                 }
             }
@@ -844,6 +1119,25 @@ const docTemplate = `{
                 }
             }
         },
+        "AdmRefreshIn": {
+            "type": "object",
+            "required": [
+                "refreshToken"
+            ],
+            "properties": {
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "AdmResetAdminPassword": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "AdmResetPasswordIn": {
             "type": "object",
             "required": [
@@ -860,6 +1154,14 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 4
+                }
+            }
+        },
+        "AdmResetUserPassword": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
                 }
             }
         },
@@ -917,10 +1219,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "password": {
-                    "description": "Password",
-                    "type": "string"
-                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -955,10 +1253,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "password": {
-                    "description": "Password",
-                    "type": "string"
-                },
                 "updated_at": {
                     "type": "string"
                 },
@@ -971,10 +1265,13 @@ const docTemplate = `{
         "UsrAuth": {
             "type": "object",
             "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "token": {
+                "refreshToken": {
                     "type": "string"
                 }
             }
@@ -996,26 +1293,7 @@ const docTemplate = `{
                 }
             }
         },
-        "UsrResetPasswordIn": {
-            "type": "object",
-            "required": [
-                "new",
-                "old"
-            ],
-            "properties": {
-                "new": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 4
-                },
-                "old": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 4
-                }
-            }
-        },
-        "UsrUser": {
+        "UsrProfile": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -1032,7 +1310,7 @@ const docTemplate = `{
                 }
             }
         },
-        "UsrUserIn": {
+        "UsrProfileIn": {
             "type": "object",
             "required": [
                 "username"
@@ -1040,6 +1318,36 @@ const docTemplate = `{
             "properties": {
                 "username": {
                     "type": "string",
+                    "minLength": 4
+                }
+            }
+        },
+        "UsrRefreshIn": {
+            "type": "object",
+            "required": [
+                "refreshToken"
+            ],
+            "properties": {
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "UsrResetPasswordIn": {
+            "type": "object",
+            "required": [
+                "new",
+                "old"
+            ],
+            "properties": {
+                "new": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 4
+                },
+                "old": {
+                    "type": "string",
+                    "maxLength": 50,
                     "minLength": 4
                 }
             }

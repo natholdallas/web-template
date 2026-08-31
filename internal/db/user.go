@@ -1,16 +1,31 @@
 package db
 
 import (
+	"webtplmst/internal/pwd"
+
 	"github.com/natholdallas/natools4go/orms"
 	"gorm.io/gorm"
 )
 
 type User struct {
 	orms.Model[uint]
-	Username string `gorm:"column:username;size:50;unique" json:"username"` // Username
-	Password string `gorm:"column:password;size:50" json:"password"`        // Password
+	Username string `gorm:"column:username;size:50;unique;comment:Username" json:"username"` // Username
+	Password string `gorm:"column:password;size:255;comment:Username" json:"-"`              // Password
 } //	@name	User
 
 func AuthUser(tx *gorm.DB, username, password string) (User, error) {
-	return orms.First[User](tx, "BINARY username = ? AND BINARY password = ?", username, password)
+	v, err := orms.First[User](tx, "BINARY username = ?", username)
+	if err != nil {
+		return v, err
+	}
+	if pwd.Verify(password, v.Password) {
+		return v, nil
+	}
+	if !pwd.IsHashed(v.Password) && v.Password == password {
+		if hash, err := pwd.Hash(password); err == nil {
+			tx.Model(&User{}).Where("id = ?", v.ID).Update("password", hash)
+		}
+		return v, nil
+	}
+	return v, gorm.ErrRecordNotFound
 }

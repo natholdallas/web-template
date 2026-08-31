@@ -12,9 +12,9 @@ import { locales } from '~/lib/locale'
 
         <div class="flex items-center gap-1">
           <SwitchLang
-            @update="$i18n.setLocale"
             :options="Object.values(locales).map(({ k, v }) => ({ label: $t(k), key: k, value: v }))"
             :value="$t(locales[$i18n.locale].k)"
+            @update="$i18n.setLocale"
           />
           <SwitchTheme />
         </div>

@@ -2,6 +2,7 @@ package usr
 
 import (
 	"webtplmst/internal/db"
+	"webtplmst/internal/pwd"
 	"webtplmst/internal/srv/internal"
 
 	"github.com/gofiber/fiber/v3"
@@ -9,51 +10,51 @@ import (
 	"github.com/natholdallas/natools4go/orms"
 )
 
-type User struct {
+type Profile struct {
 	orms.Model[uint]
 	Username string `json:"username"`
-} //	@name	UsrUser
+} //	@name	UsrProfile
 
-// FindUser godoc
+// FindProfile godoc
 //
-//	@Summary	Find User by ID
-//	@Tags		usrUser
-//	@ID			usrFindUser
+//	@Summary	Current user profile
+//	@Tags		usrProfile
+//	@ID			usrFindProfile
 //	@Accept		json
 //	@Produce	json
 //	@Security	ApiKeyAuth
-//	@Success	200	{object}	User
-//	@Router		/usr/api/v1/user [get]
-func FindUser(c fiber.Ctx) error {
+//	@Success	200	{object}	Profile
+//	@Router		/usr/api/v1/profile/me [get]
+func FindProfile(c fiber.Ctx) error {
 	claims := jwt.Claims(c)
-	v := orms.QM[User, db.User](db.Tx).IFirst(claims.ID)
+	v := orms.QM[Profile, db.User](db.Tx).IFirst(claims.ID)
 	return c.JSON(v)
 }
 
-type UserIn struct {
+type ProfileIn struct {
 	Username string `json:"username" validate:"required,min=4"`
-} //	@name	UsrUserIn
+} //	@name	UsrProfileIn
 
-func (s *UserIn) Get() *db.User {
+func (s *ProfileIn) Get() *db.User {
 	return &db.User{
 		Username: s.Username,
 	}
 }
 
-// UpdateUser godoc
+// UpdateProfile godoc
 //
-//	@Summary	Update User
-//	@Tags		usrUser
-//	@ID			usrUpdateUser
+//	@Summary	Update current user profile
+//	@Tags		usrProfile
+//	@ID			usrUpdateProfile
 //	@Accept		json
 //	@Produce	json
 //	@Security	ApiKeyAuth
-//	@Param		body	body	UserIn	true	"User object"
+//	@Param		body	body	ProfileIn	true	"Profile object"
 //	@Success	200
 //	@Failure	400	{object}	Fail
-//	@Router		/usr/api/v1/user [put]
-func UpdateUser(c fiber.Ctx) error {
-	d, err := fext.BodyVarser[UserIn](c)
+//	@Router		/usr/api/v1/profile/me [put]
+func UpdateProfile(c fiber.Ctx) error {
+	d, err := fext.BodyVarser[ProfileIn](c)
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
@@ -70,9 +71,9 @@ type ResetPasswordIn struct {
 
 // ResetPassword godoc
 //
-//	@Summary		Reset user password
+//	@Summary		Reset current user password
 //	@Description	Reset current user's password
-//	@Tags			usrUser
+//	@Tags			usrProfile
 //	@ID				usrResetPassword
 //	@Accept			json
 //	@Produce		json
@@ -80,15 +81,24 @@ type ResetPasswordIn struct {
 //	@Param			body	body	ResetPasswordIn	true	"Password object"
 //	@Success		200
 //	@Failure		400	{object}	Fail
-//	@Router			/usr/api/v1/user/reset/password [post]
+//	@Router			/usr/api/v1/profile/password [put]
 func ResetPassword(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[ResetPasswordIn](c)
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
 	claims := jwt.Claims(c)
-	orms.QE[db.User](db.Tx).
-		Where("id = ? and password = ?", claims.ID, d.Old).
-		Update("password", d.New)
+	v, err := orms.First[db.User](db.Tx, "id = ?", claims.ID)
+	if err != nil {
+		return &fext.Fail{Code: internal.OperationFailed, Message: "incorrect old password"}
+	}
+	if !pwd.Verify(d.Old, v.Password) && (pwd.IsHashed(v.Password) || v.Password != d.Old) {
+		return &fext.Fail{Code: internal.OperationFailed, Message: "incorrect old password"}
+	}
+	hash, err := pwd.Hash(d.New)
+	if err != nil {
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	}
+	orms.UpdatesByID[db.User](db.Tx, claims.ID, map[string]any{"password": hash})
 	return nil
 }

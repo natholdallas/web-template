@@ -9,6 +9,8 @@
     "dev:tauri": "tauri dev",
     "generate": "nuxt generate --dotenv .env.production",
     "generate:dev": "nuxt generate",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "analyze": "nuxt analyze",

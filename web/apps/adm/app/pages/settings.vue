@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Apis, ProfileIn, ResetPasswordIn } from '~/lib/sdk'
 import { Locale, locales } from '~/lib/locale'
+import { Apis, ProfileIn, ResetPasswordIn } from '~/lib/sdk'
 
 definePageMeta({
   name: 'settings',
@@ -14,14 +14,14 @@ const password = ref(inst(ResetPasswordIn))
 
 const { loading: updatingProfile, send: sendProfile } = useRequest(
   () =>
-    Apis.Admin.updateProfile({
+    Apis.Profile.update({
       data: { username: profile.value.username || '' },
     }),
   { immediate: false },
 )
 const { loading: updatingPassword, send: sendPassword } = useRequest(
   () =>
-    Apis.Admin.resetPassword({
+    Apis.Profile.resetPassword({
       data: password.value,
     }),
   {
@@ -36,11 +36,12 @@ const themeOptions = [
 </script>
 
 <template>
-  <ComCtl scroll class="p-4">
+  <ComCtl class="p-4" scroll>
     <div class="mx-auto max-w-2xl flex flex-col gap-4">
       <VCard border>
         <VCardTitle>{{ $t('settings.profile') }}</VCardTitle>
         <VCardSubtitle>{{ $t('settings.profile.desc') }}</VCardSubtitle>
+
         <VCardText>
           <FormProfile v-model="profile" :loading="updatingProfile" @submit="sendProfile" />
         </VCardText>
@@ -49,6 +50,7 @@ const themeOptions = [
       <VCard border>
         <VCardTitle>{{ $t('settings.password') }}</VCardTitle>
         <VCardSubtitle>{{ $t('settings.password.desc') }}</VCardSubtitle>
+
         <VCardText>
           <FormPasswd v-model="password" :loading="updatingPassword" @submit="sendPassword" />
         </VCardText>
@@ -56,10 +58,11 @@ const themeOptions = [
 
       <VCard border>
         <VCardTitle>{{ $t('settings.theme') }}</VCardTitle>
+
         <VCardText>
-          <VBtnToggle v-model="conf.theme" mandatory divided variant="outlined" color="blue">
+          <VBtnToggle v-model="conf.theme" color="blue" divided mandatory variant="outlined">
             <VBtn v-for="opt in themeOptions" :key="opt.value" :value="opt.value">
-              <VIcon :icon="opt.icon" class="mr-1" />
+              <VIcon class="mr-1" :icon="opt.icon" />
               {{ $t(opt.title) }}
             </VBtn>
           </VBtnToggle>
@@ -68,8 +71,9 @@ const themeOptions = [
 
       <VCard border>
         <VCardTitle>{{ $t('settings.locale') }}</VCardTitle>
+
         <VCardText>
-          <VBtnToggle :model-value="$i18n.locale" @update:model-value="$i18n.setLocale($event)" variant="outlined" color="blue" mandatory divided>
+          <VBtnToggle color="blue" divided mandatory :model-value="$i18n.locale" variant="outlined" @update:model-value="$i18n.setLocale($event)">
             <VBtn v-for="l in Locale" :key="l" :value="l">
               {{ $t(locales[l].k) }}
             </VBtn>

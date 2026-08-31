@@ -15,6 +15,9 @@ export default {
   'user.username': '用户名',
   'user.password': '密码',
 
+  'reset.password': '重置密码',
+  'reset.password.desc': '新密码为随机生成，请复制并妥善保存：',
+
   'locale.en.us': '英语',
   'locale.zh.cn': '简体中文',
 

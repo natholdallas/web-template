@@ -29,6 +29,7 @@ export default defineNuxtConfig({
     '@natholdallas/i18n',
     '@natholdallas/infra',
     '@natholdallas/vuetify',
+    '@natholdallas/tauri',
   ],
   imports: {
     presets: [

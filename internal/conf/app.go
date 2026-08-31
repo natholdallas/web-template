@@ -12,7 +12,6 @@ import (
 	"github.com/natholdallas/natools4go/strs"
 	"github.com/natholdallas/natools4go/vipers"
 
-	"github.com/gofiber/fiber/v3"
 	flog "github.com/gofiber/fiber/v3/log"
 	glog "gorm.io/gorm/logger"
 )
@@ -26,8 +25,12 @@ type AppConf struct {
 	BodyLimit int
 
 	// jwt
-	SecretAdm string `validate:"required"`
-	SecretUsr string `validate:"required"`
+	JwtAccessMinutes int
+	JwtRefreshHours  int
+
+	// jwt secret
+	JwtSecretAdm string `validate:"required"`
+	JwtSecretUsr string `validate:"required"`
 
 	// log
 	LogLevelGorm  glog.LogLevel
@@ -49,10 +52,10 @@ type AppConf struct {
 	DBDriver      string `validate:"required"`
 
 	// redis
-	RedisHost  string
-	RedisPort  string
+	RedisHost  string `validate:"required"`
+	RedisPort  string `validate:"required"`
 	RedisIndex int
-	RedisAddr  string
+	RedisAddr  string `validate:"required"`
 
 	// resources
 	RWeb   string `validate:"required"`
@@ -88,32 +91,6 @@ type AppConf struct {
 	RestyInsecureSkipVerify bool
 }
 
-func (a *AppConf) DebugMiddleware(c fiber.Ctx) error {
-	if a.Debug {
-		return c.Next()
-	}
-	return &fext.Fail{Status: fiber.StatusForbidden}
-}
-
-func (a *AppConf) NginxMiddleware(c fiber.Ctx) bool {
-	return a.Nginx
-}
-
-func (a *AppConf) SwaggerMiddleware(c fiber.Ctx) error {
-	if a.Swagger {
-		return c.Next()
-	}
-	return &fext.Fail{Status: fiber.StatusForbidden}
-}
-
-func (a *AppConf) AllowOriginsFunc(origin string) bool {
-	if a.Debug {
-		return strs.AnyPrefix(origin, a.CorsDev...)
-	} else {
-		return strs.AnyPrefix(origin, a.CorsPrd...)
-	}
-}
-
 func (a *AppConf) LogWriter() io.Writer {
 	return io.MultiWriter(os.Stdout, &lumberjack.Logger{
 		Filename:   a.RLog + "/app.log",
@@ -138,8 +115,10 @@ func LoadApp() {
 	App.Nginx = vipers.Get("app.nginx", false)
 	App.BodyLimit = vipers.Get("app.body-limit", 200)
 	App.Swagger = vipers.Get("app.swagger", false)
-	App.SecretAdm = vipers.String("secret.adm")
-	App.SecretUsr = vipers.String("secret.usr")
+	App.JwtAccessMinutes = vipers.Get("jwt.access-minutes", 15)
+	App.JwtRefreshHours = vipers.Get("jwt.refresh-hours", 720)
+	App.JwtSecretAdm = vipers.String("jwt.secret.adm")
+	App.JwtSecretUsr = vipers.String("jwt.secret.usr")
 	App.LogLevelFiber = flog.Level(vipers.Get("loglevel.fiber", int(flog.LevelTrace)))
 	App.LogLevelGorm = glog.LogLevel(vipers.Get("loglevel.gorm", int(glog.Warn)))
 	App.CorsDev = vipers.StringSlice("cors.dev")

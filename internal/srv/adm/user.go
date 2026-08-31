@@ -2,10 +2,13 @@ package adm
 
 import (
 	"webtplmst/internal/db"
+	"webtplmst/internal/pwd"
+	"webtplmst/internal/srv/internal"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/natholdallas/natools4go/orms"
+	"github.com/natholdallas/natools4go/rands"
 )
 
 type UserQueries struct {
@@ -24,11 +27,15 @@ type UserIn struct {
 	Password string `json:"password" validate:"required,min=4,max=20"`
 } //	@name	AdmUserIn
 
-func (s *UserIn) Get() *db.User {
+func (s *UserIn) Get() (*db.User, error) {
+	hash, err := pwd.Hash(s.Password)
+	if err != nil {
+		return nil, err
+	}
 	return &db.User{
 		Username: s.Username,
-		Password: s.Password,
-	}
+		Password: hash,
+	}, nil
 }
 
 // ListUser godoc
@@ -83,7 +90,10 @@ func CreateUser(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	v := d.Get()
+	v, err := d.Get()
+	if err != nil {
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	}
 	orms.Create(db.Tx, v)
 	return nil
 }
@@ -106,9 +116,13 @@ func UpdateUser(c fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	hash, err := pwd.Hash(d.Password)
+	if err != nil {
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	}
 	orms.UpdatesByID[db.User](db.Tx, c.Params("id"), map[string]any{
 		"username": d.Username,
-		"password": d.Password,
+		"password": hash,
 	})
 	return nil
 }
@@ -127,4 +141,33 @@ func UpdateUser(c fiber.Ctx) error {
 func RemoveUser(c fiber.Ctx) error {
 	orms.Delete[db.User](db.Tx, c.Params("id"))
 	return nil
+}
+
+type ResetUserPasswordOut struct {
+	Password string `json:"password"`
+} //	@name	AdmResetUserPassword
+
+// ResetUserPassword godoc
+//
+//	@Summary		Reset User password
+//	@Description	Reset a user password to a new random one, returned once
+//	@Tags			admUser
+//	@ID				admResetUserPassword
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			id	path		int	true	"User ID"
+//	@Success		200	{object}	ResetUserPasswordOut
+//	@Failure		400	{object}	Fail
+//	@Router			/adm/api/v1/user/{id}/reset-password [post]
+func ResetUserPassword(c fiber.Ctx) error {
+	plain := rands.Char(20)
+	hash, err := pwd.Hash(plain)
+	if err != nil {
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	}
+	if err := orms.UpdatesByID[db.User](db.Tx, c.Params("id"), map[string]any{"password": hash}); err != nil {
+		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
+	}
+	return c.JSON(ResetUserPasswordOut{Password: plain})
 }

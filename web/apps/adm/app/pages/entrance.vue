@@ -23,11 +23,12 @@ const { loading: signing, send: signIn } = useRequest(
 
 <template>
   <ComCtl class="flex flex-col justify-center items-center size-full px-2">
-    <VCard class="w-full sm:w-120" border>
+    <VCard border class="w-full sm:w-120">
       <VCardTitle>{{ $t('sign.in') }}</VCardTitle>
       <VCardSubtitle> {{ $t('sign.in.desc') }} </VCardSubtitle>
+
       <VCardText class="flex flex-col gap-2">
-        <FormLogin v-model="model" @submit="signIn" :loading="signing" :submit-text="$t('sign.in')" />
+        <FormLogin v-model="model" :loading="signing" :submit-text="$t('sign.in')" @submit="signIn" />
       </VCardText>
     </VCard>
   </ComCtl>

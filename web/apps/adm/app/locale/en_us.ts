@@ -15,6 +15,9 @@ export default {
   'user.username': 'Username',
   'user.password': 'Password',
 
+  'reset.password': 'Reset Password',
+  'reset.password.desc': 'The new password is generated randomly, please copy and keep it safe:',
+
   'locale.en.us': 'English',
   'locale.zh.cn': 'Simplified Chinese',
 

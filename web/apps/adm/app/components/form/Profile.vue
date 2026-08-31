@@ -13,7 +13,7 @@ const model = defineModel<ProfileIn>({ required: true })
 </script>
 
 <template>
-  <VxForm @submit="$emit('submit')" :loading="loading" :submit-text="submitText">
+  <VxForm :loading="loading" :submit-text="submitText" @submit="$emit('submit')">
     <VTextField v-model="model.username" :label="$t('settings.username')" />
   </VxForm>
 </template>

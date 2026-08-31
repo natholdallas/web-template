@@ -680,7 +680,7 @@ function createEngine(props: MessageScrollerProviderProps) {
     if (defaultScrollPositionApplied || itemCount === 0)
       return false
     const position = defaultScrollPosition()
-    let applied = false
+    let applied: boolean
     if (position === "last-anchor") {
       const lastAnchor = content && viewport
         ? findLastAnchor(getMessageChildren(content, spacer))

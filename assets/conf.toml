@@ -6,7 +6,11 @@ nginx = false
 body-limit = 200  # upload size limit (MB)
 swagger = true
 
-[secret]
+[jwt]
+access-minutes = 15  # access token TTL (minutes)
+refresh-hours = 720  # refresh token TTL (hours, default 30 days)
+
+[jwt.secret]
 adm = ""
 usr = ""
 

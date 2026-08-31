@@ -26,4 +26,4 @@ logs
 # !.env.example
 
 # Generated API SDK (alova)
-apps/*/app/lib/sdk/gen
+apps/*/app/lib/sdk

@@ -3,12 +3,11 @@ package db
 
 import (
 	"context"
-
 	"webtplmst/internal/conf"
+	"webtplmst/internal/pwd"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/natholdallas/natools4go/orms"
-	"github.com/natholdallas/natools4go/redisx"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -16,7 +15,6 @@ import (
 var (
 	Tx *gorm.DB
 	Tc = context.Background()
-
 	Rx *redis.Client
 	Rc = context.Background()
 )
@@ -27,7 +25,7 @@ func Connect() {
 	Tx = orms.MustNew(dialector, &gorm.Config{
 		Logger: orms.LogPreset(conf.App.LogWriter(), conf.App.LogLevelGorm),
 	})
-	Rx = redisx.New(&redis.Options{
+	Rx = redis.NewClient(&redis.Options{
 		Addr: conf.App.RedisAddr,
 		DB:   conf.App.RedisIndex,
 	})
@@ -35,8 +33,10 @@ func Connect() {
 }
 
 func Mock() {
-	orms.Create(Tx, &Admin{Username: "admin", Password: "123456"})
-	orms.Create(Tx, &User{Username: "user", Password: "123456"})
+	adminPwd, _ := pwd.Hash("123456")
+	userPwd, _ := pwd.Hash("123456")
+	orms.Create(Tx, &Admin{Username: "admin", Password: adminPwd})
+	orms.Create(Tx, &User{Username: "user", Password: userPwd})
 }
 
 func AutoMigration() {
@@ -58,6 +58,7 @@ func Migration() {
 		&User{},
 		&Rate{},
 		&Media{},
+		&SysConf{},
 	)
 }
 

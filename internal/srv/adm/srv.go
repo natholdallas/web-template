@@ -8,25 +8,31 @@ import (
 	"github.com/natholdallas/natools4go/fext"
 )
 
-var jwt = fext.NewJwt(conf.App.SecretAdm)
+var jwt = fext.NewJwt(conf.App.JwtSecretAdm)
 
 func Setup(api fiber.Router) {
 	api.Group("/auth").
-		Post("/in", SignIn)
+		Post("/login", Login).
+		Post("/refresh", Refresh).
+		Post("/logout", Logout)
+	api.Group("/profile", jwt.Middleware).
+		Get("/me", FindProfile).
+		Put("/me", UpdateProfile).
+		Put("/password", ResetPassword)
 	api.Group("/user", jwt.Middleware).
 		Get("", ListUser).
 		Get("/:id", FindUser).
 		Post("", CreateUser).
 		Put("/:id", UpdateUser).
-		Delete("/:id", RemoveUser)
+		Delete("/:id", RemoveUser).
+		Post("/:id/reset-password", ResetUserPassword)
 	api.Group("/admin", jwt.Middleware).
-		Put("/profile", UpdateProfile).
-		Put("/password", ResetPassword).
 		Get("", ListAdmin).
 		Get("/:id", FindAdmin).
 		Post("", CreateAdmin).
 		Put("/:id", UpdateAdmin).
-		Delete("/:id", RemoveAdmin)
+		Delete("/:id", RemoveAdmin).
+		Post("/:id/reset-password", ResetAdminPassword)
 	api.Group("/stat", jwt.Middleware).
 		Get("", GetStats)
 }

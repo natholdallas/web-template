@@ -23,20 +23,20 @@ func Setup() {
 		BodyLimit:    conf.App.BodyLimit * 1024 * 1024,
 	})
 	app.Use(cors.New(cors.Config{
-		AllowOriginsFunc: conf.App.AllowOriginsFunc,
+		AllowOriginsFunc: internal.AllowOriginsFunc,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 	}))
 	app.Use("/", static.New(conf.App.RWeb, static.Config{
-		Next: conf.App.NginxMiddleware,
+		Next: internal.NginxMiddleware,
 	}))
 	app.Use("/media", static.New(conf.App.RMedia, static.Config{
-		Next: conf.App.NginxMiddleware,
+		Next: internal.NginxMiddleware,
 	}))
 	std.Setup(app.Group("/api/v1").Use(internal.Log("GEN")))
 	adm.Setup(app.Group("/adm/api/v1").Use(internal.Log("ADM")))
 	usr.Setup(app.Group("/usr/api/v1").Use(internal.Log("USR")))
 	swg.Setup(app.Group("/swg/doc/v1").Use(internal.Log("DOC")))
-	fext.Listen(app, strs.ToStart(conf.App.Port, ":"))
+	fext.Listen(app, strs.ToStart(conf.App.Port, strs.Colon))
 }

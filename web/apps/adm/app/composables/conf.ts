@@ -1,10 +1,14 @@
 type Conf = { theme: string }
 
 function loadConf(): Conf {
-  if (typeof window === 'undefined') return { theme: 'dark' }
+  if (typeof window === 'undefined') {
+    return { theme: 'dark' }
+  }
   try {
     const raw = window.localStorage.getItem('conf')
-    if (raw) return { theme: 'dark', ...JSON.parse(raw) }
+    if (raw) {
+      return { theme: 'dark', ...JSON.parse(raw) }
+    }
   } catch {
     // ignore
   }
@@ -12,7 +16,9 @@ function loadConf(): Conf {
 }
 
 function persist() {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    return
+  }
   try {
     window.localStorage.setItem('conf', JSON.stringify(conf))
   } catch {

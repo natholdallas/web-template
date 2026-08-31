@@ -14,8 +14,8 @@ const model = defineModel<AuthIn>({ required: true })
 </script>
 
 <template>
-  <VxForm @submit="$emit('submit')" :loading="loading" :submit-text="submitText" :readonly="readonly">
-    <VTextField v-model="model.username" :label="$t('user.username')" :counter="100" autocomplete="username" />
-    <VxPasswdField v-model="model.password" :label="$t('user.password')" autocomplete="current-password" />
+  <VxForm :loading="loading" :readonly="readonly" :submit-text="submitText" @submit="$emit('submit')">
+    <VTextField v-model="model.username" autocomplete="username" :counter="100" :label="$t('user.username')" />
+    <VxPasswdField v-model="model.password" autocomplete="current-password" :label="$t('user.password')" />
   </VxForm>
 </template>

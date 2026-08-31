@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Admin } from '~/lib/sdk'
+import type { AdminIn } from '~/lib/sdk'
 
 defineProps<{
   loading: boolean
@@ -10,11 +10,11 @@ defineEmits<{
   (e: 'submit'): void
 }>()
 
-const model = defineModel<Admin>({ required: true })
+const model = defineModel<AdminIn>({ required: true })
 </script>
 
 <template>
-  <VxForm @submit="$emit('submit')" :loading="loading" :submit-text="submitText" :readonly="readonly">
+  <VxForm :loading="loading" :readonly="readonly" :submit-text="submitText" @submit="$emit('submit')">
     <VTextField v-model="model.username" :label="$t('admin.username')" />
     <VxPasswdField v-model="model.password" :label="$t('admin.password')" />
   </VxForm>

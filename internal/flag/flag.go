@@ -3,9 +3,9 @@ package flag
 
 import (
 	"fmt"
-
 	"webtplmst/internal/conf"
 	"webtplmst/internal/db"
+	"webtplmst/internal/pwd"
 	"webtplmst/internal/task"
 
 	"github.com/natholdallas/natools4go/ask"
@@ -47,7 +47,12 @@ func Usr() {
 	fmt.Println("add user script")
 	username := ask.Read[string]("username")
 	password := ask.Read[string]("password")
-	v := db.User{Username: username, Password: password}
+	hash, err := pwd.Hash(password)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	v := db.User{Username: username, Password: hash}
 	if err := orms.Create(db.Tx, &v); err != nil {
 		fmt.Println(err)
 	} else {
@@ -59,7 +64,12 @@ func Adm() {
 	fmt.Println("add admin script")
 	username := ask.Read[string]("username")
 	password := ask.Read[string]("password")
-	v := db.Admin{Username: username, Password: password}
+	hash, err := pwd.Hash(password)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	v := db.Admin{Username: username, Password: hash}
 	if err := orms.Create(db.Tx, &v); err != nil {
 		fmt.Println(err)
 	} else {

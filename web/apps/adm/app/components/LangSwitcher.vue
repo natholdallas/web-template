@@ -6,19 +6,21 @@ const showLang = shallowRef(false)
 
 <template>
   <div>
-    <VBtn @click="showLang = true" icon="mdi-web" variant="flat" />
+    <VBtn icon="mdi-web" variant="flat" @click="showLang = true" />
+
     <VxModal v-model="showLang" :title="$t('switch.locale')">
       <VBtn
         v-for="i in Locale"
+        :key="i"
+        block
+        flat
+        :text="$t(locales[i].k)"
         @click="
           () => {
             $i18n.setLocale(i)
             showLang = false
           }
         "
-        :text="$t(locales[i].k)"
-        flat
-        block
       />
     </VxModal>
   </div>

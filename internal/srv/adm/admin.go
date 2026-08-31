@@ -2,11 +2,13 @@ package adm
 
 import (
 	"webtplmst/internal/db"
+	"webtplmst/internal/pwd"
 	"webtplmst/internal/srv/internal"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/natholdallas/natools4go/orms"
+	"github.com/natholdallas/natools4go/rands"
 )
 
 type AdminQueries struct {
@@ -63,11 +65,15 @@ type AdminIn struct {
 	Password string `json:"password" validate:"required,min=4,max=20"`
 } //	@name	AdmAdminIn
 
-func (s *AdminIn) Get() *db.Admin {
+func (s *AdminIn) Get() (*db.Admin, error) {
+	hash, err := pwd.Hash(s.Password)
+	if err != nil {
+		return nil, err
+	}
 	return &db.Admin{
 		Username: s.Username,
-		Password: s.Password,
-	}
+		Password: hash,
+	}, nil
 }
 
 // CreateAdmin godoc
@@ -87,7 +93,10 @@ func CreateAdmin(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	v := d.Get()
+	v, err := d.Get()
+	if err != nil {
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	}
 	orms.Create(db.Tx, v)
 	return nil
 }
@@ -110,7 +119,10 @@ func UpdateAdmin(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	v := d.Get()
+	v, err := d.Get()
+	if err != nil {
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	}
 	orms.UpdatesByID[db.Admin](db.Tx, c.Params("id"), v)
 	return nil
 }
@@ -131,62 +143,31 @@ func RemoveAdmin(c fiber.Ctx) error {
 	return nil
 }
 
-type ProfileIn struct {
-	Username string `json:"username" validate:"required"`
-} //	@name	AdmProfileIn
+type ResetAdminPasswordOut struct {
+	Password string `json:"password"`
+} //	@name	AdmResetAdminPassword
 
-// UpdateProfile godoc
+// ResetAdminPassword godoc
 //
-//	@Summary	Update current admin profile
-//	@Tags		admAdmin
-//	@ID			admUpdateProfile
-//	@Accept		json
-//	@Produce	json
-//	@Security	ApiKeyAuth
-//	@Param		body	body	ProfileIn	true	"Profile object"
-//	@Success	200
-//	@Router		/adm/api/v1/admin/profile [put]
-func UpdateProfile(c fiber.Ctx) error {
-	d, err := fext.BodyVarser[ProfileIn](c)
+//	@Summary		Reset Admin password
+//	@Description	Reset an admin password to a new random one, returned once
+//	@Tags			admAdmin
+//	@ID				admResetAdminPassword
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			id	path		int	true	"Admin ID"
+//	@Success		200	{object}	ResetAdminPasswordOut
+//	@Failure		400	{object}	Fail
+//	@Router			/adm/api/v1/admin/{id}/reset-password [post]
+func ResetAdminPassword(c fiber.Ctx) error {
+	plain := rands.Char(20)
+	hash, err := pwd.Hash(plain)
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	claims := jwt.Claims(c)
-	orms.UpdatesByID[db.Admin](db.Tx, claims.ID, map[string]any{
-		"username": d.Username,
-	})
-	return nil
-}
-
-type ResetPasswordIn struct {
-	Old string `json:"old" validate:"required,min=4,max=50"`
-	New string `json:"new" validate:"required,min=4,max=50"`
-} //	@name	AdmResetPasswordIn
-
-// ResetPassword godoc
-//
-//	@Summary	Reset current admin password
-//	@Tags		admAdmin
-//	@ID			admResetPassword
-//	@Accept		json
-//	@Produce	json
-//	@Security	ApiKeyAuth
-//	@Param		body	body	ResetPasswordIn	true	"Password object"
-//	@Success	200
-//	@Failure	400	{object}	Fail
-//	@Router		/adm/api/v1/admin/password [put]
-func ResetPassword(c fiber.Ctx) error {
-	d, err := fext.BodyVarser[ResetPasswordIn](c)
-	if err != nil {
-		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	if err := orms.UpdatesByID[db.Admin](db.Tx, c.Params("id"), map[string]any{"password": hash}); err != nil {
+		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
 	}
-	claims := jwt.Claims(c)
-	result := db.Tx.
-		Model(&db.Admin{}).
-		Where("id = ? AND password = ?", claims.ID, d.Old).
-		Update("password", d.New)
-	if result.RowsAffected == 0 {
-		return &fext.Fail{Code: internal.OperationFailed, Message: "incorrect old password"}
-	}
-	return nil
+	return c.JSON(ResetAdminPasswordOut{Password: plain})
 }

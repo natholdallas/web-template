@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Admin, Apis, BaseQueries, Page } from '~/lib/sdk'
+import { AdminIn, Apis, BaseQueries, Page } from '~/lib/sdk'
 
 definePageMeta({
   name: 'admin',
@@ -9,7 +9,7 @@ definePageMeta({
 const queries = ref(inst(BaseQueries, { column: 'id', desc: true }))
 
 const { open } = useDialog()
-const { mi, mo, sc, su, reset } = useCrud(inst(Admin))
+const { mi, mo, sc, su, reset } = useCrud({ ...inst(AdminIn), id: 0 })
 const { loading, data, send } = useRequest(
   () =>
     Apis.Admin.list({
@@ -48,62 +48,86 @@ const { loading: removing, send: remove } = useRequest(
   },
 ).onSuccess(send)
 
+const resetPwd = ref('')
+const resetPwdOpen = ref(false)
+const { loading: resetting, send: resetPassword } = useRequest(
+  (id: number) =>
+    Apis.Admin.resetAdminPassword({
+      pathParams: { id },
+    }),
+  {
+    immediate: false,
+  },
+).onSuccess(({ data }) => {
+  resetPwd.value = data.password
+  resetPwdOpen.value = true
+})
+
 watch(queries, send, { deep: true })
 </script>
 
 <template>
-  <ComCtl>
+  <ComCtl :loading="resetting">
     <VDataTableServer
       v-model:items-per-page="queries.size"
       v-model:page="queries.page"
-      @update:options="({ sortBy }) => vtables.sort(queries, sortBy)"
+      class="h-full"
+      :headers="[{ title: $t('model.id'), key: 'id' }, { title: $t('user.username'), key: 'username' }, { key: 'data-table-expand' }]"
+      :items="data.content"
       :items-length="data.total"
       :loading="loading || removing"
-      :items="data.content"
-      :headers="[
-        { title: $t('model.id'), key: 'id' },
-        { title: $t('user.username'), key: 'username' },
-        { title: $t('user.password'), key: 'password' },
-        { key: 'data-table-expand' },
-      ]"
-      class="h-full"
+      @update:options="({ sortBy }) => vtables.sort(queries, sortBy)"
     >
       <template #top>
         <TopTableBar v-model="sc" />
       </template>
+
       <template #item.data-table-expand="{ internalItem, item, isExpanded, toggleExpand }">
         <div class="flex gap-2 items-center">
           <VxActionBtn
+            icon="mdi-pencil"
             @click="
               () => {
-                mo = cpm(item)
+                mo = cpm({ ...item, password: '' })
                 su = true
               }
             "
-            icon="mdi-pencil"
           />
+
           <VxActionBtn
+            icon="mdi-delete"
             @click="
               () => {
-                mo = cpm(item)
+                mo = cpm({ ...item, password: '' })
                 open({ confirm: remove })
               }
             "
-            icon="mdi-delete"
           />
-          <VxExpandBtn @expanded="isExpanded" @toggle="toggleExpand" :item="internalItem" />
+
+          <VxActionBtn icon="mdi-key-refresh" @click="resetPassword(item.id)" />
+          <VxExpandBtn :item="internalItem" @expanded="isExpanded" @toggle="toggleExpand" />
         </div>
       </template>
+
       <template #expanded-row="{ columns, item }">
         <RecordInfoTable :colspan="columns.length" :info="item" />
       </template>
     </VDataTableServer>
+
     <template #modals>
       <VxModal v-model="sc" :title="$t('create')">
-        <FormUser v-model="mi" @submit="create" :loading="creating" />
+        <FormUser v-model="mi" :loading="creating" @submit="create" />
       </VxModal>
+
       <VxModal v-model="su" :title="$t('update')">
-        <FormUser v-model="mo" @submit="update" :loading="updating" />
+        <FormUser v-model="mo" :loading="updating" @submit="update" />
+      </VxModal>
+
+      <VxModal v-model="resetPwdOpen" :title="$t('reset.password')">
+        <div class="flex flex-col items-center gap-2 p-2">
+          <p>{{ $t('reset.password.desc') }}</p>
+          <VxCopyable :text="resetPwd" />
+        </div>
       </VxModal>
     </template>
   </ComCtl>

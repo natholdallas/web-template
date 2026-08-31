@@ -71,8 +71,7 @@ export const stripOperationIdPrefix = createPlugin((prefix: string) => ({
       for (const method of METHODS) {
         const op = item?.[method]
         if (!op || typeof op.operationId !== 'string') continue
-        const stripped =
-          prefix && op.operationId.startsWith(prefix) ? op.operationId.slice(prefix.length) : op.operationId
+        const stripped = prefix && op.operationId.startsWith(prefix) ? op.operationId.slice(prefix.length) : op.operationId
 
         // derive the tag (post app-prefix) to find the entity to drop
         let tag = (Array.isArray(op.tags) ? op.tags[0] : '') as string
@@ -178,11 +177,7 @@ type SchemaWalkerOptions = { responses?: boolean; requestBody?: boolean; paramet
 // Collect all schema names transitively referenced by this app's routes.
 // `responses` only walks 2xx responses, `requestBody` only request bodies,
 // `parameters` only (path/query) parameter schemas.
-function collectUsedSchemas(
-  document: OpenAPIDocument,
-  prefixes: string[],
-  options: SchemaWalkerOptions = {},
-): Set<string> {
+function collectUsedSchemas(document: OpenAPIDocument, prefixes: string[], options: SchemaWalkerOptions = {}): Set<string> {
   const schemas = (document.components?.schemas ?? {}) as Record<string, SchemaObject>
   const used = new Set<string>()
 
@@ -199,8 +194,7 @@ function collectUsedSchemas(
     for (const key of ['allOf', 'oneOf', 'anyOf'] as const) (s as any)[key]?.forEach(visit)
     if ((s as any).items) visit((s as any).items)
     for (const p of Object.values((s as any).properties ?? {})) visit(p)
-    if ((s as any).additionalProperties && typeof (s as any).additionalProperties === 'object')
-      visit((s as any).additionalProperties)
+    if ((s as any).additionalProperties && typeof (s as any).additionalProperties === 'object') visit((s as any).additionalProperties)
   }
 
   const requestBodies = (document.components?.requestBodies ?? {}) as Record<string, any>
@@ -293,7 +287,31 @@ export const modelDefaults = createPlugin((outputDir: string, prefixes: string[]
         })
         .join('\n\n')
 
-      const code = `/* tslint:disable */\n/* eslint-disable */\nimport type * as G from './globals'\n\n${body}\n`
+      // Hand-written helpers shared by both apps (absent from the swagger doc):
+      // pagination/sort query models plus the generic `Page` container used by
+      // VDataTableServer tables. Skipped when a generated schema already uses
+      // the name, to avoid colliding with the emitted type/const pair.
+      const baseModels: Array<[string, string]> = [
+        ['PageQueries', 'export type PageQueries = Partial<typeof PageQueries>\nexport const PageQueries = {\n  page: 1,\n  size: 20,\n}'],
+        [
+          'SortQueries',
+          'export type SortQueries = Partial<typeof SortQueries>\nexport const SortQueries = {\n  column: <string | undefined>undefined,\n  desc: <boolean | undefined>undefined,\n}',
+        ],
+        [
+          'BaseQueries',
+          'export type BaseQueries = Partial<typeof BaseQueries>\nexport const BaseQueries = {\n  ...PageQueries,\n  ...SortQueries,\n}',
+        ],
+        [
+          'Page',
+          "export type Page<T> = { content: T[] } & Omit<typeof Page, 'content'>\nexport const Page = {\n  total: 0,\n  page: 0,\n  content: [],\n}",
+        ],
+      ]
+      const extra = baseModels
+        .filter(([name]) => !entries.some(([n]) => n === name))
+        .map(([, code]) => code)
+        .join('\n\n')
+
+      const code = `/* tslint:disable */\n/* eslint-disable */\nimport type * as G from './globals'\n\n${body}${extra ? `\n\n${extra}` : ''}\n`
       fs.mkdirSync(path.dirname(outFile), { recursive: true })
       fs.writeFileSync(outFile, code)
     },
@@ -304,8 +322,10 @@ export const modelDefaults = createPlugin((outputDir: string, prefixes: string[]
  * Override the default index.ts with an app-agnostic runtime: apiBase from
  * `useRuntimeConfig`, Bearer token from `useAuth()`, and a minimal event
  * registry (`Api.NewEvent`) so each app wires its own toast/session handlers.
+ * `wiring` is injected verbatim at the end of the module — each app passes its
+ * own handler implementation and re-exports (see alova.config.ts).
  */
-export const customIndex = createPlugin(() => ({
+export const customIndex = createPlugin((wiring = '') => ({
   async beforeCodeGenerate(_data: unknown, outputFile: string) {
     if (!outputFile.endsWith('index.ts')) return
     return `/* eslint-disable */
@@ -324,9 +344,9 @@ export const alovaInstance = createAlova({
   statesHook: VueHook,
   requestAdapter: adapterFetch(),
   beforeRequest(method) {
-    const { token } = useAuth()
-    if (token) {
-      method.config.headers = { ...method.config.headers, Authorization: 'Bearer ' + token }
+    const { accessToken } = useAuth()
+    if (accessToken) {
+      method.config.headers = { ...method.config.headers, Authorization: 'Bearer ' + accessToken }
     }
   },
   responded: {
@@ -353,7 +373,7 @@ mountApis(Apis)
 
 export { Apis }
 export default Apis
-
+${wiring}
 async function fromData(response: Response) {
   const ct = response.headers.get('Content-Type')
   if (response.status === 204 || !ct) return

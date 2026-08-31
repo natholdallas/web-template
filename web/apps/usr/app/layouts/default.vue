@@ -27,13 +27,11 @@ const menuItems = computed(() => [
               v-for="item in menuItems"
               :key="item.to"
               :to="item.to"
-              @click="isMobileOpen = false"
               :class="[
                 'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                $route.path === item.to
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+                $route.path === item.to ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
               ]"
+              @click="isMobileOpen = false"
             >
               <component :is="item.icon" class="w-5 h-5" />
               <span>{{ item.label }}</span>
@@ -43,12 +41,7 @@ const menuItems = computed(() => [
       </UiSheetContent>
     </UiSheet>
 
-    <div
-      :class="[
-        'hidden md:flex flex-col border-r bg-card transition-all duration-300 shrink-0',
-        conf.isSidebarOpen ? 'w-64' : 'w-16',
-      ]"
-    >
+    <div :class="['hidden md:flex flex-col border-r bg-card transition-all duration-300 shrink-0', conf.isSidebarOpen ? 'w-64' : 'w-16']">
       <div class="p-4 flex items-center justify-between border-b min-h-14">
         <span v-if="conf.isSidebarOpen" class="font-semibold text-lg">{{ $t('app.name').toUpperCase() }}</span>
         <UiButton variant="ghost" size="icon" @click="conf.isSidebarOpen = !conf.isSidebarOpen">
@@ -64,9 +57,7 @@ const menuItems = computed(() => [
             :to="item.to"
             :class="[
               'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-              $route.path === item.to
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
+              $route.path === item.to ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-secondary',
             ]"
           >
             <component :is="item.icon" class="w-5 h-5 shrink-0" />
@@ -87,9 +78,9 @@ const menuItems = computed(() => [
 
         <div class="flex items-center gap-1">
           <SwitchLang
-            @update="$i18n.setLocale"
             :options="Object.values(locales).map(({ k, v }) => ({ label: $t(k), key: k, value: v }))"
             :value="$t(locales[$i18n.locale].k)"
+            @update="$i18n.setLocale"
           />
           <SwitchTheme />
           <UiButton variant="ghost" size="icon" @click="isLogoutDialogOpen = true">

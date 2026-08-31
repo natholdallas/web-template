@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { locales } from '~/lib/locale'
-import { Apis, ResetPasswordIn, User } from '~/lib/sdk'
+import { Apis, Profile, ResetPasswordIn } from '~/lib/sdk'
 
 definePageMeta({
   name: 'settings',
@@ -11,28 +11,28 @@ const {
   loading: findingUser,
   data: user,
   send: findUser,
-} = useRequest(Apis.User.find, {
-  initialData: inst(User),
+} = useRequest(Apis.Profile.find, {
+  initialData: inst(Profile),
 }).onSuccess(({ data }) => {
   usrForm.value = cpm(data)
 })
-const usrForm = ref(inst(User))
+const usrForm = ref(inst(Profile))
 const { loading: savingUsr, send: saveUsr } = useRequest(
   () =>
-    Apis.User.update({
+    Apis.Profile.update({
       data: { username: usrForm.value.username },
     }),
   {
     immediate: false,
   },
 ).onSuccess(() => {
-  rst(usrForm.value, User)
+  rst(usrForm.value, Profile)
   findUser()
 })
 const pwdForm = ref(inst(ResetPasswordIn))
 const { loading: savingPwd, send: savePwd } = useRequest(
   () =>
-    Apis.User.resetPassword({
+    Apis.Profile.resetPassword({
       data: pwdForm.value,
     }),
   {
@@ -68,7 +68,7 @@ const { loading: savingPwd, send: savePwd } = useRequest(
         <UiCardDescription>{{ $t('settings.change.password.desc') }}</UiCardDescription>
       </UiCardHeader>
       <UiCardContent>
-        <FormRstPwd v-model="pwdForm" @submit="savePwd" :loading="savingPwd" />
+        <FormRstPwd v-model="pwdForm" :loading="savingPwd" @submit="savePwd" />
       </UiCardContent>
     </UiCard>
 
@@ -78,7 +78,7 @@ const { loading: savingPwd, send: savePwd } = useRequest(
         <UiCardDescription>{{ $t('settings.user.info.desc') }}</UiCardDescription>
       </UiCardHeader>
       <UiCardContent>
-        <FormUser v-model="usrForm" @submit="saveUsr" :loading="savingUsr" />
+        <FormProfile v-model="usrForm" :loading="savingUsr" @submit="saveUsr" />
       </UiCardContent>
     </UiCard>
 
@@ -101,9 +101,9 @@ const { loading: savingPwd, send: savePwd } = useRequest(
             <p class="text-sm text-muted-foreground">{{ $t('locale.desc') }}</p>
           </div>
           <SwitchLang
-            @update="$i18n.setLocale"
             :options="Object.values(locales).map(({ k, v }) => ({ label: $t(k), key: k, value: v }))"
             :value="$t(locales[$i18n.locale].k)"
+            @update="$i18n.setLocale"
           />
         </div>
       </UiCardContent>

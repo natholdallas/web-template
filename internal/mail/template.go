@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"math/rand"
-
 	"webtplmst/internal/conf"
 )
 
@@ -44,7 +43,7 @@ func VerficationCodeTPL(name, email, code string) []byte {
 		"Code": code,
 	}
 	// Error is ignored here as the template is pre-validated
-	_ = vCodeTmpl.Execute(&body, data)
+	vCodeTmpl.Execute(&body, data)
 	// Encode the Subject using RFC 2047 (Base64) to prevent encoding issues in mail clients
 	encodedSubject := fmt.Sprintf("=?UTF-8?B?%s?=", base64.StdEncoding.EncodeToString([]byte(subject)))
 	// Construct the raw email byte stream using a Buffer to minimize memory allocations

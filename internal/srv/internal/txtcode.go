@@ -16,3 +16,8 @@ const (
 	InvalidData        = "err.invalid.data"
 	NotImplement       = "err.not.implement"
 )
+
+// custom
+const (
+	Example = "err.example"
+)

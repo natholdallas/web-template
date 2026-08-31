@@ -13,36 +13,40 @@ const drawer = ref(mdAndUp.value)
       <template #prepend>
         <VAppBarNavIcon @click="drawer = !drawer" />
       </template>
+
       <VAppBarTitle :text="$t(`urls.${$route.name}`)" />
+
       <template #append>
         <VMenu>
           <template #activator="{ props }">
             <LangSwitcher />
             <VBtn icon="mdi-dots-vertical" variant="text" v-bind="props" />
           </template>
+
           <VList>
             <VListItem
-              @click="conf.theme = conf.theme === 'dark' ? 'light' : 'dark'"
-              :title="$t('switch.theme')"
               prepend-icon="mdi-theme-light-dark"
+              :title="$t('switch.theme')"
+              @click="conf.theme = conf.theme === 'dark' ? 'light' : 'dark'"
             />
-            <VListItem @click="open({ confirm: auth.$signOut })" :title="$t('sign.out')" prepend-icon="mdi-logout" />
+
+            <VListItem prepend-icon="mdi-logout" :title="$t('sign.out')" @click="open({ confirm: auth.$signOut })" />
           </VList>
         </VMenu>
       </template>
     </VAppBar>
 
-    <VNavigationDrawer v-model="drawer" :expand-on-hover="mdAndUp" :rail="mdAndUp" mobile-breakpoint="md">
+    <VNavigationDrawer v-model="drawer" :expand-on-hover="mdAndUp" mobile-breakpoint="md" :rail="mdAndUp">
       <VList>
-        <VListItem :title="$t('urls.index')" :to="{ name: 'index' }" prepend-icon="mdi-home" />
-        <VListItem :title="$t('urls.admin')" :to="{ name: 'admin' }" prepend-icon="mdi-account-supervisor" />
-        <VListItem :title="$t('urls.user')" :to="{ name: 'user' }" prepend-icon="mdi-account" />
-        <VListItem :title="$t('urls.settings')" :to="{ name: 'settings' }" prepend-icon="mdi-cog" />
+        <VListItem prepend-icon="mdi-home" :title="$t('urls.index')" :to="{ name: 'index' }" />
+        <VListItem prepend-icon="mdi-account-supervisor" :title="$t('urls.admin')" :to="{ name: 'admin' }" />
+        <VListItem prepend-icon="mdi-account" :title="$t('urls.user')" :to="{ name: 'user' }" />
+        <VListItem prepend-icon="mdi-cog" :title="$t('urls.settings')" :to="{ name: 'settings' }" />
       </VList>
     </VNavigationDrawer>
 
     <VMain class="size-full" name="main">
-      <slot></slot>
+      <slot />
     </VMain>
   </VApp>
 </template>

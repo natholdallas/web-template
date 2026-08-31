@@ -29,7 +29,7 @@ const { loading: signing, send: signIn } = useRequest(
         <UiCardDescription>{{ $t('sign.in.desc') }}</UiCardDescription>
       </UiCardHeader>
       <UiCardContent>
-        <FormLogin v-model="form" @submit="signIn" :loading="signing" />
+        <FormLogin v-model="form" :loading="signing" @submit="signIn" />
       </UiCardContent>
     </UiCard>
   </ComCtl>

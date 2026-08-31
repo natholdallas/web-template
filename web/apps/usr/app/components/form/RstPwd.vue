@@ -27,7 +27,7 @@ const schema = toTypedSchema(
 </script>
 
 <template>
-  <UixForm @submit="$emit('submit')" :loading="loading" :text="text" :schema="schema" :model="model">
+  <UixForm :loading="loading" :text="text" :schema="schema" :model="model" @submit="$emit('submit')">
     <UixFieldText v-model="model.old" :label="$t('settings.old.password')" name="old" type="password" />
     <UixFieldText v-model="model.new" :label="$t('settings.new.password')" name="new" type="password" />
     <UixFieldText v-model="model.confirm" :label="$t('settings.confirm.password')" name="confirm" type="password" />

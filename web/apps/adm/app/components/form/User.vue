@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { User } from '~/lib/sdk'
+import type { UserIn } from '~/lib/sdk'
 
 defineProps<{
   loading: boolean
@@ -10,11 +10,11 @@ defineEmits<{
   (e: 'submit'): void
 }>()
 
-const model = defineModel<User>({ required: true })
+const model = defineModel<UserIn>({ required: true })
 </script>
 
 <template>
-  <VxForm @submit="$emit('submit')" :loading="loading" :submit-text="submitText" :readonly="readonly">
+  <VxForm :loading="loading" :readonly="readonly" :submit-text="submitText" @submit="$emit('submit')">
     <VTextField v-model="model.username" :label="$t('user.username')" />
     <VxPasswdField v-model="model.password" :label="$t('user.password')" />
   </VxForm>

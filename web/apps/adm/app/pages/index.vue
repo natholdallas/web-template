@@ -10,21 +10,23 @@ const { data, send } = useRequest(Apis.Admin.getStats, {
   initialData: inst(Stats),
 })
 
-useInterval(send, 30000)
+useInterval(send, 30_000)
 </script>
 
 <template>
-  <ComCtl scroll class="p-4">
+  <ComCtl class="p-4" scroll>
     <div class="mx-auto max-w-4xl">
       <h1 class="text-h5 mb-4">{{ $t('dashboard.title') }}</h1>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <VCard border>
           <VCardItem>
             <template #prepend>
-              <VAvatar color="blue" size="48" rounded>
+              <VAvatar color="blue" rounded size="48">
                 <VIcon icon="mdi-shield-account" size="28" />
               </VAvatar>
             </template>
+
             <VCardTitle class="text-h4 font-weight-bold">{{ data.admins }}</VCardTitle>
             <VCardSubtitle>{{ $t('dashboard.total.admins') }}</VCardSubtitle>
           </VCardItem>
@@ -33,10 +35,11 @@ useInterval(send, 30000)
         <VCard border>
           <VCardItem>
             <template #prepend>
-              <VAvatar color="green" size="48" rounded>
+              <VAvatar color="green" rounded size="48">
                 <VIcon icon="mdi-account-group" size="28" />
               </VAvatar>
             </template>
+
             <VCardTitle class="text-h4 font-weight-bold">{{ data.users }}</VCardTitle>
             <VCardSubtitle>{{ $t('dashboard.total.users') }}</VCardSubtitle>
           </VCardItem>
