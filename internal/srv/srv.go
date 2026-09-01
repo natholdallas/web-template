@@ -34,9 +34,10 @@ func Setup() {
 	app.Use("/media", static.New(conf.App.RMedia, static.Config{
 		Next: internal.NginxMiddleware,
 	}))
+	app.Get("/favicon.ico", static.New("./assets/favicon.ico"))
 	std.Setup(app.Group("/api/v1").Use(internal.Log("GEN")))
 	adm.Setup(app.Group("/adm/api/v1").Use(internal.Log("ADM")))
 	usr.Setup(app.Group("/usr/api/v1").Use(internal.Log("USR")))
-	swg.Setup(app.Group("/swg/doc/v1").Use(internal.Log("DOC")))
+	swg.Setup(app.Group("/doc/api/v1").Use(internal.Log("DOC")))
 	fext.Listen(app, strs.ToStart(conf.App.Port, strs.Colon))
 }

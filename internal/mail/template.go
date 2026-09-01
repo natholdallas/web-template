@@ -2,11 +2,10 @@ package mail
 
 import (
 	"bytes"
-	"encoding/base64"
+	"crypto/rand"
 	"fmt"
 	"html/template"
-	"math/rand"
-	"webtplmst/internal/conf"
+	"math/big"
 )
 
 var vCodeTmpl = template.Must(template.New("vcode").Parse(`
@@ -34,34 +33,21 @@ var vCodeTmpl = template.Must(template.New("vcode").Parse(`
 </html>
 `))
 
-func VerficationCodeTPL(name, email, code string) []byte {
-	subject := "Verification Code"
-	// Execute the HTML template into a buffer
+// VerificationCodeTPL builds a verification-code message for the given name,
+// email and code.
+func VerificationCodeTPL(name, email, code string) *Message {
 	var body bytes.Buffer
-	data := map[string]string{
-		"Name": name,
-		"Code": code,
-	}
-	// Error is ignored here as the template is pre-validated
-	vCodeTmpl.Execute(&body, data)
-	// Encode the Subject using RFC 2047 (Base64) to prevent encoding issues in mail clients
-	encodedSubject := fmt.Sprintf("=?UTF-8?B?%s?=", base64.StdEncoding.EncodeToString([]byte(subject)))
-	// Construct the raw email byte stream using a Buffer to minimize memory allocations
-	res := bytes.NewBuffer(nil)
-	fmt.Fprintf(res, "From: %s\r\n", conf.App.SMTPFrom)
-	fmt.Fprintf(res, "To: %s\r\n", email)
-	fmt.Fprintf(res, "Subject: %s\r\n", encodedSubject)
-	res.WriteString("MIME-Version: 1.0\r\n")
-	res.WriteString("Content-Type: text/html; charset=UTF-8\r\n")
-	res.WriteString("\r\n")
-	res.Write(body.Bytes())
-	return res.Bytes()
+	vCodeTmpl.Execute(&body, map[string]string{"Name": name, "Code": code})
+	m := NewMessage([]string{email}, "Verification Code")
+	m.SetBodyHTML(body.String())
+	return m
 }
 
+// GenerateVerificationCode returns a cryptographically random 6-digit code.
 func GenerateVerificationCode() string {
-	min := 100000
-	max := 999999
-	rangeSize := max - min + 1
-	code := rand.Intn(rangeSize) + min
-	return fmt.Sprint(code)
+	n, err := rand.Int(rand.Reader, big.NewInt(900000))
+	if err != nil {
+		return "000000"
+	}
+	return fmt.Sprintf("%06d", n.Int64()+100000)
 }

@@ -25,12 +25,10 @@ type AppConf struct {
 	BodyLimit int
 
 	// jwt
-	JwtAccessMinutes int
-	JwtRefreshHours  int
-
-	// jwt secret
-	JwtSecretAdm string `validate:"required"`
-	JwtSecretUsr string `validate:"required"`
+	JwtAccessMinutes int    `validate:"required"`
+	JwtRefreshHours  int    `validate:"required"`
+	JwtSecretAdm     string `validate:"required"`
+	JwtSecretUsr     string `validate:"required"`
 
 	// log
 	LogLevelGorm  glog.LogLevel

@@ -11,6 +11,7 @@ type User struct {
 	orms.Model[uint]
 	Username string `gorm:"column:username;size:50;unique;comment:Username" json:"username"` // Username
 	Password string `gorm:"column:password;size:255;comment:Username" json:"-"`              // Password
+	Nickname string `gorm:"column:nickname;size:50;comment:Nickname" json:"nickname"`        // Nickname
 } //	@name	User
 
 func AuthUser(tx *gorm.DB, username, password string) (User, error) {

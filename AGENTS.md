@@ -20,14 +20,15 @@ Go backend (Fiber v3)         Nuxt 3 frontends (pnpm workspace)
 ├── internal/db/        GORM models (auto-migrate on startup)
 ├── internal/conf/      Viper config loading (init() runs LoadFlag+LoadApp)
 ├── internal/flag/      CLI flag scripts (--adm/--usr/--mock/...)
+├── internal/auth/      JWT sign/verify
+├── internal/pwd/       password hash/verify (only Go test lives here)
 ├── internal/mail/      SMTP mailer + templates
 ├── internal/task/      cron: rate sync at 0:00 and 12:00 daily
 └── internal/client/    WeChat/Google/Rate API clients
 
 web/apps/usr/  (port 3000) — shadcn-vue + TailwindCSS + Tauri v2
 web/apps/adm/  (port 3001) — Vuetify + TailwindCSS (v4, CSS-first via `app/assets/styles/css/tailwind.css`; layer order declared in `public/layers.css`)
-web/apps/usr/  (port 3000) — shadcn-vue + TailwindCSS + Tauri v2
-web/packages/natholdallas/ — git submodule (shared Nuxt modules; `unocss/` package exists there but no Nuxt app uses it)
+web/packages/natholdallas/ — git submodule (shared Nuxt modules). Used by apps: `alova`, `i18n`, `infra`, `tauri`, plus `vuetify` (adm) / `shadcn` (usr). Present but unused by any app: `unocss`, `watermark`, `pinia`, `tailwindcss`
 ```
 
 ## Go specifics
@@ -44,8 +45,8 @@ web/packages/natholdallas/ — git submodule (shared Nuxt modules; `unocss/` pac
 - **Log rotation:** `lumberjack` writes to `<RLog>/app.log` (10MB, 7 backups, 28 days)
 - **Lint:** after any backend code change, run `golangci-lint run --fix ./...` from the repo root (equivalent to running the frontend apps' per-app `pnpm lint`). golangci-lint v2 (2.13.2) is installed at `~/.local/share/go/bin/golangci-lint`. Config: `.golangci.yml` (revive `use-any` forces `any` over `interface{}`, gofumpt/goimports auto-format)
 - **No `_ = expr` blank assignments** — never write code that discards a value/error with `_ = xxx` (e.g. `_ = db.AutoMigrate(...)`). Handle the error/result properly instead (check it, log it, or propagate it).
-- **Formatting:** after writing/finishing any Go code, always run `goimports -w .` from the repo root before committing
-- **No Go tests** exist in the repo
+- **Formatting:** after writing/finishing any Go code, always run `goimports -w ./internal/*` from the repo root before committing
+- **Go tests are minimal** — the only test file is `internal/pwd/pwd_test.go`; run it with `go test ./internal/pwd/`. There is no wider test suite.
 - **`go mod` has a `replace`** directive for telegram-bot-api (redirects to a fork)
 
 ## GORM model conventions (internal/db/)
@@ -81,7 +82,7 @@ type User struct {
 
 ## Frontend specifics
 
-- **Package manager:** pnpm@11.24.0 (enforced in root `package.json`)
+- **Package manager:** pnpm@11.25.0 (enforced in root `package.json`)
 - **Workspace packages:** `apps/*`, `packages/*`, `packages/natholdallas/*`
 - **Prod build:** `pnpm generate` (SSG / static generation via `nuxt generate --dotenv .env.production`), not `nuxt build`
 - **SSR disabled:** both apps set `ssr: false`
@@ -129,10 +130,10 @@ build → deploy
 
 - `conf.toml` is gitignored — must run `./main.sh copyfile` or manually copy `assets/conf.toml` before running
 - `secret.adm` and `secret.usr` are validated as required — the app won't start without them
-- The swagger UI is served at `/swg/doc/v1` only when `app.swagger = true` in `conf.toml` (default `false`); the spec is still written to `docs/` regardless
+- The swagger UI is served at `/doc/api/v1` (mounted in `internal/srv/srv.go:41`) only when `app.swagger = true` in `conf.toml` (default `false`); the spec is still written to `docs/` regardless
 - Frontend `nuxt.config.ts` imports from `@natholdallas/*` workspace packages — these come from the git submodule
 - The `internal/conf` package `init()` function runs on import (loads flags and app config before `main()`)
 - The generated SDK (`web/apps/*/app/lib/sdk/`) is **gitignored** — always regenerate via `./main.sh docs`, never commit it
-- `swag` is pinned to **v1.16.6** in `go.mod` and installed by `./main.sh init` (newer/older may change generic type naming). The `swag` binary on `PATH` may be a different version (e.g. `~/.local/share/go/bin/swag` could be v1.16.4) — check with `swag --version` and reinstall with `go install github.com/swaggo/swag/cmd/swag@v1.16.6` if it differs
+- `swag` is pinned to **v2.0.0-rc5** in `go.mod` (`github.com/swaggo/swag/v2`) and installed by `./main.sh init` via `go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5`. **Gotcha:** the `docs()` failure message inside `main.sh` still says `@v1.16.6` — trust `go.mod`, not that message. If `swag --version` differs, reinstall with the v2 command above
 - `stripSchemaPrefix` only strips names whose remainder starts uppercase, so the shared `Admin` model (whose name happens to start with the `Adm` prefix) is preserved; don't introduce app DTOs whose stripped name would collide with a shared model used in the same app
 - Every new DB model must have **complete gotags** (`gorm:"column:...;comment:..."` + `json` tag) and a trailing comment on **every field** — see the "GORM model conventions" section above and `assets/exp.md`

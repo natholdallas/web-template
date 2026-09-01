@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"webtplmst/internal/conf"
 
-	"github.com/gofiber/fiber/v3/log"
 	"github.com/natholdallas/natools4go/jsons"
 	"github.com/natholdallas/natools4go/spew"
 	"github.com/shopspring/decimal"
@@ -28,13 +27,11 @@ func InitWechat() {
 	// Load merchant private key from local file using utils, used to sign requests
 	mchPrivateKey, err := utils.LoadPrivateKeyWithPath(conf.App.WxAPIClientKeyPem)
 	if err != nil {
-		log.Fatal("load merchant private key error: ", err)
-		return
+		panic("load merchant private key error: " + err.Error())
 	}
 	wechatpayPublicKey, err := utils.LoadPublicKeyWithPath(conf.App.WxPubKeyPem)
 	if err != nil {
-		log.Fatal("load merchant public key error: ", err)
-		return
+		panic("load merchant public key error: " + err.Error())
 	}
 	client, err := core.NewClient(context.Background(), option.WithWechatPayPublicKeyAuthCipher(
 		conf.App.WxMch,
@@ -43,15 +40,15 @@ func InitWechat() {
 		conf.App.WxPubKey,
 		wechatpayPublicKey,
 	))
-	if err != nil {
-		log.Fatal("new wechat pay client err: %s", err)
-		return
-	}
-	wechatInstance = client
-	wechatHandler = notify.NewNotifyHandler(
+	notifyHandler := notify.NewNotifyHandler(
 		conf.App.WxV3Sercret,
 		verifiers.NewSHA256WithRSAPubkeyVerifier(conf.App.WxPubKey, *wechatpayPublicKey),
 	)
+	if err != nil || client == nil {
+		panic("new wechat pay client err: " + err.Error())
+	}
+	wechatInstance = client
+	wechatHandler = notifyHandler
 }
 
 type WxLoginRes struct {

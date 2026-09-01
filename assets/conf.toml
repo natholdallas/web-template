@@ -56,8 +56,8 @@ index = 0
 
 [smtp]
 host = "smtp.qq.com"
-port = 587
-from = ""
+port = 587  # 465 = implicit SSL, 587 = STARTTLS, 25 = plaintext
+from = ""  # sender address (also used as SMTP username)
 password = ""
 
 [wechat]

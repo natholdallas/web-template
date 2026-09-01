@@ -11,6 +11,7 @@ type Admin struct {
 	orms.Model[uint]
 	Username string `gorm:"column:username;size:50;unique;comment:Username" json:"username"` // Username
 	Password string `gorm:"column:password;size:255;comment:Password" json:"-"`              // Password
+	Nickname string `gorm:"column:nickname;size:50;comment:Nickname" json:"nickname"`        // Nickname
 } //	@name	Admin
 
 func AuthAdmin(tx *gorm.DB, username, password string) (Admin, error) {
