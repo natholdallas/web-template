@@ -7,8 +7,7 @@ import (
 	"os"
 
 	"github.com/natefinch/lumberjack"
-	"github.com/natholdallas/natools4go/fext"
-	"github.com/natholdallas/natools4go/spew"
+	"github.com/natholdallas/natools4go/narder"
 	"github.com/natholdallas/natools4go/strs"
 	"github.com/natholdallas/natools4go/vipers"
 
@@ -167,9 +166,8 @@ func LoadApp() {
 	App.MkdirAll()
 
 	// init
-	spew.SetPrinter(flog.Debugf)
 	flog.SetLevel(App.LogLevelFiber)
 	flog.SetOutput(App.LogWriter())
-	fext.SetDebugMode(App.Debug)
-	fext.SetErrorFunc(func(err error) { flog.Error(err) })
+	narder.SetDebugMode(App.Debug)
+	narder.SetOutput(App.LogWriter())
 }

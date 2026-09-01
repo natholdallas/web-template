@@ -3,6 +3,7 @@ package db
 
 import (
 	"context"
+
 	"webtplmst/internal/conf"
 	"webtplmst/internal/pwd"
 
@@ -20,7 +21,7 @@ var (
 )
 
 func Connect() {
-	dsn := orms.MustDsn(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
+	dsn := orms.MustDSN(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
 	dialector := orms.MustDialector(conf.App.DBDriver, dsn, conf.App.DBName, conf.App.DBQuery, conf.App.DBAutoCreate)
 	Tx = orms.MustNew(dialector, &gorm.Config{
 		Logger: orms.LogPreset(conf.App.LogWriter(), conf.App.LogLevelGorm),
@@ -63,12 +64,12 @@ func Migration() {
 }
 
 func ResetDB() {
-	dsn := orms.MustDsn(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
+	dsn := orms.MustDSN(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
 	orms.Reset(conf.App.DBName, conf.App.DBDriver, dsn)
 }
 
 func AutoCreateDB() {
-	dsn := orms.MustDsn(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
+	dsn := orms.MustDSN(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
 	orms.AutoCreate(conf.App.DBName, conf.App.DBDriver, dsn)
 }
 

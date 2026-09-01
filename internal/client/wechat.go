@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
 	"webtplmst/internal/conf"
 
 	"github.com/natholdallas/natools4go/jsons"
-	"github.com/natholdallas/natools4go/spew"
 	"github.com/shopspring/decimal"
 	"github.com/wechatpay-apiv3/wechatpay-go/core"
 	"github.com/wechatpay-apiv3/wechatpay-go/core/auth/verifiers"
@@ -146,7 +146,6 @@ func WxPay(openid string, amount int64, tradeNo string) (*jsapi.PrepayWithReques
 		Payer:       &jsapi.Payer{Openid: core.String(openid)},
 	}
 	resp, _, err := svc.PrepayWithRequestPayment(context.Background(), req)
-	spew.Dump(resp, req)
 	return resp, err
 }
 
