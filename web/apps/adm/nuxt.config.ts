@@ -44,12 +44,16 @@ export default defineNuxtConfig({
     rootAttrs: { id: 'root' },
     head: {
       link: [
-        // link
-        { rel: 'stylesheet', href: '/layers.css' },
+        {
+          rel: 'stylesheet',
+          href: '/layers.css',
+        },
       ],
       meta: [
-        // meta
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        {
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1',
+        },
       ],
     },
   },

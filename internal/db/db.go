@@ -5,10 +5,10 @@ import (
 	"context"
 
 	"webtplmst/internal/conf"
-	"webtplmst/internal/pwd"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/natholdallas/natools4go/orms"
+	"github.com/natholdallas/natools4go/pwd"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )

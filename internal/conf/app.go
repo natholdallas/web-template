@@ -106,29 +106,43 @@ func (a *AppConf) MkdirAll() {
 
 func LoadApp() {
 	vipers.Config(Flag.ConfName, Flag.ConfPath, Flag.ConfType)
+
+	// app
 	App.Name = vipers.Get("app.name", "app")
 	App.Port = vipers.Get("app.port", "8080")
 	App.Debug = vipers.Get("app.debug", false)
 	App.Nginx = vipers.Get("app.nginx", false)
 	App.BodyLimit = vipers.Get("app.body-limit", 200)
 	App.Swagger = vipers.Get("app.swagger", false)
+
+	// jwt
 	App.JwtAccessMinutes = vipers.Get("jwt.access-minutes", 15)
 	App.JwtRefreshHours = vipers.Get("jwt.refresh-hours", 720)
 	App.JwtSecretAdm = vipers.String("jwt.secret.adm")
 	App.JwtSecretUsr = vipers.String("jwt.secret.usr")
+
+	// log
 	App.LogLevelFiber = flog.Level(vipers.Get("loglevel.fiber", int(flog.LevelTrace)))
 	App.LogLevelGorm = glog.LogLevel(vipers.Get("loglevel.gorm", int(glog.Warn)))
+
+	// cors
 	App.CorsDev = vipers.StringSlice("cors.dev")
 	App.CorsPrd = vipers.StringSlice("cors.prd")
+
+	// resources
 	App.RWeb = strs.TrimEnd(vipers.String("resources.web"), strs.Slash)
 	App.RLog = strs.TrimEnd(vipers.Get("resources.log", "log"), strs.Slash)
 	App.RCache = strs.TrimEnd(vipers.String("resources.cache"), strs.Slash)
 	App.RMedia = strs.TrimEnd(vipers.Get("resources.media", "media"), strs.Slash)
+
+	// smtp
 	App.SMTPHost = vipers.String("smtp.host")
 	App.SMTPPort = vipers.Int("smtp.port")
 	App.SMTPFrom = vipers.String("smtp.from")
 	App.SMTPPassword = vipers.String("smtp.password")
 	App.SMTPAddr = fmt.Sprintf("%s:%d", App.SMTPHost, App.SMTPPort)
+
+	// db
 	App.DBName = vipers.String("db.name")
 	App.DBPort = vipers.String("db.port")
 	App.DBQuery = vipers.String("db.query")
@@ -138,10 +152,14 @@ func LoadApp() {
 	App.DBAutoMigrate = vipers.Get("db.auto-migrate", false)
 	App.DBAutoCreate = vipers.Get("db.auto-create", false)
 	App.DBDriver = vipers.Get("db.driver", "mysql")
+
+	// redis
 	App.RedisHost = vipers.Get("redis.host", "localhost")
 	App.RedisPort = vipers.Get("redis.port", "6379")
 	App.RedisIndex = vipers.Get("redis.index", 0)
 	App.RedisAddr = net.JoinHostPort(App.RedisHost, App.RedisPort)
+
+	// wechat
 	App.WxSite = strs.TrimStart(vipers.String("wechat.site"), strs.Slash)
 	App.WxAppID = vipers.String("wechat.appid")
 	App.WxSecret = vipers.String("wechat.secret")
@@ -153,8 +171,12 @@ func LoadApp() {
 	App.WxPubKey = vipers.String("wechat.pay.public-key")
 	App.WxAPIClientKeyPem = vipers.String("wechat.pem.apiclient")
 	App.WxPubKeyPem = vipers.String("wechat.pem.pub")
+
+	// rate
 	App.RateSite = strs.TrimEnd(vipers.String("exchangerate.site"), strs.Slash)
 	App.RateCurrencies = vipers.StringSlice("exchangerate.currencies")
+
+	// resty
 	App.RestyInsecureSkipVerify = vipers.Get("resty.insecure-skip-verify", false)
 
 	// xdg support

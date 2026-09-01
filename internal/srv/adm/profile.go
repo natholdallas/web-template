@@ -2,12 +2,12 @@ package adm
 
 import (
 	"webtplmst/internal/db"
-	"webtplmst/internal/pwd"
 	"webtplmst/internal/srv/internal"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/natholdallas/natools4go/orms"
+	"github.com/natholdallas/natools4go/pwd"
 )
 
 // FindProfile godoc

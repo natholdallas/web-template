@@ -13,8 +13,9 @@ func Setup(app fiber.Router) {
 		return
 	}
 	app.Get("/*", internal.SwaggerMiddleware, scalar.New(scalar.Config{
+		Title:             "API Documentation",
+		BasePath:          "/doc/api/v1",
 		Theme:             scalar.ThemeSaturn,
 		FileContentString: displayDoc(),
-		Title:             "API Documentation",
 	}))
 }

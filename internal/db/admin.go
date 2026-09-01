@@ -1,9 +1,8 @@
 package db
 
 import (
-	"webtplmst/internal/pwd"
-
 	"github.com/natholdallas/natools4go/orms"
+	"github.com/natholdallas/natools4go/pwd"
 	"gorm.io/gorm"
 )
 
