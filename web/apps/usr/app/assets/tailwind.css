@@ -3,6 +3,8 @@
 @import 'shadcn-vue/tailwind.css';
 @import 'vue-sonner/style.css';
 
+@source '../../../../packages/natholdallas/shadcn';
+
 @custom-variant dark (&:is(.dark *));
 @theme inline {
   --font-sans: 'Inter Variable', sans-serif;

@@ -2,6 +2,8 @@
 @import 'tailwindcss/preflight' layer(tailwind-reset);
 @import 'tailwindcss/utilities' layer(tailwind-utilities);
 
+@source '../../../../../../packages/natholdallas/vuetify';
+
 @theme {
   --font-heading: 'Roboto', sans-serif;
   --font-body: 'Roboto', sans-serif;

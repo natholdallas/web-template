@@ -311,14 +311,13 @@ renewal() {
       -o -name ".output" \
       -o -name "dist" \
       -o -name "docs" \
-      -o -name "assets" \
       -o -name "logs" \
       -o -name "media" \
       -o -name "bin" \
       -o -name "go.sum" \
       -o -name "pnpm-lock.yaml" \) -prune \
       -o -type f \
-      \( -name "*.go" -o -name "*.md" -o -name "*.toml" \
+      \( -name "*.go" -o -name "*.md" -o -name "*.mod" -o -name "*.toml" \
       -o -name "*.service" -o -name "*.sh" -o -name "*.json" \
       -o -name "*.yml" -o -name "*.yaml" -o -name "*.ts" \
       -o -name "*.tsx" -o -name "*.vue" -o -name "*.nuxtrc" \
