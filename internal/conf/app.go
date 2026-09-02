@@ -5,9 +5,11 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 
 	"github.com/natefinch/lumberjack"
 	"github.com/natholdallas/natools4go/narder"
+	"github.com/natholdallas/natools4go/orms"
 	"github.com/natholdallas/natools4go/strs"
 	"github.com/natholdallas/natools4go/vipers"
 
@@ -16,6 +18,7 @@ import (
 )
 
 type AppConf struct {
+	// app
 	Name      string
 	Port      string
 	Debug     bool
@@ -24,12 +27,18 @@ type AppConf struct {
 	BodyLimit int
 
 	// jwt
-	JwtAccessMinutes int    `validate:"required"`
-	JwtRefreshHours  int    `validate:"required"`
-	JwtSecretAdm     string `validate:"required"`
-	JwtSecretUsr     string `validate:"required"`
+	AccessMinutes int    `validate:"required"`
+	RefreshHours  int    `validate:"required"`
+	SecretAdm     string `validate:"required"`
+	SecretUsr     string `validate:"required"`
 
 	// log
+	LogFilename   string `validate:"required"`
+	LogMaxSize    int    `validate:"required"`
+	LogMaxBacks   int
+	LogMaxAge     int
+	LogCompress   bool
+	LogLocalTime  bool
 	LogLevelGorm  glog.LogLevel
 	LogLevelFiber flog.Level
 
@@ -47,6 +56,7 @@ type AppConf struct {
 	DBAutoMigrate bool
 	DBAutoCreate  bool
 	DBDriver      string `validate:"required"`
+	DBDsn         string `validate:"required"`
 
 	// redis
 	RedisHost  string `validate:"required"`
@@ -90,11 +100,12 @@ type AppConf struct {
 
 func (a *AppConf) LogWriter() io.Writer {
 	return io.MultiWriter(os.Stdout, &lumberjack.Logger{
-		Filename:   a.RLog + "/app.log",
-		MaxSize:    10,
-		MaxBackups: 7,
-		MaxAge:     28,
-		Compress:   true,
+		Filename:   filepath.Join(a.RLog, a.LogFilename),
+		MaxSize:    a.LogMaxSize,
+		MaxBackups: a.LogMaxBacks,
+		MaxAge:     a.LogMaxAge,
+		Compress:   a.LogCompress,
+		LocalTime:  a.LogLocalTime,
 	})
 }
 
@@ -105,7 +116,7 @@ func (a *AppConf) MkdirAll() {
 }
 
 func LoadApp() {
-	vipers.Config(Flag.ConfName, Flag.ConfPath, Flag.ConfType)
+	vipers.MustConfig(Flag.ConfName, Flag.ConfPath, Flag.ConfType)
 
 	// app
 	App.Name = vipers.Get("app.name", "app")
@@ -116,12 +127,18 @@ func LoadApp() {
 	App.Swagger = vipers.Get("app.swagger", false)
 
 	// jwt
-	App.JwtAccessMinutes = vipers.Get("jwt.access-minutes", 15)
-	App.JwtRefreshHours = vipers.Get("jwt.refresh-hours", 720)
-	App.JwtSecretAdm = vipers.String("jwt.secret.adm")
-	App.JwtSecretUsr = vipers.String("jwt.secret.usr")
+	App.AccessMinutes = vipers.Get("jwt.access-minutes", 15)
+	App.RefreshHours = vipers.Get("jwt.refresh-hours", 720)
+	App.SecretAdm = vipers.String("jwt.secret.adm")
+	App.SecretUsr = vipers.String("jwt.secret.usr")
 
 	// log
+	App.LogFilename = vipers.Get("log.filename", "app.log")
+	App.LogMaxSize = vipers.Get("log.max-size", 10)
+	App.LogMaxBacks = vipers.Get("log.max-backups", 7)
+	App.LogMaxAge = vipers.Get("log.max-age", 28)
+	App.LogCompress = vipers.Get("log.compress", true)
+	App.LogLocalTime = vipers.Get("log.local-time", false)
 	App.LogLevelFiber = flog.Level(vipers.Get("loglevel.fiber", int(flog.LevelTrace)))
 	App.LogLevelGorm = glog.LogLevel(vipers.Get("loglevel.gorm", int(glog.Warn)))
 
@@ -152,6 +169,7 @@ func LoadApp() {
 	App.DBAutoMigrate = vipers.Get("db.auto-migrate", false)
 	App.DBAutoCreate = vipers.Get("db.auto-create", false)
 	App.DBDriver = vipers.Get("db.driver", "mysql")
+	App.DBDsn = orms.MustDSN(App.DBDriver, App.DBName, App.DBUsername, App.DBPassword, App.DBHost, App.DBPort)
 
 	// redis
 	App.RedisHost = vipers.Get("redis.host", "localhost")
@@ -181,7 +199,7 @@ func LoadApp() {
 
 	// xdg support
 	if dir, err := os.UserCacheDir(); err == nil {
-		App.RCache = dir + strs.ToStart(App.RCache, strs.Slash)
+		App.RCache = filepath.Join(dir, App.RCache)
 	}
 
 	// mkdir

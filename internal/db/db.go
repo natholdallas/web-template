@@ -21,8 +21,7 @@ var (
 )
 
 func Connect() {
-	dsn := orms.MustDSN(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
-	dialector := orms.MustDialector(conf.App.DBDriver, dsn, conf.App.DBName, conf.App.DBQuery, conf.App.DBAutoCreate)
+	dialector := orms.MustDialector(conf.App.DBDriver, conf.App.DBDsn, conf.App.DBName, conf.App.DBQuery, conf.App.DBAutoCreate)
 	Tx = orms.MustNew(dialector, &gorm.Config{
 		Logger: orms.LogPreset(conf.App.LogWriter(), conf.App.LogLevelGorm),
 	})
@@ -34,10 +33,8 @@ func Connect() {
 }
 
 func Mock() {
-	adminPwd, _ := pwd.Hash("123456")
-	userPwd, _ := pwd.Hash("123456")
-	orms.Create(Tx, &Admin{Username: "admin", Password: adminPwd})
-	orms.Create(Tx, &User{Username: "user", Password: userPwd})
+	orms.Create(Tx, &Admin{Username: "admin", Password: pwd.TryHash("123456")})
+	orms.Create(Tx, &User{Username: "user", Password: pwd.TryHash("123456")})
 }
 
 func AutoMigration() {
@@ -64,13 +61,11 @@ func Migration() {
 }
 
 func ResetDB() {
-	dsn := orms.MustDSN(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
-	orms.Reset(conf.App.DBName, conf.App.DBDriver, dsn)
+	orms.Reset(conf.App.DBName, conf.App.DBDriver, conf.App.DBDsn)
 }
 
 func AutoCreateDB() {
-	dsn := orms.MustDSN(conf.App.DBDriver, conf.App.DBName, conf.App.DBUsername, conf.App.DBPassword, conf.App.DBHost, conf.App.DBPort)
-	orms.AutoCreate(conf.App.DBName, conf.App.DBDriver, dsn)
+	orms.AutoCreate(conf.App.DBName, conf.App.DBDriver, conf.App.DBDsn)
 }
 
 func Reload(fsnotify.Event) {

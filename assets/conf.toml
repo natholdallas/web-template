@@ -1,22 +1,30 @@
 [app]
 name = "webtplmst"
 port = "8080"
-debug = true
-nginx = false
-body-limit = 200  # upload size limit (MB)
-swagger = true
+debug = true       # enable debug
+nginx = false      # enable nginx
+body-limit = 200   # upload size limit (MB)
+swagger = true     # enable swagger
 
 [jwt]
-access-minutes = 15  # access token TTL (minutes)
-refresh-hours = 720  # refresh token TTL (hours, default 30 days)
+access-minutes = 15 # access token TTL (minutes)
+refresh-hours = 720 # refresh token TTL (hours, default 30 days)
 
 [jwt.secret]
-adm = ""
-usr = ""
+adm = "" # admin
+usr = "" # user
 
-[loglevel]
+[log]
+filename = "app.log" # log filename
+max-size = 10        # max log size (MB)
+max-backups = 7      # max log backups
+max-age = 28         # max log age (days)
+compress = true      # compress log files
+local-time = false   # use local time for log file names
+
+[log.level]
 gorm = 2  # 1: slient; 2: error; 3: warn; 4: info
-fiber = 1  # 0: trace;  1: debug; 2: info; 3: warn; 4: error; 5: fatal; 6: panic
+fiber = 1 # 0: trace;  1: debug; 2: info; 3: warn; 4: error; 5: fatal; 6: panic
 
 [cors]
 dev = [
@@ -47,7 +55,7 @@ username = ""
 password = ""
 auto-migrate = true
 auto-create = true
-driver = "mysql"  # sqlite, sqlserver, clickhouse, postgresql, mysql, mariadb(use mysql instead of mariadb)
+driver = "mysql"                                   # sqlite, sqlserver, clickhouse, postgresql, mysql, mariadb(use mysql instead of mariadb)
 
 [redis]
 host = "localhost"
@@ -56,30 +64,30 @@ index = 0
 
 [smtp]
 host = "smtp.qq.com"
-port = 587  # 465 = implicit SSL, 587 = STARTTLS, 25 = plaintext
-from = ""  # sender address (also used as SMTP username)
+port = 587           # 465 = implicit SSL, 587 = STARTTLS, 25 = plaintext
+from = ""            # sender address (also used as SMTP username)
 password = ""
 
 [wechat]
-site = "https://api.weixin.qq.com"  # WeChat API address
-appid = ""  # WeChat App ID
-secret = ""  # WeChat App Secret
+site = "https://api.weixin.qq.com" # WeChat API address
+appid = ""                         # WeChat App ID
+secret = ""                        # WeChat App Secret
 
 [wechat.pay]
-webhook = ""  # WeChat callback URL
-mch = ""  # Merchant ID
-cert = ""  # Certificate serial number
-apiv2secret = ""  # v2 private key
-apiv3secret = ""  # v3 private key
+webhook = ""     # WeChat callback URL
+mch = ""         # Merchant ID
+cert = ""        # Certificate serial number
+apiv2secret = "" # v2 private key
+apiv3secret = "" # v3 private key
 public-key = ""  # Public key
 
 [wechat.pem]
-pub = "./assets/wechat/pub_key.pem"  # WeChat API public key certificate file
-apiclient = "./assets/wechat/apiclient_key.pem"  # WeChat API private key certificate file
+pub = "assets/wechat/pub_key.pem"             # WeChat API public key certificate file
+apiclient = "assets/wechat/apiclient_key.pem" # WeChat API private key certificate file
 
 [exchangerate]
-site = "https://v6.exchangerate-api.com/v6/{id}/latest"  # Requires API key, see https://exchangerate-api.com
-currencies = []  # Currencies, e.g. CNY, USD
+site = "https://v6.exchangerate-api.com/v6/{id}/latest" # Requires API key, see https://exchangerate-api.com
+currencies = []                                         # Currencies, e.g. CNY, USD
 
 [resty]
-insecure-skip-verify = false  # Skip insecure verify
+insecure-skip-verify = false # Skip insecure verify

@@ -8,7 +8,7 @@ import (
 	"github.com/natholdallas/natools4go/fext"
 )
 
-var jwt = fext.NewJWT(conf.App.JwtSecretUsr)
+var jwt = fext.NewJWT(conf.App.SecretUsr)
 
 func Setup(api fiber.Router) {
 	api.Group("/auth").

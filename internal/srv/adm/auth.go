@@ -27,7 +27,7 @@ type RefreshIn struct {
 	RefreshToken string `json:"refreshToken" validate:"required"`
 } //	@name	AdmRefreshIn
 
-var authMgr = auth.New(conf.App.JwtSecretAdm, "adm", time.Duration(conf.App.JwtAccessMinutes)*time.Minute, time.Duration(conf.App.JwtRefreshHours)*time.Hour)
+var authMgr = auth.New(conf.App.SecretAdm, "adm", time.Duration(conf.App.AccessMinutes)*time.Minute, time.Duration(conf.App.RefreshHours)*time.Hour)
 
 // Login godoc
 //

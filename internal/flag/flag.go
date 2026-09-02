@@ -13,11 +13,10 @@ import (
 	"github.com/natholdallas/natools4go/orms"
 	"github.com/natholdallas/natools4go/pwd"
 	"github.com/natholdallas/natools4go/rands"
-	"github.com/spf13/viper"
 )
 
 func PreRun() {
-	flags.Run(conf.Flag.RemakeSecret, RemakeSecret)
+	flags.Run(conf.Flag.Gensec, Gensec)
 }
 
 func Run() {
@@ -88,13 +87,9 @@ func Mock() {
 	db.Mock()
 }
 
-func RemakeSecret() {
+func Gensec() {
 	fmt.Println("remake secret script")
-	viper.Set("secret.adm", rands.Char(32))
-	viper.Set("secret.usr", rands.Char(32))
-	if err := viper.WriteConfig(); err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("secret remake success")
-	}
+	fmt.Println("adm: ", rands.Char(32))
+	fmt.Println("usr: ", rands.Char(32))
+	fmt.Println("secret remake success, please edit your configuration")
 }

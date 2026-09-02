@@ -8,7 +8,7 @@ import (
 	"math/big"
 )
 
-var vCodeTmpl = template.Must(template.New("vcode").Parse(`
+var verficationCodeTpl = template.Must(template.New("vcode").Parse(`
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"></head>
@@ -37,7 +37,7 @@ var vCodeTmpl = template.Must(template.New("vcode").Parse(`
 // email and code.
 func VerificationCodeTPL(name, email, code string) *Message {
 	var body bytes.Buffer
-	vCodeTmpl.Execute(&body, map[string]string{"Name": name, "Code": code})
+	verficationCodeTpl.Execute(&body, map[string]string{"Name": name, "Code": code})
 	m := NewMessage([]string{email}, "Verification Code")
 	m.SetBodyHTML(body.String())
 	return m

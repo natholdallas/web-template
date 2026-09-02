@@ -3,6 +3,7 @@ package conf
 
 import (
 	"github.com/fsnotify/fsnotify"
+	"github.com/natholdallas/natools4go/dbg"
 	"github.com/natholdallas/natools4go/vipers"
 )
 
@@ -17,10 +18,11 @@ func init() {
 }
 
 func Validate() {
-	vipers.Validate(Flag)
-	vipers.Validate(App)
+	vipers.MustValidate(Flag)
+	vipers.MustValidate(App)
 }
 
 func Reload(fsnotify.Event) {
 	LoadApp()
+	dbg.Dump(App)
 }
