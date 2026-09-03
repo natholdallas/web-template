@@ -56,7 +56,7 @@ func ListAdmin(c fiber.Ctx) error {
 //	@Success	200	{object}	db.Admin
 //	@Router		/adm/api/v1/admin/{id} [get]
 func FindAdmin(c fiber.Ctx) error {
-	v := orms.IFirst[db.Admin](db.Tx)
+	v := orms.IFirst[db.Admin](db.Tx, c.Params("id"))
 	return c.JSON(v)
 }
 
@@ -64,6 +64,11 @@ type AdminIn struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required,min=4,max=20"`
 } //	@name	AdmAdminIn
+
+type AdminUpdateIn struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password"`
+} //	@name	AdmAdminUpdateIn
 
 func (s *AdminIn) Get() (*db.Admin, error) {
 	hash, err := pwd.Hash(s.Password)
@@ -97,7 +102,9 @@ func CreateAdmin(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	orms.Create(db.Tx, v)
+	if err := orms.Create(db.Tx, v); err != nil {
+		return &fext.Fail{Code: internal.CreateFailed, Message: err.Error()}
+	}
 	return nil
 }
 
@@ -109,21 +116,27 @@ func CreateAdmin(c fiber.Ctx) error {
 //	@Accept		json
 //	@Produce	json
 //	@Security	ApiKeyAuth
-//	@Param		id		path	int		true	"Admin ID"
-//	@Param		body	body	AdminIn	true	"Admin object"
+//	@Param		id		path	int				true	"Admin ID"
+//	@Param		body	body	AdminUpdateIn	true	"Admin object"
 //	@Success	200
 //	@Failure	400	{object}	Fail
 //	@Router		/adm/api/v1/admin/{id} [put]
 func UpdateAdmin(c fiber.Ctx) error {
-	d, err := fext.BodyVarser[AdminIn](c)
+	d, err := fext.BodyVarser[AdminUpdateIn](c)
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	v, err := d.Get()
-	if err != nil {
-		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	values := map[string]any{"username": d.Username}
+	if d.Password != "" {
+		hash, err := pwd.Hash(d.Password)
+		if err != nil {
+			return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+		}
+		values["password"] = hash
 	}
-	orms.UpdatesByID[db.Admin](db.Tx, c.Params("id"), v)
+	if err := orms.UpdatesByID[db.Admin](db.Tx, c.Params("id"), values); err != nil {
+		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
+	}
 	return nil
 }
 
@@ -139,7 +152,9 @@ func UpdateAdmin(c fiber.Ctx) error {
 //	@Success	200
 //	@Router		/adm/api/v1/admin/{id} [delete]
 func RemoveAdmin(c fiber.Ctx) error {
-	orms.Delete[db.Admin](db.Tx, c.Params("id"))
+	if err := orms.Delete[db.Admin](db.Tx, c.Params("id")); err != nil {
+		return &fext.Fail{Code: internal.RemoveFailed, Message: err.Error()}
+	}
 	return nil
 }
 

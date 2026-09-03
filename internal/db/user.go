@@ -14,7 +14,7 @@ type User struct {
 } //	@name	User
 
 func AuthUser(tx *gorm.DB, username, password string) (User, error) {
-	v, err := orms.First[User](tx, "BINARY username = ?", username)
+	v, err := orms.First[User](tx, "username = ?", username)
 	if err != nil {
 		return v, err
 	}

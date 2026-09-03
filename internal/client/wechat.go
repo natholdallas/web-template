@@ -3,7 +3,9 @@ package client
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"sync"
 
 	"webtplmst/internal/conf"
 
@@ -19,36 +21,51 @@ import (
 )
 
 var (
+	wechatOnce     sync.Once
 	wechatInstance *core.Client
 	wechatHandler  *notify.Handler
 )
 
-func InitWechat() {
-	// Load merchant private key from local file using utils, used to sign requests
-	mchPrivateKey, err := utils.LoadPrivateKeyWithPath(conf.App.WxAPIClientKeyPem)
-	if err != nil {
-		panic("load merchant private key error: " + err.Error())
-	}
-	wechatpayPublicKey, err := utils.LoadPublicKeyWithPath(conf.App.WxPubKeyPem)
-	if err != nil {
-		panic("load merchant public key error: " + err.Error())
-	}
-	client, err := core.NewClient(context.Background(), option.WithWechatPayPublicKeyAuthCipher(
-		conf.App.WxMch,
-		conf.App.WxCert,
-		mchPrivateKey,
-		conf.App.WxPubKey,
-		wechatpayPublicKey,
-	))
-	notifyHandler := notify.NewNotifyHandler(
-		conf.App.WxV3Sercret,
-		verifiers.NewSHA256WithRSAPubkeyVerifier(conf.App.WxPubKey, *wechatpayPublicKey),
-	)
-	if err != nil || client == nil {
-		panic("new wechat pay client err: " + err.Error())
-	}
-	wechatInstance = client
-	wechatHandler = notifyHandler
+// initWechat lazily builds the WeChat Pay client and notify handler on first
+// use. Pay configuration is optional, so it returns a descriptive error
+// instead of panicking when WeChat Pay is not configured.
+func initWechat() error {
+	var wechatErr error
+	wechatOnce.Do(func() {
+		if conf.App.WxAppID == "" || conf.App.WxMch == "" || conf.App.WxCert == "" ||
+			conf.App.WxV3Sercret == "" || conf.App.WxPubKey == "" ||
+			conf.App.WxAPIClientKeyPem == "" || conf.App.WxPubKeyPem == "" {
+			wechatErr = errors.New("wechat pay not configured")
+			return
+		}
+		mchPrivateKey, err := utils.LoadPrivateKeyWithPath(conf.App.WxAPIClientKeyPem)
+		if err != nil {
+			wechatErr = fmt.Errorf("load merchant private key error: %w", err)
+			return
+		}
+		wechatpayPublicKey, err := utils.LoadPublicKeyWithPath(conf.App.WxPubKeyPem)
+		if err != nil {
+			wechatErr = fmt.Errorf("load merchant public key error: %w", err)
+			return
+		}
+		payClient, err := core.NewClient(context.Background(), option.WithWechatPayPublicKeyAuthCipher(
+			conf.App.WxMch,
+			conf.App.WxCert,
+			mchPrivateKey,
+			conf.App.WxPubKey,
+			wechatpayPublicKey,
+		))
+		if err != nil || payClient == nil {
+			wechatErr = errors.New("new wechat pay client error")
+			return
+		}
+		wechatInstance = payClient
+		wechatHandler = notify.NewNotifyHandler(
+			conf.App.WxV3Sercret,
+			verifiers.NewSHA256WithRSAPubkeyVerifier(conf.App.WxPubKey, *wechatpayPublicKey),
+		)
+	})
+	return wechatErr
 }
 
 type WxLoginRes struct {
@@ -59,6 +76,9 @@ type WxLoginRes struct {
 }
 
 func WxLogin(code string) (v WxLoginRes, err error) {
+	if conf.App.WxAppID == "" || conf.App.WxSecret == "" {
+		return v, errors.New("wechat not configured")
+	}
 	d, _ := client.R().
 		SetQueryParams(map[string]string{
 			"appid":      conf.App.WxAppID,
@@ -91,6 +111,9 @@ type WxUser struct {
 }
 
 func WxGetUserInfo(token, openid string) (v WxUser, err error) {
+	if conf.App.WxAppID == "" || conf.App.WxSecret == "" {
+		return v, errors.New("wechat not configured")
+	}
 	// https://api.weixin.qq.com/cgi-bin/user/info?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN
 	d, _ := client.R().
 		SetQueryParams(map[string]string{
@@ -116,6 +139,9 @@ type WxToken struct {
 }
 
 func WxGetAccessToken(gtype string) (v WxToken, err error) {
+	if conf.App.WxAppID == "" || conf.App.WxSecret == "" {
+		return v, errors.New("wechat not configured")
+	}
 	// https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
 	d, _ := client.R().
 		SetQueryParams(map[string]string{
@@ -132,6 +158,9 @@ func WxGetAccessToken(gtype string) (v WxToken, err error) {
 }
 
 func WxPay(openid string, amount int64, tradeNo string) (*jsapi.PrepayWithRequestPaymentResponse, error) {
+	if err := initWechat(); err != nil {
+		return nil, err
+	}
 	if conf.App.Debug {
 		amount = 1
 	}
@@ -150,6 +179,9 @@ func WxPay(openid string, amount int64, tradeNo string) (*jsapi.PrepayWithReques
 }
 
 func WxVerify(request *http.Request) (*payments.Transaction, error) {
+	if err := initWechat(); err != nil {
+		return nil, err
+	}
 	v := new(payments.Transaction)
 	_, err := wechatHandler.ParseNotifyRequest(context.Background(), request, &v)
 	return v, err

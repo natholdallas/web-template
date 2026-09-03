@@ -19,20 +19,31 @@ import { toast } from 'vue-sonner'
 import { ResetPasswordIn as GenResetPasswordIn } from './models'
 import type { ResetPasswordIn as GenResetPasswordInT } from './models'
 
-const retried = new WeakSet<Method>()
+const retried = new Set<string>()
 
-function ok(_response: Response, method: Method) {
+function ok(_response: Response, method: Method, data: unknown) {
   const t = useNuxtApp().$i18n.t
   if (method.type !== 'GET') toast.success(t('success'))
+  return data
 }
 
 async function unauthorized(_response: Response, method: Method) {
   const auth = useAuth()
-  if (!retried.has(method) && (await auth.$refresh())) {
-    retried.add(method)
+  if (method.meta?.isRefresh) {
+    auth.$signOut()
+    throw new Error('refresh failed')
+  }
+  const key = \`\${method.type}:\${method.url}:\${JSON.stringify(method.config.params ?? {})}\`
+  if (retried.has(key)) {
+    auth.$signOut()
+    throw new Error('retry failed')
+  }
+  retried.add(key)
+  if (await auth.$refresh()) {
     return method.send(true)
   }
   auth.$signOut()
+  throw new Error('refresh failed')
 }
 
 function fallback(response: Response, _method: Method, v: unknown) {
@@ -57,22 +68,33 @@ export { Auth, AuthIn, Profile, ProfileIn } from './models'
 `
 
 const admWiring = `
-const retried = new WeakSet<Method>()
+const retried = new Set<string>()
 
-function ok(_response: Response, method: Method) {
+function ok(_response: Response, method: Method, data: unknown) {
   const t = useNuxtApp().$i18n.t
   if (method.type !== 'GET') {
     useSnackBar().success(t('success'))
   }
+  return data
 }
 
 async function unauthorized(_response: Response, method: Method) {
   const auth = useAuth()
-  if (!retried.has(method) && (await auth.$refresh())) {
-    retried.add(method)
+  if (method.meta?.isRefresh) {
+    auth.$signOut()
+    throw new Error('refresh failed')
+  }
+  const key = \`\${method.type}:\${method.url}:\${JSON.stringify(method.config.params ?? {})}\`
+  if (retried.has(key)) {
+    auth.$signOut()
+    throw new Error('retry failed')
+  }
+  retried.add(key)
+  if (await auth.$refresh()) {
     return method.send(true)
   }
   auth.$signOut()
+  throw new Error('refresh failed')
 }
 
 function fallback(response: Response, _method: Method, v: unknown) {

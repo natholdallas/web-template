@@ -14,7 +14,7 @@ type Admin struct {
 } //	@name	Admin
 
 func AuthAdmin(tx *gorm.DB, username, password string) (Admin, error) {
-	v, err := orms.First[Admin](tx, "BINARY username = ?", username)
+	v, err := orms.First[Admin](tx, "username = ?", username)
 	if err != nil {
 		return v, err
 	}

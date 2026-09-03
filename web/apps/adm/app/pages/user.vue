@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { Apis, BaseQueries, Page, UserIn } from '~/lib/sdk'
+import { Apis, UserIn } from '~/lib/sdk'
 
 definePageMeta({
   name: 'user',
   middleware: 'auth',
 })
 
-const queries = ref(inst(BaseQueries, { column: 'id', desc: true }))
+const queries = ref({ page: 1, size: 20, column: 'id', desc: true })
 
 const { open } = useDialog()
 const { mi, mo, sc, su, reset } = useCrud({ ...inst(UserIn), id: 0 })
@@ -16,7 +16,7 @@ const { loading, data, send } = useRequest(
       params: queries.value,
     }),
   {
-    initialData: inst(Page),
+    initialData: { total: 0, page: 0, content: [] },
   },
 ).onSuccess(reset)
 const { loading: creating, send: create } = useRequest(

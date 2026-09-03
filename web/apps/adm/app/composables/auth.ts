@@ -2,7 +2,7 @@ import type { Auth as AuthType } from '~/lib/sdk/models'
 import Apis from '~/lib/sdk'
 import { Auth, RefreshIn } from '~/lib/sdk/models'
 
-let refreshing = false
+let refreshing: Promise<boolean> | null = null
 
 function loadAuth(): AuthType {
   if (typeof window === 'undefined') {
@@ -36,20 +36,29 @@ function $signIn({ data }: { data: AuthType }) {
 }
 
 async function $refresh(): Promise<boolean> {
-  if (refreshing || !auth.refreshToken) {
+  const token = auth.refreshToken
+  if (!token) {
     return false
   }
-  refreshing = true
+  if (refreshing) {
+    return refreshing
+  }
+  refreshing = (async () => {
+    try {
+      const data = await Apis.Auth.refresh({
+        data: inst(RefreshIn, { refreshToken: token }),
+        meta: { isRefresh: true },
+      })
+      Object.assign(auth, { id: data.id, accessToken: data.accessToken, refreshToken: data.refreshToken })
+      return true
+    } catch {
+      return false
+    }
+  })()
   try {
-    const data = await Apis.Auth.refresh({
-      data: inst(RefreshIn, { refreshToken: auth.refreshToken }),
-    })
-    Object.assign(auth, { id: data.id, accessToken: data.accessToken, refreshToken: data.refreshToken })
-    return true
-  } catch {
-    return false
+    return await refreshing
   } finally {
-    refreshing = false
+    refreshing = null
   }
 }
 

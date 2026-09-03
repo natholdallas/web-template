@@ -35,12 +35,6 @@ type ProfileIn struct {
 	Username string `json:"username" validate:"required,min=4"`
 } //	@name	UsrProfileIn
 
-func (s *ProfileIn) Get() *db.User {
-	return &db.User{
-		Username: s.Username,
-	}
-}
-
 // UpdateProfile godoc
 //
 //	@Summary	Update current user profile
@@ -59,8 +53,9 @@ func UpdateProfile(c fiber.Ctx) error {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
 	claims := jwt.Claims(c)
-	v := d.Get()
-	orms.UpdatesByID[db.User](db.Tx, claims.ID, &v)
+	if err := orms.UpdatesByID[db.User](db.Tx, claims.ID, map[string]any{"username": d.Username}); err != nil {
+		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
+	}
 	return nil
 }
 
@@ -99,6 +94,8 @@ func ResetPassword(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	orms.UpdatesByID[db.User](db.Tx, claims.ID, map[string]any{"password": hash})
+	if err := orms.UpdatesByID[db.User](db.Tx, claims.ID, map[string]any{"password": hash}); err != nil {
+		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
+	}
 	return nil
 }

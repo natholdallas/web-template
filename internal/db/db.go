@@ -21,15 +21,22 @@ var (
 )
 
 func Connect() {
-	dialector := orms.MustDialector(conf.App.DBDriver, conf.App.DBDsn, conf.App.DBName, conf.App.DBQuery, conf.App.DBAutoCreate)
-	Tx = orms.MustNew(dialector, &gorm.Config{
+	Tx = orms.MustNew(orms.MustDialector(
+		conf.App.DBDriver,
+		conf.App.DBDsn,
+		conf.App.DBName,
+		conf.App.DBQuery,
+		conf.App.DBAutoCreate,
+	), &gorm.Config{
 		Logger: orms.LogPreset(conf.App.LogWriter(), conf.App.LogLevelGorm),
 	})
 	Rx = redis.NewClient(&redis.Options{
 		Addr: conf.App.RedisAddr,
 		DB:   conf.App.RedisIndex,
 	})
-	AutoMigration()
+	if conf.App.DBAutoMigrate {
+		Migration()
+	}
 }
 
 func Mock() {
@@ -37,21 +44,9 @@ func Mock() {
 	orms.Create(Tx, &User{Username: "user", Password: pwd.TryHash("123456")})
 }
 
-func AutoMigration() {
-	if conf.App.DBAutoMigrate {
-		Migration()
-	}
-}
-
 func Migration() {
-	tx := Tx
-	switch conf.App.DBDriver {
-	case "mysql":
-		tx = tx.Set("gorm:table_options", "COLLATE=utf8mb4_bin")
-	case "sqlserver", "mssql":
-		tx = tx.Set("gorm:table_options", "COLLATE=SQL_Latin1_General_CP1_CS_AS")
-	}
-	tx.AutoMigrate(
+	orms.MustAutoMigrate(
+		Tx,
 		&Admin{},
 		&User{},
 		&Rate{},
@@ -60,11 +55,11 @@ func Migration() {
 	)
 }
 
-func ResetDB() {
+func Reset() {
 	orms.Reset(conf.App.DBName, conf.App.DBDriver, conf.App.DBDsn)
 }
 
-func AutoCreateDB() {
+func AutoCreate() {
 	orms.AutoCreate(conf.App.DBName, conf.App.DBDriver, conf.App.DBDsn)
 }
 

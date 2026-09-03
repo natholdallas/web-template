@@ -287,31 +287,7 @@ export const modelDefaults = createPlugin((outputDir: string, prefixes: string[]
         })
         .join('\n\n')
 
-      // Hand-written helpers shared by both apps (absent from the swagger doc):
-      // pagination/sort query models plus the generic `Page` container used by
-      // VDataTableServer tables. Skipped when a generated schema already uses
-      // the name, to avoid colliding with the emitted type/const pair.
-      const baseModels: Array<[string, string]> = [
-        ['PageQueries', 'export type PageQueries = Partial<typeof PageQueries>\nexport const PageQueries = {\n  page: 1,\n  size: 20,\n}'],
-        [
-          'SortQueries',
-          'export type SortQueries = Partial<typeof SortQueries>\nexport const SortQueries = {\n  column: <string | undefined>undefined,\n  desc: <boolean | undefined>undefined,\n}',
-        ],
-        [
-          'BaseQueries',
-          'export type BaseQueries = Partial<typeof BaseQueries>\nexport const BaseQueries = {\n  ...PageQueries,\n  ...SortQueries,\n}',
-        ],
-        [
-          'Page',
-          "export type Page<T> = { content: T[] } & Omit<typeof Page, 'content'>\nexport const Page = {\n  total: 0,\n  page: 0,\n  content: [],\n}",
-        ],
-      ]
-      const extra = baseModels
-        .filter(([name]) => !entries.some(([n]) => n === name))
-        .map(([, code]) => code)
-        .join('\n\n')
-
-      const code = `/* tslint:disable */\n/* eslint-disable */\nimport type * as G from './globals'\n\n${body}${extra ? `\n\n${extra}` : ''}\n`
+      const code = `/* tslint:disable */\n/* eslint-disable */\nimport type * as G from './globals'\n\n${body}\n`
       fs.mkdirSync(path.dirname(outFile), { recursive: true })
       fs.writeFileSync(outFile, code)
     },
@@ -335,7 +311,7 @@ import adapterFetch from 'alova/fetch'
 import VueHook from 'alova/vue'
 import { createApis, mountApis, withConfigType } from './createApis'
 
-type FetchEvent = (response: Response, method: Method, data: unknown) => void
+type FetchEvent = (response: Response, method: Method, data: unknown) => unknown
 const events: Record<number, FetchEvent> = {}
 
 export const alovaInstance = createAlova({
@@ -353,7 +329,7 @@ export const alovaInstance = createAlova({
     async onSuccess(response, method) {
       const data = await fromData(response)
       const fn = events[response.status] ?? events[-1]
-      if (fn) fn(response, method, data)
+      if (fn) return fn(response, method, data)
       return data
     },
   },

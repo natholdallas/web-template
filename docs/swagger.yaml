@@ -11,6 +11,15 @@ definitions:
     - password
     - username
     type: object
+  AdmAdminUpdateIn:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
   AdmAdminsPage:
     properties:
       content:
@@ -100,6 +109,15 @@ definitions:
     - password
     - username
     type: object
+  AdmUserUpdateIn:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
   AdmUsersPage:
     properties:
       content:
@@ -117,6 +135,9 @@ definitions:
         type: string
       id:
         type: integer
+      nickname:
+        description: Nickname
+        type: string
       updated_at:
         type: string
       username:
@@ -140,6 +161,9 @@ definitions:
         type: string
       id:
         type: integer
+      nickname:
+        description: Nickname
+        type: string
       updated_at:
         type: string
       username:
@@ -328,7 +352,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/AdmAdminIn'
+          $ref: '#/definitions/AdmAdminUpdateIn'
       produces:
       - application/json
       responses:
@@ -647,7 +671,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/AdmUserIn'
+          $ref: '#/definitions/AdmUserUpdateIn'
       produces:
       - application/json
       responses:

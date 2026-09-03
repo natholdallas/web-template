@@ -5,7 +5,7 @@ require (
 	github.com/gofiber/fiber/v3 v3.4.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/natefinch/lumberjack v2.0.0+incompatible
-	github.com/natholdallas/natools4go v1.26.0
+	github.com/natholdallas/natools4go v1.26.1
 	github.com/redis/go-redis/v9 v9.22.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shopspring/decimal v1.4.0

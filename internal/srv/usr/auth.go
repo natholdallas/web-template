@@ -8,6 +8,7 @@ import (
 	"webtplmst/internal/srv/internal"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/log"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/natholdallas/natools4go/strs"
 )
@@ -78,7 +79,9 @@ func Refresh(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.SignInFailed, Message: "invalid refresh token"}
 	}
-	authMgr.RevokeRefresh(d.RefreshToken)
+	if err := authMgr.RevokeRefresh(d.RefreshToken); err != nil {
+		log.Warn("revoke refresh token failed: ", err)
+	}
 	p, err := authMgr.GenPair(userID)
 	if err != nil {
 		return &fext.Fail{Status: fiber.StatusInternalServerError, System: err}

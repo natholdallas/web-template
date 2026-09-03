@@ -3,7 +3,6 @@ package flag
 
 import (
 	"fmt"
-
 	"webtplmst/internal/conf"
 	"webtplmst/internal/db"
 	"webtplmst/internal/task"
@@ -30,12 +29,12 @@ func Run() {
 
 func RstDB() {
 	fmt.Println("resetting database")
-	db.ResetDB()
+	db.Reset()
 }
 
 func CrtDB() {
 	fmt.Println("creating database")
-	db.AutoCreateDB()
+	db.AutoCreate()
 }
 
 func Migration() {

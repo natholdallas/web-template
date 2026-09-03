@@ -112,10 +112,10 @@ export default defineNuxtConfig({
   pwa: {
     disable: !pwaEnabled,
     manifest: {
-      name: 'App',
-      short_name: 'App',
+      name: 'webtplmst',
+      short_name: 'webtplmst',
       theme_color: '#0a0a0a',
-      description: 'App',
+      description: 'webtplmst',
     },
   },
 

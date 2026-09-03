@@ -176,7 +176,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AdmAdminIn"
+                            "$ref": "#/definitions/AdmAdminUpdateIn"
                         }
                     }
                 ],
@@ -681,7 +681,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AdmUserIn"
+                            "$ref": "#/definitions/AdmUserUpdateIn"
                         }
                     }
                 ],
@@ -1060,6 +1060,20 @@ const docTemplate = `{
                 }
             }
         },
+        "AdmAdminUpdateIn": {
+            "type": "object",
+            "required": [
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "AdmAdminsPage": {
             "type": "object",
             "properties": {
@@ -1193,6 +1207,20 @@ const docTemplate = `{
                 }
             }
         },
+        "AdmUserUpdateIn": {
+            "type": "object",
+            "required": [
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "AdmUsersPage": {
             "type": "object",
             "properties": {
@@ -1218,6 +1246,10 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "nickname": {
+                    "description": "Nickname",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"
@@ -1252,6 +1284,10 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "nickname": {
+                    "description": "Nickname",
+                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

@@ -18,7 +18,13 @@ var schemaPrefixes = []string{"Usr", "Adm"}
 func stripAny(t string, prefixes []string) string {
 	for _, p := range prefixes {
 		if strings.HasPrefix(t, p) && len(t) > len(p) {
-			return t[len(p):]
+			r := t[len(p):]
+			// Only strip real type names (PascalCase remainder). This keeps the
+			// shared `Admin` model intact: `Adm` is a prefix, but its remainder
+			// `in` starts lowercase and would otherwise be corrupted to `in`.
+			if r[0] >= 'A' && r[0] <= 'Z' {
+				return r
+			}
 		}
 	}
 	return t

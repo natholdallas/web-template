@@ -27,6 +27,11 @@ type UserIn struct {
 	Password string `json:"password" validate:"required,min=4,max=20"`
 } //	@name	AdmUserIn
 
+type UserUpdateIn struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password"`
+} //	@name	AdmUserUpdateIn
+
 func (s *UserIn) Get() (*db.User, error) {
 	hash, err := pwd.Hash(s.Password)
 	if err != nil {
@@ -50,7 +55,10 @@ func (s *UserIn) Get() (*db.User, error) {
 //	@Success	200		{object}	UsersPage
 //	@Router		/adm/api/v1/user [get]
 func ListUser(c fiber.Ctx) error {
-	q, _ := fext.QueryParser[UserQueries](c)
+	q, err := fext.QueryParser[UserQueries](c)
+	if err != nil {
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+	}
 	v := orms.QE[db.User](db.Tx).
 		Scopes(q.Sorter.Scope).
 		IPaginate(q.Pagination)
@@ -88,13 +96,15 @@ func FindUser(c fiber.Ctx) error {
 func CreateUser(c fiber.Ctx) error {
 	d, err := fext.BodyVarser[UserIn](c)
 	if err != nil {
-		return err
+		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
 	v, err := d.Get()
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	orms.Create(db.Tx, v)
+	if err := orms.Create(db.Tx, v); err != nil {
+		return &fext.Fail{Code: internal.CreateFailed, Message: err.Error()}
+	}
 	return nil
 }
 
@@ -106,24 +116,27 @@ func CreateUser(c fiber.Ctx) error {
 //	@Accept		json
 //	@Produce	json
 //	@Security	ApiKeyAuth
-//	@Param		id		path	int		true	"User ID"
-//	@Param		body	body	UserIn	true	"User object"
+//	@Param		id		path	int				true	"User ID"
+//	@Param		body	body	UserUpdateIn	true	"User object"
 //	@Success	200
 //	@Failure	400	{object}	Fail
 //	@Router		/adm/api/v1/user/{id} [put]
 func UpdateUser(c fiber.Ctx) error {
-	d, err := fext.BodyVarser[UserIn](c)
-	if err != nil {
-		return err
-	}
-	hash, err := pwd.Hash(d.Password)
+	d, err := fext.BodyVarser[UserUpdateIn](c)
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	orms.UpdatesByID[db.User](db.Tx, c.Params("id"), map[string]any{
-		"username": d.Username,
-		"password": hash,
-	})
+	values := map[string]any{"username": d.Username}
+	if d.Password != "" {
+		hash, err := pwd.Hash(d.Password)
+		if err != nil {
+			return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
+		}
+		values["password"] = hash
+	}
+	if err := orms.UpdatesByID[db.User](db.Tx, c.Params("id"), values); err != nil {
+		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
+	}
 	return nil
 }
 
@@ -139,7 +152,9 @@ func UpdateUser(c fiber.Ctx) error {
 //	@Success	200
 //	@Router		/adm/api/v1/user/{id} [delete]
 func RemoveUser(c fiber.Ctx) error {
-	orms.Delete[db.User](db.Tx, c.Params("id"))
+	if err := orms.Delete[db.User](db.Tx, c.Params("id")); err != nil {
+		return &fext.Fail{Code: internal.RemoveFailed, Message: err.Error()}
+	}
 	return nil
 }
 

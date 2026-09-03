@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { AdminIn, Apis, BaseQueries, Page } from '~/lib/sdk'
+import { AdminIn, Apis } from '~/lib/sdk'
 
 definePageMeta({
   name: 'admin',
   middleware: 'auth',
 })
 
-const queries = ref(inst(BaseQueries, { column: 'id', desc: true }))
+const queries = ref({ page: 1, size: 20, column: 'id', desc: true })
 
 const { open } = useDialog()
 const { mi, mo, sc, su, reset } = useCrud({ ...inst(AdminIn), id: 0 })
@@ -16,7 +16,7 @@ const { loading, data, send } = useRequest(
       params: queries.value,
     }),
   {
-    initialData: inst(Page),
+    initialData: { total: 0, page: 0, content: [] },
   },
 ).onSuccess(reset)
 const { loading: creating, send: create } = useRequest(
@@ -116,11 +116,11 @@ watch(queries, send, { deep: true })
 
     <template #modals>
       <VxModal v-model="sc" :title="$t('create')">
-        <FormUser v-model="mi" :loading="creating" @submit="create" />
+        <FormAdmin v-model="mi" :loading="creating" @submit="create" />
       </VxModal>
 
       <VxModal v-model="su" :title="$t('update')">
-        <FormUser v-model="mo" :loading="updating" @submit="update" />
+        <FormAdmin v-model="mo" :loading="updating" @submit="update" />
       </VxModal>
 
       <VxModal v-model="resetPwdOpen" :title="$t('reset.password')">

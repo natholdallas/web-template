@@ -15,12 +15,19 @@ type Media struct {
 	Path string `json:"path"`
 }
 
+func suffixOf(filename string) string {
+	if i := strings.LastIndex(filename, "."); i >= 0 {
+		return strings.ToLower(filename[i:])
+	}
+	return ""
+}
+
 func UploadImg(c fiber.Ctx) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return &fext.Fail{Code: InvalidData, System: err}
 	}
-	suffix := strings.ToLower(file.Filename[strings.LastIndex(file.Filename, "."):])
+	suffix := suffixOf(file.Filename)
 	suffixes := []string{".jpg", ".png", ".jpeg", ".webp"}
 	return SaveMedia(c, file, suffixes, suffix, InvalidImgSuffixes)
 }
@@ -30,7 +37,7 @@ func UploadVid(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: InvalidData, System: err}
 	}
-	suffix := strings.ToLower(file.Filename[strings.LastIndex(file.Filename, "."):])
+	suffix := suffixOf(file.Filename)
 	suffixes := []string{".mp4"}
 	return SaveMedia(c, file, suffixes, suffix, InvalidVidSuffixes)
 }
