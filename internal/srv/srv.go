@@ -39,5 +39,5 @@ func Setup() {
 	adm.Setup(app.Group("/adm/api/v1").Use(internal.Log("ADM")))
 	usr.Setup(app.Group("/usr/api/v1").Use(internal.Log("USR")))
 	swg.Setup(app.Group("/doc/api/v1").Use(internal.Log("DOC")))
-	fext.Listen(app, strs.ToStart(conf.App.Port, strs.Colon))
+	fext.MustListen(app, strs.ToStart(conf.App.Port, strs.Colon))
 }

@@ -35,7 +35,7 @@ func Connect() {
 		DB:   conf.App.RedisIndex,
 	})
 	if conf.App.DBAutoMigrate {
-		Migration()
+		Migrate()
 	}
 }
 
@@ -44,7 +44,7 @@ func Mock() {
 	orms.Create(Tx, &User{Username: "user", Password: pwd.TryHash("123456")})
 }
 
-func Migration() {
+func Migrate() {
 	orms.MustAutoMigrate(
 		Tx,
 		&Admin{},

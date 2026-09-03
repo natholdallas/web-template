@@ -3,6 +3,7 @@ package flag
 
 import (
 	"fmt"
+
 	"webtplmst/internal/conf"
 	"webtplmst/internal/db"
 	"webtplmst/internal/task"
@@ -20,7 +21,7 @@ func PreRun() {
 
 func Run() {
 	flags.Run(conf.Flag.RstDB, RstDB)
-	flags.Run(conf.Flag.Migration, Migration)
+	flags.Run(conf.Flag.Migrate, Migrate)
 	flags.Run(conf.Flag.Adm, Adm)
 	flags.Run(conf.Flag.Usr, Usr)
 	flags.Run(conf.Flag.Sync, Sync)
@@ -37,9 +38,9 @@ func CrtDB() {
 	db.AutoCreate()
 }
 
-func Migration() {
+func Migrate() {
 	fmt.Println("migration database")
-	db.Migration()
+	db.Migrate()
 }
 
 func Usr() {
