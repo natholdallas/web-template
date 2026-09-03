@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const conf = useConf()
+const conf = useConfStore()
 </script>
 
 <template>

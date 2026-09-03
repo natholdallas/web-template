@@ -19,10 +19,10 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@lucide/vue": "^1.33.0",
     "@natholdallas/alova": "workspace:^",
     "@natholdallas/i18n": "workspace:^",
     "@natholdallas/infra": "workspace:^",
+    "@natholdallas/pinia": "workspace:^",
     "@natholdallas/shadcn": "workspace:^",
     "@natholdallas/tauri": "workspace:^"
   }

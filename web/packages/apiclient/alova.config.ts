@@ -28,7 +28,7 @@ function ok(_response: Response, method: Method, data: unknown) {
 }
 
 async function unauthorized(_response: Response, method: Method) {
-  const auth = useAuth()
+  const auth = useAuthStore()
   if (method.meta?.isRefresh) {
     auth.$signOut()
     throw new Error('refresh failed')
@@ -79,7 +79,7 @@ function ok(_response: Response, method: Method, data: unknown) {
 }
 
 async function unauthorized(_response: Response, method: Method) {
-  const auth = useAuth()
+  const auth = useAuthStore()
   if (method.meta?.isRefresh) {
     auth.$signOut()
     throw new Error('refresh failed')
@@ -135,7 +135,7 @@ export default defineConfig({
         stripSchemaPrefix('Usr'),
         requiredResponses(['/usr/api/v1', '/api/v1']),
         modelDefaults('../../apps/usr/app/lib/sdk', ['/usr/api/v1', '/api/v1']),
-        customIndex(usrWiring),
+        customIndex(usrWiring, 'useAuthStore'),
       ],
     },
     // ── Admin app: adm + public (std) ──────────────────────────────────
@@ -152,7 +152,7 @@ export default defineConfig({
         stripSchemaPrefix('Adm'),
         requiredResponses(['/adm/api/v1', '/api/v1']),
         modelDefaults('../../apps/adm/app/lib/sdk', ['/adm/api/v1', '/api/v1']),
-        customIndex(admWiring),
+        customIndex(admWiring, 'useAuthStore'),
       ],
     },
   ],

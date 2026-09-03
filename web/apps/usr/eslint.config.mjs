@@ -1,9 +1,7 @@
 // @ts-check
 import withNuxt from './.nuxt/eslint.config.mjs'
 
-export default withNuxt(
-  {
-    ignores: ['app/lib/sdk/**', 'app/components/ui/**'],
-  },
-)
+export default withNuxt({
+  ignores: ['app/lib/sdk/**', 'app/components/ui/**'],
+})
 // Your custom configs here

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { Locale, locales } from '~/lib/locale'
 import { Apis, Admin, ProfileIn, ResetPasswordIn } from '~/lib/sdk'
-import type { ThemeMode } from '~/composables/conf'
+import type { ThemeMode } from '~/stores/conf'
 
 definePageMeta({
   name: 'settings',
   middleware: 'auth',
 })
 
-const conf = useConf()
+const conf = useConfStore()
 const { locale: currentLocale } = useI18n()
 
 const {

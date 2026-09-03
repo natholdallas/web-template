@@ -67,7 +67,7 @@ watch(queries, send, { deep: true })
 </script>
 
 <template>
-  <ComCtl :loading="resetting" class="flex flex-col p-4 lg:p-6">
+  <ComCtl :loading="resetting" class="flex flex-col p-4">
     <div class="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col gap-4">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4">
@@ -80,9 +80,7 @@ watch(queries, send, { deep: true })
           </div>
         </div>
 
-        <VChip prepend-icon="mdi-account-multiple" variant="tonal" class="hidden sm:inline-flex" rounded>
-          {{ $t('total') }}: {{ data.total }}
-        </VChip>
+        <VChip prepend-icon="mdi-account-multiple" variant="tonal" class="hidden sm:inline-flex" rounded> {{ $t('total') }}: {{ data.total }} </VChip>
       </div>
 
       <VCard border rounded="xl" class="flex-1 min-h-0 overflow-hidden">
@@ -90,7 +88,11 @@ watch(queries, send, { deep: true })
           v-model:items-per-page="queries.size"
           v-model:page="queries.page"
           class="h-full"
-          :headers="[{ title: $t('model.id'), key: 'id', sortable: true }, { title: $t('user.username'), key: 'username', sortable: true }, { key: 'data-table-expand' }]"
+          :headers="[
+            { title: $t('model.id'), key: 'id', sortable: true },
+            { title: $t('user.username'), key: 'username', sortable: true },
+            { key: 'data-table-expand' },
+          ]"
           :items="data.content"
           :items-length="data.total"
           :loading="loading || removing"
@@ -102,8 +104,26 @@ watch(queries, send, { deep: true })
 
           <template #item.data-table-expand="{ internalItem, item, isExpanded, toggleExpand }">
             <div class="flex items-center justify-end gap-1">
-              <VxActionBtn icon="mdi-pencil" :tooltip="$t('update')" @click="() => { mo = cpm({ ...item, password: '' }); su = true }" />
-              <VxActionBtn icon="mdi-delete" :tooltip="$t('remove')" @click="() => { mo = cpm({ ...item, password: '' }); open({ confirm: remove }) }" />
+              <VxActionBtn
+                icon="mdi-pencil"
+                :tooltip="$t('update')"
+                @click="
+                  () => {
+                    mo = cpm({ ...item, password: '' })
+                    su = true
+                  }
+                "
+              />
+              <VxActionBtn
+                icon="mdi-delete"
+                :tooltip="$t('remove')"
+                @click="
+                  () => {
+                    mo = cpm({ ...item, password: '' })
+                    open({ confirm: remove })
+                  }
+                "
+              />
               <VxActionBtn icon="mdi-key-refresh" :tooltip="$t('reset.password')" @click="resetPassword(item.id)" />
               <VxExpandBtn :item="internalItem" @expanded="isExpanded" @toggle="toggleExpand" />
             </div>

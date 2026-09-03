@@ -1,5 +1,5 @@
 export default defineNuxtRouteMiddleware(() => {
-  if (useAuth().accessToken) {
+  if (useAuthStore().accessToken) {
     return navigateTo({ name: 'index' })
   }
 })

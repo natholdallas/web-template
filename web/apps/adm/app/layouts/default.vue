@@ -2,8 +2,8 @@
 const { mdAndUp } = useVDisplay()
 const { open } = useDialog()
 
-const auth = useAuth()
-const conf = useConf()
+const auth = useAuthStore()
+const conf = useConfStore()
 const drawer = ref(mdAndUp.value)
 </script>
 
@@ -24,12 +24,7 @@ const drawer = ref(mdAndUp.value)
           </template>
 
           <VList>
-            <VListItem
-              prepend-icon="mdi-theme-light-dark"
-              :title="$t('switch.theme')"
-              @click="conf.$switchTheme"
-            />
-
+            <VListItem prepend-icon="mdi-theme-light-dark" :title="$t('switch.theme')" @click="conf.$switchTheme" />
             <VListItem prepend-icon="mdi-logout" :title="$t('sign.out')" @click="open({ confirm: auth.$signOut })" />
           </VList>
         </VMenu>
@@ -38,10 +33,10 @@ const drawer = ref(mdAndUp.value)
 
     <VNavigationDrawer v-model="drawer" :expand-on-hover="mdAndUp" mobile-breakpoint="md" :rail="mdAndUp">
       <VList>
-        <VListItem prepend-icon="mdi-home" :title="$t('urls.index')" :to="{ name: 'index' }" />
-        <VListItem prepend-icon="mdi-account-supervisor" :title="$t('urls.admin')" :to="{ name: 'admin' }" />
-        <VListItem prepend-icon="mdi-account" :title="$t('urls.user')" :to="{ name: 'user' }" />
-        <VListItem prepend-icon="mdi-cog" :title="$t('urls.settings')" :to="{ name: 'settings' }" />
+        <VListItem prepend-icon="mdi-home" :title="$t('urls.index')" to="/" />
+        <VListItem prepend-icon="mdi-account-supervisor" :title="$t('urls.admin')" to="/admin" />
+        <VListItem prepend-icon="mdi-account" :title="$t('urls.user')" to="/user" />
+        <VListItem prepend-icon="mdi-cog" :title="$t('urls.settings')" to="/settings" />
       </VList>
     </VNavigationDrawer>
 

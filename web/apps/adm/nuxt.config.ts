@@ -17,6 +17,7 @@ export default defineNuxtConfig({
 
   css: [
     // css
+    '~/assets/styles/css/vuetify.css',
     '~/assets/styles/css/tailwind.css',
     '~/assets/styles/css/main.css',
     '~/assets/styles/css/fonts.css',
@@ -29,6 +30,7 @@ export default defineNuxtConfig({
     '@natholdallas/i18n',
     '@natholdallas/infra',
     '@natholdallas/vuetify',
+    '@natholdallas/pinia',
     '@natholdallas/tauri',
   ],
   imports: {
@@ -43,12 +45,6 @@ export default defineNuxtConfig({
   app: {
     rootAttrs: { id: 'root' },
     head: {
-      link: [
-        {
-          rel: 'stylesheet',
-          href: '/layers.css',
-        },
-      ],
       meta: [
         {
           name: 'viewport',

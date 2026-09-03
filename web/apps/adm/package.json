@@ -23,6 +23,8 @@
     "@natholdallas/i18n": "workspace:^",
     "@natholdallas/infra": "workspace:^",
     "@natholdallas/vuetify": "workspace:^",
-    "@natholdallas/tauri": "workspace:^"
+    "@natholdallas/pinia": "workspace:^",
+    "@natholdallas/tauri": "workspace:^",
+    "@vueuse/core": "^14.4.0"
   }
 }

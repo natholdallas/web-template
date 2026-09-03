@@ -2,11 +2,11 @@
 import { Home, LogOut, Menu, Settings } from '@lucide/vue'
 import { locales } from '~/lib/locale'
 
-const auth = useAuth()
+const auth = useAuthStore()
 const isMobileOpen = ref(false)
 const isLogoutDialogOpen = ref(false)
 
-const conf = useConf()
+const conf = useConfStore()
 const menuItems = computed(() => [
   { label: $t('urls.index'), icon: Home, to: '/' },
   { label: $t('urls.settings'), icon: Settings, to: '/settings' },

@@ -301,7 +301,7 @@ export const modelDefaults = createPlugin((outputDir: string, prefixes: string[]
  * `wiring` is injected verbatim at the end of the module — each app passes its
  * own handler implementation and re-exports (see alova.config.ts).
  */
-export const customIndex = createPlugin((wiring = '') => ({
+export const customIndex = createPlugin((wiring = '', authAccessor = 'useAuth') => ({
   async beforeCodeGenerate(_data: unknown, outputFile: string) {
     if (!outputFile.endsWith('index.ts')) return
     return `/* eslint-disable */
@@ -320,7 +320,7 @@ export const alovaInstance = createAlova({
   statesHook: VueHook,
   requestAdapter: adapterFetch(),
   beforeRequest(method) {
-    const { accessToken } = useAuth()
+    const { accessToken } = ${authAccessor}()
     if (accessToken) {
       method.config.headers = { ...method.config.headers, Authorization: 'Bearer ' + accessToken }
     }

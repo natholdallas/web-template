@@ -7,7 +7,7 @@ definePageMeta({
   middleware: 'entrance',
 })
 
-const auth = useAuth()
+const auth = useAuthStore()
 const model = ref(inst(AuthIn))
 
 const { loading: signing, send: signIn } = useRequest(

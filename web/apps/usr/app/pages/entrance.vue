@@ -7,7 +7,7 @@ definePageMeta({
   layout: 'minimal',
 })
 
-const auth = useAuth()
+const auth = useAuthStore()
 const form = ref(inst(AuthIn))
 
 const { loading: signing, send: signIn } = useRequest(

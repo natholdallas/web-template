@@ -28,6 +28,7 @@ export default defineNuxtConfig({
     '@natholdallas/alova',
     '@natholdallas/i18n',
     '@natholdallas/infra',
+    '@natholdallas/pinia',
     '@natholdallas/shadcn',
     '@natholdallas/tauri',
   ],
