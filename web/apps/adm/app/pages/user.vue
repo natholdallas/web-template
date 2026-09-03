@@ -68,7 +68,7 @@ watch(queries, send, { deep: true })
 
 <template>
   <ComCtl :loading="resetting" class="flex flex-col p-4">
-    <div class="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col gap-4">
+    <div class="flex size-full flex-1 flex-col gap-4">
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4">
           <div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
