@@ -10,7 +10,7 @@ interface Props extends PrimitiveProps {
   size?: ButtonVariants["size"]
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   variant: "ghost",
   size: "icon-xs",
 })

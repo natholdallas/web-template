@@ -27,7 +27,7 @@ const drawer = ref(mdAndUp.value)
             <VListItem
               prepend-icon="mdi-theme-light-dark"
               :title="$t('switch.theme')"
-              @click="conf.theme = conf.theme === 'dark' ? 'light' : 'dark'"
+              @click="conf.$switchTheme"
             />
 
             <VListItem prepend-icon="mdi-logout" :title="$t('sign.out')" @click="open({ confirm: auth.$signOut })" />

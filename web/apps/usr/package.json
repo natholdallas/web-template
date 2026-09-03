@@ -15,9 +15,11 @@
     "postinstall": "nuxt prepare",
     "analyze": "nuxt analyze",
     "package": "NO_STRIP=true tauri build",
-    "package:debug": "NO_STRIP=true tauri build --debug"
+    "package:debug": "NO_STRIP=true tauri build --debug",
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@lucide/vue": "^1.33.0",
     "@natholdallas/alova": "workspace:^",
     "@natholdallas/i18n": "workspace:^",
     "@natholdallas/infra": "workspace:^",

@@ -23,7 +23,7 @@
 
   :root.dark {
     --loader-primary-color: #2196f3;
-    --loader-bg-color: rgba(18, 18, 18, 0.85);
+    --loader-bg-color: #121212;
   }
 
   html,
@@ -104,14 +104,22 @@
 </style>
 <script>
   ;(function () {
-    const m = localStorage.getItem('conf') || 'auto'
-    const { theme } = JSON.parse(m)
-    if (m === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    var theme = 'system'
+    try {
+      var raw = localStorage.getItem('conf')
+      if (raw) {
+        var parsed = JSON.parse(raw)
+        if (parsed && parsed.theme) theme = parsed.theme
+      }
+    } catch (e) {
+      // ignore
+    }
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    var isDark = theme === 'dark' || (theme === 'system' && prefersDark)
+    if (isDark) {
       document.documentElement.classList.add('dark')
-    } else if (theme === 'light') {
+    } else {
       document.documentElement.classList.remove('dark')
-    } else if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
     }
   })()
 </script>

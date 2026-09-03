@@ -67,52 +67,54 @@ watch(queries, send, { deep: true })
 </script>
 
 <template>
-  <ComCtl :loading="resetting">
-    <VDataTableServer
-      v-model:items-per-page="queries.size"
-      v-model:page="queries.page"
-      class="h-full"
-      :headers="[{ title: $t('model.id'), key: 'id' }, { title: $t('user.username'), key: 'username' }, { key: 'data-table-expand' }]"
-      :items="data.content"
-      :items-length="data.total"
-      :loading="loading || removing"
-      @update:options="({ sortBy }) => vtables.sort(queries, sortBy)"
-    >
-      <template #top>
-        <TopTableBar v-model="sc" />
-      </template>
-
-      <template #item.data-table-expand="{ internalItem, item, isExpanded, toggleExpand }">
-        <div class="flex gap-2 items-center">
-          <VxActionBtn
-            icon="mdi-pencil"
-            @click="
-              () => {
-                mo = cpm({ ...item, password: '' })
-                su = true
-              }
-            "
-          />
-
-          <VxActionBtn
-            icon="mdi-delete"
-            @click="
-              () => {
-                mo = cpm({ ...item, password: '' })
-                open({ confirm: remove })
-              }
-            "
-          />
-
-          <VxActionBtn icon="mdi-key-refresh" @click="resetPassword(item.id)" />
-          <VxExpandBtn :item="internalItem" @expanded="isExpanded" @toggle="toggleExpand" />
+  <ComCtl :loading="resetting" class="flex flex-col p-4 lg:p-6">
+    <div class="mx-auto flex w-full max-w-6xl min-h-0 flex-1 flex-col gap-4">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <VIcon icon="mdi-shield-account" size="28" />
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold leading-tight">{{ $t('urls.admin') }}</h1>
+            <p class="text-sm opacity-70">{{ $t('admin.desc') }}</p>
+          </div>
         </div>
-      </template>
 
-      <template #expanded-row="{ columns, item }">
-        <RecordInfoTable :colspan="columns.length" :info="item" />
-      </template>
-    </VDataTableServer>
+        <VChip prepend-icon="mdi-account-multiple" variant="tonal" class="hidden sm:inline-flex" rounded>
+          {{ $t('total') }}: {{ data.total }}
+        </VChip>
+      </div>
+
+      <VCard border rounded="xl" class="flex-1 min-h-0 overflow-hidden">
+        <VDataTableServer
+          v-model:items-per-page="queries.size"
+          v-model:page="queries.page"
+          class="h-full"
+          :headers="[{ title: $t('model.id'), key: 'id', sortable: true }, { title: $t('user.username'), key: 'username', sortable: true }, { key: 'data-table-expand' }]"
+          :items="data.content"
+          :items-length="data.total"
+          :loading="loading || removing"
+          @update:options="({ sortBy }) => vtables.sort(queries, sortBy)"
+        >
+          <template #top>
+            <TopTableBar v-model="sc" :text="$t('admin')" />
+          </template>
+
+          <template #item.data-table-expand="{ internalItem, item, isExpanded, toggleExpand }">
+            <div class="flex items-center justify-end gap-1">
+              <VxActionBtn icon="mdi-pencil" :tooltip="$t('update')" @click="() => { mo = cpm({ ...item, password: '' }); su = true }" />
+              <VxActionBtn icon="mdi-delete" :tooltip="$t('remove')" @click="() => { mo = cpm({ ...item, password: '' }); open({ confirm: remove }) }" />
+              <VxActionBtn icon="mdi-key-refresh" :tooltip="$t('reset.password')" @click="resetPassword(item.id)" />
+              <VxExpandBtn :item="internalItem" @expanded="isExpanded" @toggle="toggleExpand" />
+            </div>
+          </template>
+
+          <template #expanded-row="{ columns, item }">
+            <RecordInfoTable :colspan="columns.length" :info="item" />
+          </template>
+        </VDataTableServer>
+      </VCard>
+    </div>
 
     <template #modals>
       <VxModal v-model="sc" :title="$t('create')">

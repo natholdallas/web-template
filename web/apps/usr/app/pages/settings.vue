@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Palette, Lock, UserRound } from '@lucide/vue'
 import { locales } from '~/lib/locale'
 import { Apis, Profile, ResetPasswordIn } from '~/lib/sdk'
 
@@ -44,69 +45,84 @@ const { loading: savingPwd, send: savePwd } = useRequest(
 </script>
 
 <template>
-  <ComCtl :loading="findingUser" class="space-y-6 p-4" scroll>
-    <UiCard>
-      <UiCardHeader>
-        <UiCardTitle>{{ $t('settings.user.info') }}</UiCardTitle>
-        <UiCardDescription>{{ $t('settings.user.info.desc') }}</UiCardDescription>
-      </UiCardHeader>
-      <UiCardContent class="space-y-4">
-        <div class="flex items-center justify-between py-2 border-b">
-          <span class="text-sm text-muted-foreground">{{ $t('model.id') }}</span>
-          <span class="font-medium">{{ user.id }}</span>
-        </div>
-        <div class="flex items-center justify-between py-2 border-b">
-          <span class="text-sm text-muted-foreground">{{ $t('user.username') }}</span>
-          <span class="font-medium">{{ user.username }}</span>
-        </div>
-      </UiCardContent>
-    </UiCard>
-
-    <UiCard>
-      <UiCardHeader>
-        <UiCardTitle>{{ $t('settings.change.password') }}</UiCardTitle>
-        <UiCardDescription>{{ $t('settings.change.password.desc') }}</UiCardDescription>
-      </UiCardHeader>
-      <UiCardContent>
-        <FormRstPwd v-model="pwdForm" :loading="savingPwd" @submit="savePwd" />
-      </UiCardContent>
-    </UiCard>
-
-    <UiCard>
-      <UiCardHeader>
-        <UiCardTitle>{{ $t('settings.user.info') }}</UiCardTitle>
-        <UiCardDescription>{{ $t('settings.user.info.desc') }}</UiCardDescription>
-      </UiCardHeader>
-      <UiCardContent>
-        <FormProfile v-model="usrForm" :loading="savingUsr" @submit="saveUsr" />
-      </UiCardContent>
-    </UiCard>
-
-    <UiCard>
-      <UiCardHeader>
-        <UiCardTitle>{{ $t('settings.appearance') }}</UiCardTitle>
-        <UiCardDescription>{{ $t('settings.appearance.desc') }}</UiCardDescription>
-      </UiCardHeader>
-      <UiCardContent class="flex flex-col gap-4">
-        <div class="flex items-center justify-between">
-          <div class="space-y-0.5">
-            <span class="font-medium">{{ $t('settings.dark.mode') }}</span>
-            <p class="text-sm text-muted-foreground">{{ $t('settings.dark.mode.desc') }}</p>
+  <ComCtl :loading="findingUser" class="p-4 lg:p-6" scroll>
+    <div class="mx-auto max-w-3xl flex flex-col gap-4">
+      <UiCard>
+        <UiCardContent class="flex items-center gap-4 p-6 sm:gap-5">
+          <UiAvatar class="size-16 rounded-none">
+            <UiAvatarFallback class="bg-secondary text-lg secondary-foreground">
+              {{ user.username?.slice(0, 1).toUpperCase() || '?' }}
+            </UiAvatarFallback>
+          </UiAvatar>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-lg font-semibold">{{ user.username || $t('settings.no.username') }}</p>
+            <p class="mt-1 text-sm text-muted-foreground">ID: {{ user.id }}</p>
           </div>
-          <SwitchTheme switch />
-        </div>
-        <div class="flex items-center justify-between gap-4">
-          <div class="space-y-0.5">
-            <span class="font-medium">{{ $t('locale') }}</span>
-            <p class="text-sm text-muted-foreground">{{ $t('locale.desc') }}</p>
+        </UiCardContent>
+      </UiCard>
+
+      <UiCard class="flex flex-col">
+        <UiCardHeader class="space-y-1">
+          <UiCardTitle class="flex items-center gap-2 text-base">
+            <span class="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <UserRound class="size-4" />
+            </span>
+            {{ $t('settings.edit.profile') }}
+          </UiCardTitle>
+          <UiCardDescription>{{ $t('settings.edit.profile.desc') }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent class="flex-1">
+          <FormProfile v-model="usrForm" :loading="savingUsr" class="flex h-full flex-col" @submit="saveUsr" />
+        </UiCardContent>
+      </UiCard>
+
+      <UiCard class="flex flex-col">
+        <UiCardHeader class="space-y-1">
+          <UiCardTitle class="flex items-center gap-2 text-base">
+            <span class="flex size-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <Lock class="size-4" />
+            </span>
+            {{ $t('settings.change.password') }}
+          </UiCardTitle>
+          <UiCardDescription>{{ $t('settings.change.password.desc') }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent class="flex-1">
+          <FormRstPwd v-model="pwdForm" :loading="savingPwd" class="flex h-full flex-col" @submit="savePwd" />
+        </UiCardContent>
+      </UiCard>
+
+      <UiCard>
+        <UiCardHeader class="space-y-1">
+          <UiCardTitle class="flex items-center gap-2 text-base">
+            <span class="flex size-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <Palette class="size-4" />
+            </span>
+            {{ $t('settings.appearance') }}
+          </UiCardTitle>
+          <UiCardDescription>{{ $t('settings.appearance.desc') }}</UiCardDescription>
+        </UiCardHeader>
+        <UiCardContent class="flex flex-col gap-5">
+          <div class="space-y-2.5">
+            <div class="space-y-0.5">
+              <span class="text-sm font-medium">{{ $t('settings.theme') }}</span>
+              <p class="text-sm text-muted-foreground">{{ $t('settings.theme.desc') }}</p>
+            </div>
+            <ThemeSelect />
           </div>
-          <SwitchLang
-            :options="Object.values(locales).map(({ k, v }) => ({ label: $t(k), key: k, value: v }))"
-            :value="$t(locales[$i18n.locale].k)"
-            @update="$i18n.setLocale"
-          />
-        </div>
-      </UiCardContent>
-    </UiCard>
+          <UiSeparator />
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="space-y-0.5">
+              <span class="text-sm font-medium">{{ $t('locale') }}</span>
+              <p class="text-sm text-muted-foreground">{{ $t('locale.desc') }}</p>
+            </div>
+            <SwitchLang
+              :options="Object.values(locales).map(({ k, v }) => ({ label: $t(k), key: k, value: v }))"
+              :value="$t(locales[$i18n.locale].k)"
+              @update="$i18n.setLocale"
+            />
+          </div>
+        </UiCardContent>
+      </UiCard>
+    </div>
   </ComCtl>
 </template>
