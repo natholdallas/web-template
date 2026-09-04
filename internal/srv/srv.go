@@ -2,18 +2,17 @@
 package srv
 
 import (
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
+	"github.com/gofiber/fiber/v3/middleware/static"
+	"github.com/natholdallas/natools4go/fext"
+	"github.com/natholdallas/natools4go/strs"
 	"webtplmst/internal/conf"
 	"webtplmst/internal/srv/adm"
 	"webtplmst/internal/srv/internal"
 	"webtplmst/internal/srv/std"
 	"webtplmst/internal/srv/swg"
 	"webtplmst/internal/srv/usr"
-
-	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/cors"
-	"github.com/gofiber/fiber/v3/middleware/static"
-	"github.com/natholdallas/natools4go/fext"
-	"github.com/natholdallas/natools4go/strs"
 )
 
 func Setup() {

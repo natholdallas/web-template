@@ -1,11 +1,10 @@
 package swg
 
 import (
-	"webtplmst/internal/conf"
-	"webtplmst/internal/srv/internal"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/yokeTH/gofiber-scalar/scalar/v3"
+	"webtplmst/internal/conf"
+	"webtplmst/internal/srv/internal"
 )
 
 func Setup(app fiber.Router) {

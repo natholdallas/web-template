@@ -2,13 +2,12 @@
 package task
 
 import (
-	"webtplmst/internal/client"
-	"webtplmst/internal/conf"
-	"webtplmst/internal/db"
-
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
+	"webtplmst/internal/client"
+	"webtplmst/internal/conf"
+	"webtplmst/internal/db"
 )
 
 func Sync() {

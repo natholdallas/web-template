@@ -320,6 +320,8 @@ renewal() {
       -exec "${SED_CMD[@]}" "s/${pname_esc}/${new_name_esc}/g" {} +
     # copy file
     copyfile
+    # initialize project
+    init
     # generate docs
     docs
     # initialize git repository

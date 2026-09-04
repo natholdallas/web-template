@@ -13,6 +13,8 @@ type FlagConf struct {
 	RstDB    bool
 	CrtDB    bool
 	MigDB    bool
+	SyncDB   bool
+	RstTable bool
 	Sync     bool
 	Mock     bool
 	Gensec   bool
@@ -27,6 +29,8 @@ func LoadFlag() {
 	flag.BoolVar(&Flag.RstDB, "rstdb", false, "reset database to default")
 	flag.BoolVar(&Flag.CrtDB, "crtdb", false, "create database if not exists")
 	flag.BoolVar(&Flag.MigDB, "migrate", false, "run migration script")
+	flag.BoolVar(&Flag.SyncDB, "sync-db", false, "sync table schemas with models (add/drop/reorder, keeps data)")
+	flag.BoolVar(&Flag.RstTable, "rstable", false, "reset table structures to match models (drops data)")
 	flag.BoolVar(&Flag.Sync, "sync", false, "run sync task")
 	flag.BoolVar(&Flag.Mock, "mock", false, "create mock data")
 	flag.BoolVar(&Flag.Gensec, "gensec", false, "regenerate secrets")

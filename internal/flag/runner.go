@@ -3,13 +3,12 @@ package flag
 import (
 	"fmt"
 
-	"webtplmst/internal/db"
-	"webtplmst/internal/task"
-
 	"github.com/natholdallas/natools4go/ask"
 	"github.com/natholdallas/natools4go/orms"
 	"github.com/natholdallas/natools4go/pwd"
 	"github.com/natholdallas/natools4go/rands"
+	"webtplmst/internal/db"
+	"webtplmst/internal/task"
 )
 
 func Gensec() {
@@ -32,6 +31,16 @@ func CrtDB() {
 func MigDB() {
 	fmt.Println("migration database")
 	db.Migrate()
+}
+
+func SyncDB() {
+	fmt.Println("sync database schema")
+	db.SyncDB(db.Tx)
+}
+
+func RstTable() {
+	fmt.Println("reset table structures")
+	db.ResetTables(db.Tx)
 }
 
 func Usr() {

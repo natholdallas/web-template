@@ -1,12 +1,11 @@
 package std
 
 import (
-	"webtplmst/internal/client"
-	"webtplmst/internal/srv/internal"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/log"
 	"github.com/natholdallas/natools4go/dbg"
+	"webtplmst/internal/client"
+	"webtplmst/internal/srv/internal"
 )
 
 func WechatWebhook(c fiber.Ctx) error {

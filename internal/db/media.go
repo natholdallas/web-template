@@ -2,10 +2,10 @@ package db
 
 import (
 	"os"
-	"webtplmst/internal/conf"
 
 	"github.com/natholdallas/natools4go/orms"
 	"gorm.io/gorm"
+	"webtplmst/internal/conf"
 )
 
 type Media struct {

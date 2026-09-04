@@ -1,9 +1,8 @@
 package adm
 
 import (
-	"webtplmst/internal/db"
-
 	"github.com/gofiber/fiber/v3"
+	"webtplmst/internal/db"
 )
 
 type Stats struct {

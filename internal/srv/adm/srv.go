@@ -2,10 +2,9 @@
 package adm
 
 import (
-	"webtplmst/internal/conf"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/natholdallas/natools4go/fext"
+	"webtplmst/internal/conf"
 )
 
 var jwt = fext.NewJWT(conf.App.SecretAdm)

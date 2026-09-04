@@ -3,13 +3,13 @@ package internal
 import (
 	"net/http"
 	"time"
-	"webtplmst/internal/conf"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/gofiber/fiber/v3/middleware/logger"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
+	"webtplmst/internal/conf"
 )
 
 func FasthttpToHTTP(context *fasthttp.RequestCtx) (*http.Request, error) {

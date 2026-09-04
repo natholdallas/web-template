@@ -189,11 +189,13 @@ web-templates/
 ./bin/backend --mock         # Seed test data
 
 # Database operations
-./bin/backend --migration    # Run auto-migration
+./bin/backend --migration    # Run auto-migration (add-only, safe)
+./bin/backend --sync-db      # Sync table schemas with models (add/drop/reorder, keeps data)
+./bin/backend --rstable      # Reset table structures to match models (drops data)
 ./bin/backend --rstdb        # Reset database
 
-# Utility
-./bin/backend --sync         # Sync exchange rates
+# Task scripts
+./bin/backend --sync         # Run cron task scripts (e.g. sync exchange rates)
 ./bin/backend --remake-secret # Regenerate JWT secrets
 ```
 

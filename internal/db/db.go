@@ -4,13 +4,12 @@ package db
 import (
 	"context"
 
-	"webtplmst/internal/conf"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/natholdallas/natools4go/orms"
 	"github.com/natholdallas/natools4go/pwd"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+	"webtplmst/internal/conf"
 )
 
 var (
@@ -44,15 +43,10 @@ func Mock() {
 	orms.Create(Tx, &User{Username: "user", Password: pwd.TryHash("123456")})
 }
 
+var Models = []any{&Admin{}, &User{}, &Rate{}, &Media{}, &SysConf{}}
+
 func Migrate() {
-	orms.MustAutoMigrate(
-		Tx,
-		&Admin{},
-		&User{},
-		&Rate{},
-		&Media{},
-		&SysConf{},
-	)
+	orms.MustAutoMigrate(Tx, Models...)
 }
 
 func Reset() {

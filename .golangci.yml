@@ -1,20 +1,43 @@
 version: "2"
 
+# 1. 对应 gopls 的 analyses / staticcheck 启用项
 linters:
   default: none
   enable:
-    - govet
-    - ineffassign
-    - misspell
-    - revive
-    - staticcheck
-    - unused
+    - govet # 对应 shadow, unreachable, nilness, fieldalignment 等分析
+    - staticcheck # 对应 gopls 中的 staticcheck = true 及 ST1003
+    - unused # 对应 unusedparams / unusedwrite 等未使用的元素检测
+    - revive # 对应 useany / 各种逻辑编码规范检测
+    - misspell # 补充的拼写检查
   settings:
     revive:
       rules:
         - name: use-any
 
+# 2. 对应 gopls 的具体分析规则细化配置
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - fieldalignment # 对应 gopls 中的 fieldalignment = false
+
+  revive:
+    rules:
+      - name: use-any # 对应 gopls analyses 中的 useany = true
+      - name: var-naming # 对应 ST1003 (变量/导出的命名规范)
+
+  staticcheck:
+    checks:
+      - "all"
+      - "ST1003" # 显式指定风格检查 ST1003
+
+# 3. 对应 gopls 中的 gofumpt = true 格式化效果
 formatters:
   enable:
-    - gofumpt
-    - goimports
+    - gofumpt # 开启 gofumpt 格式化
+    - gci # 配合 gci 实现类似 gopls 的自动多分组空行整理
+  settings:
+    gci:
+      sections:
+        - standard
+        - default

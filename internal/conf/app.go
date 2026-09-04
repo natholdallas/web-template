@@ -7,13 +7,12 @@ import (
 	"os"
 	"path/filepath"
 
+	flog "github.com/gofiber/fiber/v3/log"
 	"github.com/natefinch/lumberjack"
 	"github.com/natholdallas/natools4go/narder"
 	"github.com/natholdallas/natools4go/orms"
 	"github.com/natholdallas/natools4go/strs"
 	"github.com/natholdallas/natools4go/vipers"
-
-	flog "github.com/gofiber/fiber/v3/log"
 	glog "gorm.io/gorm/logger"
 )
 

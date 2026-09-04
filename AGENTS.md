@@ -28,7 +28,8 @@ Go backend (Fiber v3)         Nuxt 3 frontends (pnpm workspace)
 
 web/apps/usr/  (port 3000) — shadcn-vue + TailwindCSS + Tauri v2
 web/apps/adm/  (port 3001) — Vuetify + TailwindCSS (v4, CSS-first via `app/assets/styles/css/tailwind.css`; layer order declared in `public/layers.css`)
-web/packages/natholdallas/ — git submodule (shared Nuxt modules). Used by apps: `alova`, `i18n`, `infra`, `tauri`, plus `vuetify` (adm) / `shadcn` (usr). Present but unused by any app: `unocss`, `watermark`, `pinia`, `tailwindcss`
+web/packages/natholdallas/ — git submodule of shared, optional Nuxt modules (see "Shared Nuxt modules" below)
+web/packages/apiclient/   — build-time SDK codegen tool, not a Nuxt module (see "Swagger → Frontend SDK" below)
 ```
 
 ## Go specifics
@@ -39,13 +40,26 @@ web/packages/natholdallas/ — git submodule (shared Nuxt modules). Used by apps
 - **Secrets required:** `secret.adm` and `secret.usr` (validated, 32-char strings). Generate with `./bin/backend --remake-secret`
 - **Hot-reload:** `gowatch -o bin/backend` (gowatch installed via `go install github.com/silenceper/gowatch@latest`)
 - **Go tabs** — 4-space tab indent (`.editorconfig`)
-- **CLI flags:** `--adm`, `--usr`, `--rstdb`, `--migration`, `--sync`, `--mock`, `--remake-secret`
+- **CLI flags:** `--adm`, `--usr`, `--rstdb`, `--migration`, `--sync-db`, `--rstable`, `--sync` (task script), `--mock`, `--remake-secret`
 - **Auto-migrate:** runs `db.Migration()` on startup when `db.auto-migrate = true`
+
+### Database migration layers
+
+Three distinct CLI flags handle schema evolution (`--sync` is unrelated — it runs the cron task scripts):
+
+| Flag        | Source                                     | Behavior                                                                                                                                                                                                                                                             | Data                            |
+| ----------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `--migrate` | `db.Migrate()` → `orms.AutoMigrate`        | Incremental, add-only: creates missing tables/columns, alters types/comments. Runs on startup when `db.auto-migrate`                                                                                                                                                 | Safe                            |
+| `--sync-db` | `db.SyncDB(Tx)` (`internal/db/migrate.go`) | Data-preserving reconciliation per table: add missing columns, **drop extra ones**, **reorder columns to struct order**. MySQL/MariaDB reorder in place via `ALTER TABLE ... MODIFY COLUMN ... FIRST/AFTER`; other drivers rebuild the table and copy shared columns | Dropped columns lose their data |
+| `--rstable` | `db.ResetTables(Tx)`                       | Drops + recreates each registered table from its struct so column order exactly matches declaration order                                                                                                                                                            | All data lost                   |
+| `--rstdb`   | `db.Reset()`                               | Drops + recreates the whole database                                                                                                                                                                                                                                 | All data lost                   |
+
+The GORM model set is the single source of truth — registered in `db.Models` (`internal/db/db.go`), which `Migrate`, `SyncDB`, and `ResetTables` all iterate. GORM's own `AutoMigrate` only ever appends new columns (at the end) and never drops or reorders, which is why `--sync-db`/`--rstable` exist.
+
 - **CORS prefix matching:** `AllowOriginsFunc` uses `strs.AnyPrefix`, not exact match — e.g. `http://localhost` also matches `http://localhost:3000`
 - **Log rotation:** `lumberjack` writes to `<RLog>/app.log` (10MB, 7 backups, 28 days)
 - **Lint:** after any backend code change, run `golangci-lint run --fix ./...` from the repo root (equivalent to running the frontend apps' per-app `pnpm lint`). golangci-lint v2 (2.13.2) is installed at `~/.local/share/go/bin/golangci-lint`. Config: `.golangci.yml` (revive `use-any` forces `any` over `interface{}`, gofumpt/goimports auto-format)
 - **No `_ = expr` blank assignments** — never write code that discards a value/error with `_ = xxx` (e.g. `_ = db.AutoMigrate(...)`). Handle the error/result properly instead (check it, log it, or propagate it).
-- **Formatting:** after writing/finishing any Go code, always run `goimports -w ./internal/*` from the repo root before committing
 - **Go tests are minimal** — the only test file is `internal/pwd/pwd_test.go`; run it with `go test ./internal/pwd/`. There is no wider test suite.
 - **`go mod` has a `replace`** directive for telegram-bot-api (redirects to a fork)
 
@@ -83,7 +97,7 @@ type User struct {
 ## Frontend specifics
 
 - **Package manager:** pnpm@11.25.0 (enforced in root `package.json`)
-- **Workspace packages:** `apps/*`, `packages/*`, `packages/natholdallas/*`
+- **Workspace packages:** `apps/*` (Nuxt apps), `packages/*` (build-time tooling — currently `apiclient`, the SDK codegen), `packages/natholdallas/*` (shared Nuxt modules, git submodule)
 - **Prod build:** `pnpm generate` (SSG / static generation via `nuxt generate --dotenv .env.production`), not `nuxt build`. Root script `pnpm gen` (`pnpm -F adm -F usr --parallel generate`) runs both apps' SSG in parallel — distinct from `pnpm gen:api` (SDK generation)
 - **SSR disabled:** both apps set `ssr: false`
 - **Formatting:** `pnpm format` (Prettier) — run from `web/` dir. Config: no semis, single quotes, 120 print width, 2-space indent
@@ -94,9 +108,26 @@ type User struct {
 - **Shared packages:** git submodule at `web/packages/natholdallas` → `https://github.com/natholdallas/nuxt-modules.git`
 - **Test utils:** configured via `.nuxtrc`: `setups.@nuxt/test-utils="4.2.0"` — test with `nuxi test` from app dir
 
+## Shared Nuxt modules (web/packages/natholdallas/)
+
+Every package under `web/packages/natholdallas/` is a **Nuxt module** (each exposes a `defineNuxtModule` in its `index.ts`). They are **optional** — an app only loads the ones it lists in its `nuxt.config.ts` `modules` and declares as `@natholdallas/*` `workspace:*` deps. This directory is a **git submodule** (shared across projects), so prefer keeping app-specific behavior in the project rather than editing the modules here.
+
+- **`alova`** — registers the alova runtime auto-imports (`lib/`). Provides the runtime side (alova instance, `Api`, `Apis`) that the generated SDK in `app/lib/sdk/` builds on. Used by both apps.
+- **`i18n`** — wraps `@nuxtjs/i18n`. Ships the **globally stored shared translation keys** in `locale/*.ts` (`zh_cn`, `en_us`, `zh_tw`, `ja_jp`). **Do NOT modify these** — they are the global key set. To change or add translations, edit the **project's own i18n files** (`web/apps/<app>/app/locale/*.ts`), which import and spread the shared dict (e.g. `import zh from '@natholdallas/i18n/locale/zh_cn'` then `...zh`) and layer app-specific keys on top. The submodule locales should stay untouched so every project gets the same base keys.
+- **`infra`** — bundles the common infra modules: `@nuxtjs/seo`, `@nuxt/icon`, `@vite-pwa/nuxt`, `@nuxtjs/device`, `@vueuse/nuxt`, `dayjs-nuxt`, `nuxt-og-image`, `@nuxt/eslint`, `@nuxt/test-utils`. Enables Nuxt 4 compatibility (`compatibilityVersion: 4`, typed pages, vite env API), sets PWA/dayjs defaults and a `public.apiBase` runtime default. Also auto-imports shared components (`PwaProvider`) and composables (`crud`, `routes`, `interval`). Used by both apps (adm via `vuetify`, usr via `shadcn`).
+- **`pinia`** — wraps `@pinia/nuxt`; enables Pinia stores (`useAuthStore`, ...). Optional, not currently used.
+- **`shadcn`** — the shadcn-vue module (usr app): depends on `@natholdallas/i18n`, bundles `shadcn-nuxt` + Tailwind v4 (`@tailwindcss/vite`) + radix/reka-ui + vee-validate/zod, and registers `Uix`-prefixed module components (`Form`, `DataTable`, `Field`, `Modal`, ...).
+- **`tailwindcss`** — Tailwind v4 CSS-first module (postcss/vite plugin + sass), for apps that don't use the shadcn/vuetify bundles. Optional, not currently used.
+- **`tauri`** — Tauri v2 integration (`@tauri-apps/api`); used by the usr app.
+- **`unocss`** — UnoCSS module (wraps `@unocss/nuxt` + presets, ships an example `uno.config.ts`). Optional, not currently used.
+- **`vuetify`** — the Vuetify module (adm app): depends on `@natholdallas/i18n` + `@natholdallas/infra`, wraps `vuetify-nuxt-module` with theme/component defaults, wires Tailwind postcss, and registers `Vx`-prefixed module components (`Form`, `Dialog`, `Upload`, `Drawer`, ...).
+- **`watermark`** — adds a `Watermark` component + runtime config. Optional, not currently used.
+
 ## Swagger → Frontend SDK (alova/wormhole)
 
 The frontend SDKs are **generated** from the backend swagger doc, not hand-written. Flow: `swag init` produces `docs/swagger.json` → `web/packages/apiclient/alova.config.ts` runs `@alova/wormhole` → emits each app's `app/lib/sdk/*` directly (gitignored, no `gen/` subdir).
+
+**`web/packages/apiclient`** is **not a Nuxt module** — it's the build-time SDK generator. It holds the `@alova/wormhole` config (`alova.config.ts`) plus the custom codegen plugins (`codegen/plugins.ts`) that turn `docs/swagger.json` into each app's typed API SDK (`app/lib/sdk/`). It's only ever driven by `pnpm gen:api` (`pnpm --dir packages/apiclient exec alova gen -f`) at build time; app code never imports it at runtime.
 
 - **Entrypoint:** `./main.sh docs` regenerates swagger **and** the SDK. `./main.sh build` also runs `pnpm gen:api` before `pnpm generate`.
 - **Config:** `web/packages/apiclient/alova.config.ts` — two generators (usr → `/usr/api/v1`+`/api/v1`, adm → `/adm/api/v1`+`/api/v1`), driven by plugins in `web/packages/apiclient/codegen/plugins.ts`. The root `pnpm gen:api` runs it via `pnpm --dir packages/apiclient exec alova gen -f`.

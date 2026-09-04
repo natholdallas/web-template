@@ -1,11 +1,10 @@
 package internal
 
 import (
-	"webtplmst/internal/conf"
-
 	"github.com/gofiber/fiber/v3"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/natholdallas/natools4go/strs"
+	"webtplmst/internal/conf"
 )
 
 // DebugMiddleware only allows access to the debug mode

@@ -2,14 +2,13 @@
 package main
 
 import (
+	"github.com/natholdallas/natools4go/concur"
+	"github.com/natholdallas/natools4go/vipers"
 	"webtplmst/internal/conf"
 	"webtplmst/internal/db"
 	"webtplmst/internal/flag"
 	"webtplmst/internal/srv"
 	"webtplmst/internal/task"
-
-	"github.com/natholdallas/natools4go/concur"
-	"github.com/natholdallas/natools4go/vipers"
 )
 
 // @title						webtplmst

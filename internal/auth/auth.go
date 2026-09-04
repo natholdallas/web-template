@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"time"
-	"webtplmst/internal/db"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/natholdallas/natools4go/rands"
 	"github.com/redis/go-redis/v9"
+	"webtplmst/internal/db"
 )
 
 // Pair is an access token and its matching refresh token.
