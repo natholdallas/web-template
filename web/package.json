@@ -7,7 +7,7 @@
     "format:check": "prettier --check .",
     "lint": "pnpm -r --parallel run lint",
     "lint:fix": "pnpm -r --parallel run lint:fix",
-    "check": "pnpm lint && pnpm format:check",
+    "gen": "pnpm -F adm -F usr --parallel generate",
     "gen:api": "pnpm --dir packages/apiclient exec alova gen -f"
   },
   "keywords": [],

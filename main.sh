@@ -73,17 +73,14 @@ dev() {
 
 build() {
   info "Building backend & frontend"
-  local p1 p2 p3 rc=0
+  local p1 p2 rc=0
   go build -o bin/backend &
   p1=$!
   run_in_dir "web" pnpm gen:api || warn "SDK generation failed"
-  run_in_dir "web/apps/adm" pnpm generate &
+  run_in_dir "web" pnpm gen &
   p2=$!
-  run_in_dir "web/apps/usr" pnpm generate &
-  p3=$!
   wait "$p1" || rc=1
   wait "$p2" || rc=1
-  wait "$p3" || rc=1
   return $rc
 }
 
