@@ -1,41 +1,41 @@
 version: "2"
 
-# 1. 对应 gopls 的 analyses / staticcheck 启用项
+# 1. Linters corresponding to gopls analyses / staticcheck
 linters:
   default: none
   enable:
-    - govet # 对应 shadow, unreachable, nilness, fieldalignment 等分析
-    - staticcheck # 对应 gopls 中的 staticcheck = true 及 ST1003
-    - unused # 对应 unusedparams / unusedwrite 等未使用的元素检测
-    - revive # 对应 useany / 各种逻辑编码规范检测
-    - misspell # 补充的拼写检查
+    - govet # Corresponds to shadow, unreachable, nilness, fieldalignment, etc.
+    - staticcheck # Corresponds to gopls staticcheck = true and ST1003
+    - unused # Corresponds to unusedparams / unusedwrite detections
+    - revive # Corresponds to useany and coding standard rules
+    - misspell # Additional spell checking
   settings:
     revive:
       rules:
         - name: use-any
 
-# 2. 对应 gopls 的具体分析规则细化配置
+# 2. Detailed configuration corresponding to gopls analysis rules
 linters-settings:
   govet:
     enable-all: true
     disable:
-      - fieldalignment # 对应 gopls 中的 fieldalignment = false
+      - fieldalignment # Corresponds to gopls fieldalignment = false
 
   revive:
     rules:
-      - name: use-any # 对应 gopls analyses 中的 useany = true
-      - name: var-naming # 对应 ST1003 (变量/导出的命名规范)
+      - name: use-any # Corresponds to gopls analyses useany = true
+      - name: var-naming # Corresponds to ST1003 (naming conventions for variables/exported identifiers)
 
   staticcheck:
     checks:
       - "all"
-      - "ST1003" # 显式指定风格检查 ST1003
+      - "ST1003" # Explicitly specify style check ST1003
 
-# 3. 对应 gopls 中的 gofumpt = true 格式化效果
+# 3. Formatting configuration corresponding to gopls gofumpt = true
 formatters:
   enable:
-    - gofumpt # 开启 gofumpt 格式化
-    - gci # 配合 gci 实现类似 gopls 的自动多分组空行整理
+    - gofumpt # Enable gofumpt formatting
+    - gci # Used alongside gci to replicate gopls automatic multi-group import sorting
   settings:
     gci:
       sections:
