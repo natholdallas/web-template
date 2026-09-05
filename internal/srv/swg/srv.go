@@ -3,6 +3,7 @@ package swg
 import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/yokeTH/gofiber-scalar/scalar/v3"
+
 	"webtplmst/internal/conf"
 	"webtplmst/internal/srv/internal"
 )
