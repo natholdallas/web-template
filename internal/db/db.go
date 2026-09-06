@@ -15,10 +15,18 @@ import (
 
 var (
 	Tx *gorm.DB
-	Tc = context.Background()
+	Tc context.Context
 	Rx *redis.Client
-	Rc = context.Background()
+	Rc context.Context
 )
+
+var Models = []any{
+	&Admin{},
+	&User{},
+	&Rate{},
+	&Media{},
+	&SysConf{},
+}
 
 func Connect() {
 	Tx = orms.MustNew(orms.MustDialector(
@@ -30,10 +38,12 @@ func Connect() {
 	), &gorm.Config{
 		Logger: orms.LogPreset(conf.App.LogWriter(), conf.App.LogLevelGorm),
 	})
+	Tc = context.Background()
 	Rx = redis.NewClient(&redis.Options{
 		Addr: conf.App.RedisAddr,
 		DB:   conf.App.RedisIndex,
 	})
+	Rc = context.Background()
 	if conf.App.DBAutoMigrate {
 		Migrate()
 	}
@@ -43,8 +53,6 @@ func Mock() {
 	orms.Create(Tx, &Admin{Username: "admin", Password: pwd.TryHash("123456")})
 	orms.Create(Tx, &User{Username: "user", Password: pwd.TryHash("123456")})
 }
-
-var Models = []any{&Admin{}, &User{}, &Rate{}, &Media{}, &SysConf{}}
 
 func Migrate() {
 	orms.MustAutoMigrate(Tx, Models...)

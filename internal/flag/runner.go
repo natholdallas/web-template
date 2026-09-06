@@ -34,14 +34,14 @@ func MigDB() {
 	db.Migrate()
 }
 
-func SyncDB() {
+func SynDB() {
 	fmt.Println("sync database schema")
-	db.SyncDB(db.Tx)
+	orms.SyncDB(db.Tx, db.Models...)
 }
 
 func RstTable() {
 	fmt.Println("reset table structures")
-	db.ResetTables(db.Tx)
+	orms.ResetTables(db.Tx, db.Models...)
 }
 
 func Usr() {
