@@ -2,19 +2,21 @@
 
 cd "$(dirname "$(readlink -f "$0")")" || exit 1
 
-pname=webtplmst                    # project name
-srv_user=xxx                       # server user
-srv_host=xxx                       # server host
-ssh_target="$srv_user@$srv_host"   # ssh target
-tmux_root=tasks                    # tmux root
-tmux_dir="$tmux_root/$pname"       # tmux dir
-systemd_root=/srv/http             # systemd root dir
-systemd_dir="$systemd_root/$pname" # systemd dir
-sys=/etc/systemd/system            # systemd service dir
-use_rsync="${USE_RSYNC:-true}"     # rsync, scp
-tmp_dir="/tmp/$pname"              # tmp dir for deploy
-deploy_mode="systemctl"            # deploy target: systemctl, tmux
-sudoers_name="webtplmstx"          # shared /etc/sudoers.d filename (merged per-user) — keep fixed across projects
+pname=webtplmst                         # project name
+srv_user=xxx                            # server user
+srv_host=xxx                            # server host
+ssh_target="$srv_user@$srv_host"        # ssh target
+tmux_root=tasks                         # tmux root
+tmux_dir="$tmux_root/$pname"            # tmux dir
+systemd_root=/srv/http                  # systemd root dir
+systemd_dir="$systemd_root/$pname"      # systemd dir
+sys=/etc/systemd/system                 # systemd service dir
+use_rsync="${USE_RSYNC:-true}"          # rsync, scp
+tmp_dir="/tmp/$pname"                   # tmp dir for deploy
+deploy_mode="systemctl"                 # deploy target: systemctl, tmux
+sudoers_name="webtplmstx"               # shared /etc/sudoers.d filename (merged per-user) — keep fixed across projects
+SUDO=""                                 # remote command prefix
+[ "$srv_user" = "root" ] || SUDO="sudo" # root 免 sudo，否则用 sudo
 
 success() { echo -e "\033[0;32m[SUCCESS]\033[0m $1"; }
 info() { echo -e "\033[1;36m[INFO]\033[0m $1"; }
@@ -168,6 +170,10 @@ sync_conf_if_missing() {
 # All projects on the same server share one file: /etc/sudoers.d/<user>-<sudoers_name>.
 # Idempotent: skips if already configured. Validates the sudoers file first.
 ensure_sudoers() {
+  [ -n "$SUDO" ] || {
+    info "srv_user=root, skipping sudoers setup."
+    return 0
+  }
   local sudoer_file="$srv_user-$sudoers_name"
   local commands="/usr/bin/systemctl, /bin/mkdir, /bin/chmod, /usr/bin/install, /usr/bin/journalctl"
   local expected="$srv_user ALL=(root) NOPASSWD: $commands"
@@ -208,19 +214,19 @@ deploy_systemctl() {
 
   # d. extract + install service + start + health check (sudo whitelisted)
   info "Extracting & registering systemd service..."
-  remote "bash -s" -- "$systemd_dir" "$sys" "$pname" "$force_service" <<'EOF' || return 1
-        SRV="$1"; SYS="$2"; P="$3"; FORCE="$4"
+  remote "bash -s" -- "$systemd_dir" "$sys" "$pname" "$force_service" "$SUDO" <<'EOF' || return 1
+        SRV="$1"; SYS="$2"; P="$3"; FORCE="$4"; SUDO="$5"
         cd "$SRV" || { echo "Directory not found"; exit 1; }
         unzip -qo web.zip && rm -f web.zip && chmod +x bin/backend
         if [ "$FORCE" = "1" ] || [ ! -f "$SYS/${P}.service" ]; then
-          sudo install -o root -g root -m 0644 "${SRV}/${P}.service" "$SYS/${P}.service"
-          sudo systemctl daemon-reload
+          $SUDO install -o root -g root -m 0644 "${SRV}/${P}.service" "$SYS/${P}.service"
+          $SUDO systemctl daemon-reload
         fi
         rm -f "${SRV}/${P}.service"
-        sudo systemctl enable "$P"
-        sudo systemctl restart "$P"
+        $SUDO systemctl enable "$P"
+        $SUDO systemctl restart "$P"
         for i in $(seq 1 15); do
-          sudo systemctl is-active "$P" >/dev/null 2>&1 && exit 0
+          $SUDO systemctl is-active "$P" >/dev/null 2>&1 && exit 0
           sleep 1
         done
         echo "Service $P failed to start" >&2
@@ -354,10 +360,10 @@ trap 'on_interrupt' INT TERM
 serverlog() {
   local lines="${2:-100}"
   if [ "$2" = "once" ]; then
-    ssh -t "$ssh_target" "sudo journalctl -u $pname -n $lines"
+    ssh -t "$ssh_target" "$SUDO journalctl -u $pname -n $lines"
     return
   fi
-  ssh -t "$ssh_target" "sudo journalctl -u $pname -n $lines -f"
+  ssh -t "$ssh_target" "$SUDO journalctl -u $pname -n $lines -f"
 }
 
 clean() {
