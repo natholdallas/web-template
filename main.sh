@@ -105,18 +105,6 @@ deploy() {
   esac
 }
 
-docs() {
-  info "Generating Swagger documentation"
-  if ! command -v swag >/dev/null 2>&1; then
-    error "swag not found. Install it first: go install github.com/swaggo/swag/cmd/swag@v1.16.6"
-    return 1
-  fi
-  swag fmt || return 1
-  swag init --parseDependency --parseInternal || return 1
-  info "Regenerating frontend SDK"
-  run_in_dir "web" pnpm gen:api
-}
-
 # Prepare build artifacts and zip them for deployment.
 prepare_deploy() {
   local skip_build="$1"
@@ -255,11 +243,26 @@ copyfile() {
 }
 
 init() {
-  go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5
   go install github.com/silenceper/gowatch@latest
+  if ! command -v gowatch >/dev/null 2>&1; then
+    go install github.com/silenceper/gowatch@latest
+  fi
+  if ! command -v swag >/dev/null 2>&1; then
+    go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5
+    return 1
+  fi
   git submodule update --init --recursive
+  docs
   go mod tidy
   run_in_dir "web" pnpm install
+}
+
+docs() {
+  info "Generating Swagger documentation"
+  swag fmt || return 1
+  swag init --parseDependency --parseInternal || return 1
+  info "Regenerating frontend SDK"
+  run_in_dir "web" pnpm gen:api
 }
 
 renewal() {
@@ -325,8 +328,6 @@ renewal() {
     copyfile
     # initialize project
     init
-    # generate docs
-    docs
     # add all files & commit
     git add -A
     git commit -m "initialize"
