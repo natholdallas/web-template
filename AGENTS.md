@@ -8,7 +8,10 @@
 - `./main.sh init` — first-time: installs swag/gowatch, inits submodules, `go mod tidy`, `pnpm install`
 - `./main.sh deploy [--skip-build] [--force-service]` — builds, zips, rsyncs to the server, and (re)starts the service. **Target mode (`tmux` | `systemctl`, default `systemctl`) is chosen by editing the `deploy_mode` variable at the top of `main.sh`** — there is no `deploy-tmux`/`deploy-systemctl` subcommand or `--use-systemctl` flag
 - `./main.sh docs` — `swag fmt && swag init --parseDependency --parseInternal`, then regenerates the frontend SDK via `pnpm gen:api` (alova/wormhole)
-- `./main.sh copyfile` — copies `assets/conf.toml` → `conf.toml` and `assets/nuxt.env` → each app's `.env`
+- `./main.sh copyfile` — copies `assets/conf.toml` → `conf.toml` and `assets/nuxt.env` → each app's `.env` **and** `.env.production`
+- `./main.sh dev restart` / `./main.sh dev stop` — restart / kill the tmux session
+- `./main.sh push "msg"` — `git add -A && git commit -m "msg" && git push` (defaults to `upd`)
+- `./main.sh serverlog [once] [lines]` — tail remote `journalctl -u <name>` (requires sudo)
 
 ## Architecture
 
@@ -21,8 +24,7 @@ Go backend (Fiber v3)         Nuxt 3 frontends (pnpm workspace)
 ├── internal/conf/      Viper config loading (init() runs LoadFlag+LoadApp)
 ├── internal/flag/      CLI flag scripts (--adm/--usr/--mock/...)
 ├── internal/auth/      JWT sign/verify
-├── internal/pwd/       password hash/verify (only Go test lives here)
-├── internal/mail/      SMTP mailer + templates
+├── internal/mail/      SMTP mailer + templates (password hashing lives in the external natools4go/pwd)
 ├── internal/task/      cron: rate sync at 0:00 and 12:00 daily
 └── internal/client/    WeChat/Google/Rate API clients
 
@@ -37,30 +39,30 @@ web/packages/apiclient/   — build-time SDK codegen tool, not a Nuxt module (se
 - **Module:** `webtplmst` — this name is baked into all imports, `main.sh`, and `assets/run.service`
 - **Build output:** `bin/backend` (gitignored)
 - **Config:** `conf.toml` (TOML, gitignored). Template at `assets/conf.toml`. Loaded via Viper.
-- **Secrets required:** `secret.adm` and `secret.usr` (validated, 32-char strings). Generate with `./bin/backend --remake-secret`
+- **Secrets required:** `secret.adm` and `secret.usr` (validated, 32-char strings). Generate with `./bin/backend --gensec`, which **prints** new secrets — you must paste them into `conf.toml` yourself
 - **Hot-reload:** `gowatch -o bin/backend` (gowatch installed via `go install github.com/silenceper/gowatch@latest`)
 - **Go tabs** — 4-space tab indent (`.editorconfig`)
-- **CLI flags:** `--adm`, `--usr`, `--rstdb`, `--migration`, `--sync-db`, `--rstable`, `--sync` (task script), `--mock`, `--remake-secret`
-- **Auto-migrate:** runs `db.Migration()` on startup when `db.auto-migrate = true`
+- **CLI flags** (defined in `internal/conf/flag.go`, dispatched in `internal/flag/flag.go`): `--adm`, `--usr`, `--db-reset`, `--db-create`, `--db-migrate`, `--db-sync`, `--db-reset-table`, `--sync` (task script), `--mock`, `--gensec`. **Gotcha:** `--db-reset-table` is defined but **not wired into `flag.Run()`** — it's currently a no-op
+- **Auto-migrate:** `db.Connect()` runs `db.Migrate()` on startup when `db.auto-migrate = true`
 
 ### Database migration layers
 
-Three distinct CLI flags handle schema evolution (`--sync` is unrelated — it runs the cron task scripts):
+Four distinct CLI flags handle schema evolution (`--sync` is unrelated — it runs the cron task scripts). All are dispatched from `internal/flag/runner.go`:
 
-| Flag        | Source                                     | Behavior                                                                                                                                                                                                                                                             | Data                            |
-| ----------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `--migrate` | `db.Migrate()` → `orms.AutoMigrate`        | Incremental, add-only: creates missing tables/columns, alters types/comments. Runs on startup when `db.auto-migrate`                                                                                                                                                 | Safe                            |
-| `--sync-db` | `db.SyncDB(Tx)` (`internal/db/migrate.go`) | Data-preserving reconciliation per table: add missing columns, **drop extra ones**, **reorder columns to struct order**. MySQL/MariaDB reorder in place via `ALTER TABLE ... MODIFY COLUMN ... FIRST/AFTER`; other drivers rebuild the table and copy shared columns | Dropped columns lose their data |
-| `--rstable` | `db.ResetTables(Tx)`                       | Drops + recreates each registered table from its struct so column order exactly matches declaration order                                                                                                                                                            | All data lost                   |
-| `--rstdb`   | `db.Reset()`                               | Drops + recreates the whole database                                                                                                                                                                                                                                 | All data lost                   |
+| Flag             | Source                                             | Behavior                                                                                                                                                                                                                                                             | Data                            |
+| ---------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `--db-migrate`   | `db.Migrate()` → `orms.MustAutoMigrate`            | Incremental, add-only: creates missing tables/columns, alters types/comments. Runs on startup when `db.auto-migrate`                                                                                                                                                 | Safe                            |
+| `--db-sync`      | `orms.SyncDB(db.Tx, db.Models...)`                 | Data-preserving reconciliation per table: add missing columns, **drop extra ones**, **reorder columns to struct order**. MySQL/MariaDB reorder in place via `ALTER TABLE ... MODIFY COLUMN ... FIRST/AFTER`; other drivers rebuild the table and copy shared columns | Dropped columns lose their data |
+| `--db-reset-table` | `orms.ResetTables(db.Tx, db.Models...)`            | Drops + recreates each registered table from its struct so column order exactly matches declaration order                                                                                                                                                            | All data lost                   |
+| `--db-reset`     | `db.Reset()`                                       | Drops + recreates the whole database                                                                                                                                                                                                                                 | All data lost                   |
 
-The GORM model set is the single source of truth — registered in `db.Models` (`internal/db/db.go`), which `Migrate`, `SyncDB`, and `ResetTables` all iterate. GORM's own `AutoMigrate` only ever appends new columns (at the end) and never drops or reorders, which is why `--sync-db`/`--rstable` exist.
+`--db-create` (`db.AutoCreate()`) creates the database if missing. The GORM model set is the single source of truth — registered in `db.Models` (`internal/db/db.go`), which `Migrate`, `SyncDB`, and `ResetTables` all iterate. GORM's own `AutoMigrate` only ever appends new columns (at the end) and never drops or reorders, which is why `--db-sync`/`--db-reset-table` exist.
 
 - **CORS prefix matching:** `AllowOriginsFunc` uses `strs.AnyPrefix`, not exact match — e.g. `http://localhost` also matches `http://localhost:3000`
 - **Log rotation:** `lumberjack` writes to `<RLog>/app.log` (10MB, 7 backups, 28 days)
-- **Lint:** after any backend code change, run `golangci-lint run --fix ./...` from the repo root (equivalent to running the frontend apps' per-app `pnpm lint`). golangci-lint v2 (2.13.2) is installed at `~/.local/share/go/bin/golangci-lint`. Config: `.golangci.yml` (revive `use-any` forces `any` over `interface{}`, gofumpt/goimports auto-format)
+- **Lint:** after any backend code change, run `golangci-lint run --fix ./...` from the repo root (equivalent to running the frontend apps' per-app `pnpm lint`). golangci-lint v2 (2.13.2) is installed at `~/.local/share/go/bin/golangci-lint`. Config: `.golangci.yml` (revive `use-any` forces `any` over `interface{}`, gofumpt/gci auto-format with a `Prefix(webtplmst)` import group)
 - **No `_ = expr` blank assignments** — never write code that discards a value/error with `_ = xxx` (e.g. `_ = db.AutoMigrate(...)`). Handle the error/result properly instead (check it, log it, or propagate it).
-- **Go tests are minimal** — the only test file is `internal/pwd/pwd_test.go`; run it with `go test ./internal/pwd/`. There is no wider test suite.
+- **No Go tests exist** — there is no `*_test.go` anywhere in the repo (the old `internal/pwd` package is gone; password helpers now come from `natools4go/pwd`). Don't assume a test suite; the only verification is `golangci-lint` + `go build`.
 - **`go mod` has a `replace`** directive for telegram-bot-api (redirects to a fork)
 
 ## GORM model conventions (internal/db/)
@@ -82,7 +84,7 @@ Every GORM model in `internal/db/` must follow these rules. Reference: `assets/e
   ```
 
 - **JSON-persisted fields** (`orms.Dict[T]` / `orms.List[T]`): declare the column as `gorm:"type:json;comment:..."` (per `assets/exp.md`, a `Dict`'s type must be `json`).
-- **Register new models** in `internal/db/db.go` → `Migration()` → `tx.AutoMigrate(&...{})`.
+- **Register new models** in `internal/db/db.go` → add to the `Models` var → `Migrate()` runs `orms.MustAutoMigrate` over them.
 
 Example matching existing style:
 
@@ -96,13 +98,13 @@ type User struct {
 
 ## Frontend specifics
 
-- **Package manager:** pnpm@11.25.0 (enforced in root `package.json`)
+- **Package manager:** pnpm@12.3.4 (enforced in `web/package.json`)
 - **Workspace packages:** `apps/*` (Nuxt apps), `packages/*` (build-time tooling — currently `apiclient`, the SDK codegen), `packages/natholdallas/*` (shared Nuxt modules, git submodule)
 - **Prod build:** `pnpm generate` (SSG / static generation via `nuxt generate --dotenv .env.production`), not `nuxt build`. Root script `pnpm gen` (`pnpm -F adm -F usr --parallel generate`) runs both apps' SSG in parallel — distinct from `pnpm gen:api` (SDK generation)
 - **SSR disabled:** both apps set `ssr: false`
 - **Formatting:** `pnpm format` (Prettier) — run from `web/` dir. Config: no semis, single quotes, 120 print width, 2-space indent
 - **ESLint:** auto-generated by Nuxt (`.nuxt/eslint.config.mjs`), imported by root config. Check per-app directory.
-- **Lint:** after writing frontend code, run `pnpm lint` (or `pnpm lint:fix` to autofix) from `web/` — the root script is `pnpm -r --parallel run lint`, so it runs each app's own `lint`/`lint:fix` (`eslint .` / `eslint . --fix`) in parallel across every app under `web/apps/` (adm, usr, and any others like `xxx`, `xxx2`); no per-app loop needed, and packages without a lint script are skipped. **All `warn` and `error` findings must be fixed before finishing** (run `pnpm lint` after writing code, fix every warning/error — `pnpm lint:fix` for auto-fixables, then manually fix the rest; re-run until clean). Each app has its own `eslint.config.mjs` importing that app's generated `.nuxt/eslint.config.mjs` (adm additionally disables `vue/valid-v-slot` for Vuetify dotted slot names, and both apps ignore the generated `app/lib/sdk`); `.nuxt/` must exist first (`postinstall` runs `nuxt prepare`).
+- **Lint:** after writing frontend code, run `pnpm lint` (or `pnpm lint:fix` to autofix) from `web/` — the root script is `pnpm -r --no-bail run lint`, so it runs each app's own `lint`/`lint:fix` (`eslint .` / `eslint . --fix`) across every app under `web/apps/` (adm, usr); packages without a lint script are skipped. **All `warn` and `error` findings must be fixed before finishing** (run `pnpm lint` after writing code, fix every warning/error — `pnpm lint:fix` for auto-fixables, then manually fix the rest; re-run until clean). Each app has its own `eslint.config.mjs` importing that app's generated `.nuxt/eslint.config.mjs` (adm additionally disables `vue/valid-v-slot` for Vuetify dotted slot names, and both apps ignore the generated `app/lib/sdk`); `.nuxt/` must exist first (`postinstall` runs `nuxt prepare`).
 - **Env vars:** `NUXT_PUBLIC_API_BASE` (backend URL), `NUXT_PUBLIC_SITE_URL`, `ENABLE_PWA`, `ENABLE_SEO`
 - **Env files:** `.env` (dev), `.env.production` (prod). Both copied from `assets/nuxt.env` by `./main.sh copyfile`.
 - **Shared packages:** git submodule at `web/packages/natholdallas` → `https://github.com/natholdallas/nuxt-modules.git`
@@ -115,10 +117,10 @@ Every package under `web/packages/natholdallas/` is a **Nuxt module** (each expo
 - **`alova`** — registers the alova runtime auto-imports (`lib/`). Provides the runtime side (alova instance, `Api`, `Apis`) that the generated SDK in `app/lib/sdk/` builds on. Used by both apps.
 - **`i18n`** — wraps `@nuxtjs/i18n`. Ships the **globally stored shared translation keys** in `locale/*.ts` (`zh_cn`, `en_us`, `zh_tw`, `ja_jp`). **Do NOT modify these** — they are the global key set. To change or add translations, edit the **project's own i18n files** (`web/apps/<app>/app/locale/*.ts`), which import and spread the shared dict (e.g. `import zh from '@natholdallas/i18n/locale/zh_cn'` then `...zh`) and layer app-specific keys on top. The submodule locales should stay untouched so every project gets the same base keys.
 - **`infra`** — bundles the common infra modules: `@nuxtjs/seo`, `@nuxt/icon`, `@vite-pwa/nuxt`, `@nuxtjs/device`, `@vueuse/nuxt`, `dayjs-nuxt`, `nuxt-og-image`, `@nuxt/eslint`, `@nuxt/test-utils`. Enables Nuxt 4 compatibility (`compatibilityVersion: 4`, typed pages, vite env API), sets PWA/dayjs defaults and a `public.apiBase` runtime default. Also auto-imports shared components (`PwaProvider`) and composables (`crud`, `routes`, `interval`). Used by both apps (adm via `vuetify`, usr via `shadcn`).
-- **`pinia`** — wraps `@pinia/nuxt`; enables Pinia stores (`useAuthStore`, ...). Optional, not currently used.
+- **`pinia`** — wraps `@pinia/nuxt`; enables Pinia stores (`useAuthStore`, ...). Used by both apps (the SDK's `beforeRequest` reads the access token from `useAuthStore()`).
 - **`shadcn`** — the shadcn-vue module (usr app): depends on `@natholdallas/i18n`, bundles `shadcn-nuxt` + Tailwind v4 (`@tailwindcss/vite`) + radix/reka-ui + vee-validate/zod, and registers `Uix`-prefixed module components (`Form`, `DataTable`, `Field`, `Modal`, ...).
 - **`tailwindcss`** — Tailwind v4 CSS-first module (postcss/vite plugin + sass), for apps that don't use the shadcn/vuetify bundles. Optional, not currently used.
-- **`tauri`** — Tauri v2 integration (`@tauri-apps/api`); used by the usr app.
+- **`tauri`** — Tauri v2 integration (`@tauri-apps/api`); used by both apps (each declares `dev:tauri`/`package` scripts).
 - **`unocss`** — UnoCSS module (wraps `@unocss/nuxt` + presets, ships an example `uno.config.ts`). Optional, not currently used.
 - **`vuetify`** — the Vuetify module (adm app): depends on `@natholdallas/i18n` + `@natholdallas/infra`, wraps `vuetify-nuxt-module` with theme/component defaults, wires Tailwind postcss, and registers `Vx`-prefixed module components (`Form`, `Dialog`, `Upload`, `Drawer`, ...).
 - **`watermark`** — adds a `Watermark` component + runtime config. Optional, not currently used.
@@ -131,8 +133,8 @@ The frontend SDKs are **generated** from the backend swagger doc, not hand-writt
 
 - **Entrypoint:** `./main.sh docs` regenerates swagger **and** the SDK. `./main.sh build` also runs `pnpm gen:api` before `pnpm generate`.
 - **Config:** `web/packages/apiclient/alova.config.ts` — two generators (usr → `/usr/api/v1`+`/api/v1`, adm → `/adm/api/v1`+`/api/v1`), driven by plugins in `web/packages/apiclient/codegen/plugins.ts`. The root `pnpm gen:api` runs it via `pnpm --dir packages/apiclient exec alova gen -f`.
-- **Generated files** per app (`app/lib/sdk/`): `index.ts` (alova runtime: `useRuntimeConfig().public.apiBase`, Bearer from `useAuth()`, `Api.NewEvent` — plus each app's wiring injected by `customIndex` in `alova.config.ts`), `createApis.ts`, `apiDefinitions.ts`, `globals.d.ts` (types + `declare global Apis`), `models.ts` (`type X = G.X` re-export from `globals` + `const X = {...}` model factories, including shared `PageQueries`/`SortQueries`/`BaseQueries`/`Page` helpers).
-- **Runtime behavior** (`api.NewEvent`): 200 → success toast (non-GET), 401 → `useAuth().$signOut()`, else → error fallback by `code`/`message`. Wired in each app's generated `app/lib/sdk/index.ts` (edit the `usrWiring`/`admWiring` templates in `alova.config.ts`, then regenerate).
+- **Generated files** per app (`app/lib/sdk/`): `index.ts` (alova runtime: `baseURL: useRuntimeConfig().public.apiBase`, Bearer injected in `beforeRequest` from `useAuthStore()`, `Api.NewEvent` — plus each app's wiring injected by `customIndex` in `alova.config.ts`), `createApis.ts`, `apiDefinitions.ts`, `globals.d.ts` (types + `declare global Apis` for usr / `AdmApis` for adm), `models.ts` (`type X = G.X` re-export from `globals` + `const X = {...}` model factories, including shared `PageQueries`/`SortQueries`/`BaseQueries`/`Page` helpers).
+- **Runtime behavior** (`api.NewEvent`): 200 → success toast (non-GET), 401 → attempt one `useAuthStore().$refresh()` retry (deduped per request), then `$signOut()` on failure, else → error fallback by `code`/`message`. Wired in each app's generated `app/lib/sdk/index.ts` (edit the `usrWiring`/`admWiring` templates in `alova.config.ts`, then regenerate).
 
 ### Swagger annotation conventions (the ONLY manual cost)
 
@@ -164,7 +166,7 @@ build → deploy
 - The swagger UI is served at `/doc/api/v1` (mounted in `internal/srv/srv.go:41`) only when `app.swagger = true` in `conf.toml` (default `false`); the spec is still written to `docs/` regardless
 - Frontend `nuxt.config.ts` imports from `@natholdallas/*` workspace packages — these come from the git submodule
 - The `internal/conf` package `init()` function runs on import (loads flags and app config before `main()`)
-- The generated SDK (`web/apps/*/app/lib/sdk/`) is **gitignored** — always regenerate via `./main.sh docs`, never commit it
+- The generated SDK (`web/apps/*/app/lib/sdk/`) and the swagger spec (`docs/`) are both **gitignored** — always regenerate via `./main.sh docs`, never commit them
 - `swag` is pinned to **v2.0.0-rc5** in `go.mod` (`github.com/swaggo/swag/v2`) and installed by `./main.sh init` via `go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5`. **Gotcha:** the `docs()` failure message inside `main.sh` still says `@v1.16.6` — trust `go.mod`, not that message. If `swag --version` differs, reinstall with the v2 command above
 - `stripSchemaPrefix` only strips names whose remainder starts uppercase, so the shared `Admin` model (whose name happens to start with the `Adm` prefix) is preserved; don't introduce app DTOs whose stripped name would collide with a shared model used in the same app
 - Every new DB model must have **complete gotags** (`gorm:"column:...;comment:..."` + `json` tag) and a trailing comment on **every field** — see the "GORM model conventions" section above and `assets/exp.md`

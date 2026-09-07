@@ -5,8 +5,8 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "pnpm -r --parallel run lint",
-    "lint:fix": "pnpm -r --parallel run lint:fix",
+    "lint": "pnpm -r --no-bail run lint",
+    "lint:fix": "pnpm -r --no-bail run lint:fix",
     "gen": "pnpm -F adm -F usr --parallel generate",
     "gen:api": "pnpm --dir packages/apiclient exec alova gen -f"
   },
