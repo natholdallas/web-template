@@ -16,7 +16,7 @@ tmp_dir="/tmp/$pname"                   # tmp dir for deploy
 deploy_mode="systemctl"                 # deploy target: systemctl, tmux
 sudoers_name="webtplmstx"               # shared /etc/sudoers.d filename (merged per-user) — keep fixed across projects
 SUDO=""                                 # remote command prefix
-[ "$srv_user" = "root" ] || SUDO="sudo" # root 免 sudo，否则用 sudo
+[ "$srv_user" = "root" ] || SUDO="sudo" # root skips sudo, otherwise use sudo
 
 success() { echo -e "\033[0;32m[SUCCESS]\033[0m $1"; }
 info() { echo -e "\033[1;36m[INFO]\033[0m $1"; }
@@ -299,10 +299,10 @@ renewal() {
     rm .gitmodules
     # replace all occurrences of old_name with new_name (escape sed special chars)
     if [[ "$OSTYPE" == "darwin"* ]]; then
-      # macOS 语法
+      # macOS syntax
       SED_CMD=(sed -i "")
     else
-      # Linux 语法
+      # Linux syntax
       SED_CMD=(sed -i)
     fi
     local pname_esc new_name_esc
@@ -386,10 +386,95 @@ push() {
   fi
   local branch
   branch=$(git branch --show-current 2>/dev/null)
-  if [ -z "$branch" ] || ! git branch -r | grep -q "origin/$branch$"; then
+  if [ -z "$branch" ]; then
+    warn "Detached HEAD — cannot determine upstream."
+  elif ! git config "branch.$branch.remote" >/dev/null 2>&1 && ! git branch -r | grep -q "origin/$branch$"; then
     warn "No upstream for branch '$branch'. Set upstream: git push -u origin $branch"
   fi
   git push
+}
+
+# initremote: create a GitHub repository for the current project and link it
+# locally. It only "creates the repo + binds the remote + sets upstream" —
+# it never pushes any code.
+# Usage:
+#   ./main.sh initremote [repo-name] [--public|--private]
+# Notes:
+#   - repo-name defaults to $pname (the current project name)
+#   - creates a private repo by default; pass --public to make it public
+#   - setting upstream is equivalent to `git push -u` but does not actually
+#     push; later run ./main.sh push "commit message" to upload the code
+initremote() {
+  local visibility=private name="$pname"
+  for arg in "${@:2}"; do
+    case "$arg" in
+    --public) visibility=public ;;
+    --private) visibility=private ;;
+    *) name="$arg" ;;
+    esac
+  done
+
+  # preflight: gh CLI must be installed and authenticated
+  if ! command -v gh >/dev/null 2>&1; then
+    error "gh CLI not found, please install it first: https://cli.github.com"
+    return 1
+  fi
+  if ! gh auth status >/dev/null 2>&1; then
+    error "gh not authenticated, please run: gh auth login"
+    return 1
+  fi
+
+  # remember whether origin already exists, to decide bind vs rebind below
+  local had_origin=false
+  if git remote get-url origin >/dev/null 2>&1; then
+    had_origin=true
+    warn "Remote origin already exists: $(git remote get-url origin)"
+  fi
+
+  # step 1: create the repo on GitHub (no push, no README)
+  info "Creating GitHub repo '$name' (--$visibility)..."
+  gh repo create "$name" --"$visibility" || return 1
+
+  # step 2: bind the new repo as origin
+  local owner_repo proto want_url current_url
+  owner_repo=$(gh repo view "$name" --json nameWithOwner -q .nameWithOwner 2>/dev/null)
+  if [ -z "$owner_repo" ]; then
+    error "Could not resolve repo '$name'."
+    return 1
+  fi
+  # build the repo url according to gh's configured protocol (ssh/https)
+  proto=$(gh config get git_protocol 2>/dev/null || echo https)
+  if [ "$proto" = "ssh" ]; then
+    want_url="git@github.com:$owner_repo.git"
+  else
+    want_url="https://github.com/$owner_repo.git"
+  fi
+  if [ "$had_origin" = true ]; then
+    current_url=$(git remote get-url origin)
+    if [ "$current_url" != "$want_url" ]; then
+      warn "Rebinding origin: $current_url -> $want_url"
+      git remote set-url origin "$want_url" || return 1
+    else
+      info "Origin already points at $want_url"
+    fi
+  else
+    info "Adding remote origin -> $want_url"
+    git remote add origin "$want_url" || return 1
+  fi
+
+  # step 3: set upstream (equivalent to push -u) WITHOUT pushing
+  local branch
+  branch=$(git branch --show-current 2>/dev/null)
+  if [ -n "$branch" ]; then
+    git config "branch.$branch.remote" origin || return 1
+    git config "branch.$branch.merge" "refs/heads/$branch" || return 1
+    success "Upstream set: $branch -> origin/$branch (nothing pushed)"
+  else
+    warn "Detached HEAD — skipping upstream setup."
+  fi
+
+  success "Repo: $(gh repo view "$name" --json url -q .url 2>/dev/null)"
+  warn "Push later with: ./main.sh push \"commit message\""
 }
 
 mode=$1
@@ -405,6 +490,7 @@ renewal) renewal "$@" ;;
 clean) clean "$@" ;;
 serverlog) serverlog "$@" ;;
 push) push "$@" ;;
+initremote) initremote "$@" ;;
 *)
   C_RST="\033[0m"
   C_CMD="\033[1;36m"
@@ -431,6 +517,9 @@ push) push "$@" ;;
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "once" "Print once then exit"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "<lines>" "Number of lines to show (default 100)"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "push" "Commit & push to remote"
+  printf "  ${C_CMD}%-18s${C_RST}     %s\n" "initremote" "Create GitHub repo (default: private), bind origin, set upstream (no push)"
+  printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "[name]" "Repo name (default: $pname)"
+  printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--public" "Create a public repo (default: private)"
   unset C_RST C_CMD C_ARG C_DIM
   ;;
 esac
