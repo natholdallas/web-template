@@ -3,15 +3,34 @@
 ## Primary entrypoints
 
 - **`./main.sh`** — unified CLI for all operations (not `go build`, not `make`)
-- `./main.sh dev` — starts tmux session with 3 windows: Go hot-reload (gowatch), admin (3001), user (3000)
-- `./main.sh build` — parallel: `go build -o bin/backend` + `pnpm gen:api` + `pnpm gen` (SSG via `nuxt generate`, not `nuxt build`)
-- `./main.sh init` — first-time: installs swag/gowatch, inits submodules, `go mod tidy`, `pnpm install`
-- `./main.sh deploy [--skip-build] [--force-service]` — builds, zips, rsyncs to the server, and (re)starts the service. **Target mode (`tmux` | `systemctl`, default `systemctl`) is chosen by editing the `deploy_mode` variable at the top of `main.sh`** — there is no `deploy-tmux`/`deploy-systemctl` subcommand or `--use-systemctl` flag
+- **Server & app registries** (`main.sh` top section): `apps[]`, `servers[]`, `app_env[]` drive every build/deploy command. Edit them to add/remove servers or frontend apps — no code changes needed (see "Configuration" below).
+- `./main.sh dev [restart|stop]` — starts tmux session: window 0 = Go hot-reload (gowatch), then one window per app in `apps[]` (`pnpm dev`); `restart`/`stop` kill the session
+- `./main.sh build` — backend + SDK (`build_core`) and frontends for the **default server** (`build_front`) run in parallel
+- `./main.sh deploy [--skip-build] [--force-service]` — builds backend+SDK **once**, then for **EACH server in `servers[]`**: rebuilds every app with that server's env, zips, rsyncs, and (re)starts the service. **Target mode (`tmux` | `systemctl`, default `systemctl`) is chosen by editing `deploy_mode` at the top of `main.sh`** — there is no `deploy-tmux`/`deploy-systemctl` subcommand or `--use-systemctl` flag. `--skip-build` reuses artifacts and warns (via each app's `dist/.built-for` marker) when they were built for a different server
+- `./main.sh servers` — list available servers/apps from the registries
 - `./main.sh docs` — `swag fmt && swag init --parseDependency --parseInternal`, then regenerates the frontend SDK via `pnpm gen:api` (alova/wormhole)
 - `./main.sh copyfile` — copies `assets/conf.toml` → `conf.toml` and `assets/nuxt.env` → each app's `.env` **and** `.env.production`
-- `./main.sh dev restart` / `./main.sh dev stop` — restart / kill the tmux session
+- `./main.sh init` — first-time: installs gowatch/swag, inits submodules, `go mod tidy`, `pnpm install`
+- `./main.sh synconf [server]` — rsync `conf.toml` to the mode-appropriate remote dir of `[server]` (default: first server in `servers[]`)
+- `./main.sh webconf [server]` — when `web_server != none`, generate & install the nginx/caddy site config on `[server]` from `domains[]` and reload it (no redeploy). `deploy` also runs this automatically after each server.
+- `./main.sh serverlog [server] [once|lines]` — tail remote `journalctl -u <name>` (default follows; requires limited sudo)
 - `./main.sh push "msg"` — `git add -A && git commit -m "msg" && git push` (defaults to `upd`)
-- `./main.sh serverlog [once] [lines]` — tail remote `journalctl -u <name>` (requires sudo)
+- `./main.sh renewal <name>` — renames the entire project (irreversible, see "Project scaffolding")
+- `./main.sh initremote [name] [--public|--private]` — create a GitHub repo (private by default), bind `origin`, set upstream (never pushes)
+
+## Configuration (`main.sh` top section)
+
+- `apps[]` — frontend apps, `name|dir|build_cmd|out_dir`. `build_cmd` runs inside `dir` (e.g. `pnpm generate`); `out_dir` is the build output relative to `dir`.
+- `servers[]` — deploy targets, `name|ssh_user|host`; the **default server** (for `build`/`synconf`/`webconf`/`serverlog` when no `[server]` is given) is the **first entry**. **`./main.sh deploy` ships to every entry in `servers[]`** (frontends rebuilt per-server env). Root users skip sudo automatically (`SUDO=""`, sudoers setup skipped).
+- `app_env[]` — per-server per-app env overrides keyed `"server:app:VAR"`, exported during each app's frontend build. Nuxt/c12 gives existing env vars precedence over `--dotenv .env.production`, so `.env.production` stays a fallback. **`NUXT_PUBLIC_API_BASE` / `NUXT_PUBLIC_SITE_URL` are auto-derived from `domains[]` + `app_bind[]`** — explicit `app_env` entries still win.
+- `web_server` — `none` (default) | `nginx` | `caddy`. When not `none`, deploy/webconf render `assets/nginx/*` / `assets/caddy/*` for every **non-empty** endpoint in `domains[]` and install+reload on the remote (`/etc/nginx/conf.d/$pname.conf`, or `/etc/caddy/conf.d/$pname.caddy` + an `import` line in the main Caddyfile). It also patches the remote `conf.toml`: `app.nginx = true` plus `resources.media-url` (only when the media domain is set).
+- `domains[]` — the endpoint domains, `endpoint|domain` (empty = that site is skipped): `usr` (user site), `adm` (admin site), `api` (backend reverse proxy → `web_api_addr`), `media` (media files). Static roots derive from `apps[]`: `<deploy_dir>/<app dir>/<out_dir>/public` for usr/adm, `<deploy_dir>/media` for media. Nginx sites listen on `:80` (run `certbot --nginx` for TLS); caddy does auto-HTTPS.
+- `app_bind[]` — maps each frontend app to its `api` and `site` endpoints (used only for the env auto-derivation above).
+- `web_api_addr` (default `127.0.0.1:8080`, must match `conf.toml app.port`) and `client_max_body` (default `200m`, must match `app.body-limit`).
+- `deploy_mode` — `systemctl` (default) or `tmux`:
+  - `systemctl` renders `assets/run.service` (`@PNAME@`/`@SRV_DIR@`) and installs it under `/etc/systemd/system`, then enables/restarts the unit with a health check; it wires limited passwordless sudo via a **shared, fixed** file `/etc/sudoers.d/<user>-webtplmstx` — do not rename that filename. Whitelist: `systemctl/mkdir/chmod/install/journalctl/nginx/caddy/tee` (the last three only matter with `web_server != none`).
+  - `tmux` kills/restarts a remote tmux session running `./bin/backend`.
+- `use_rsync` (`USE_RSYNC`) — transfer method: `true`=rsync, `false`=scp.
 
 ## Architecture
 
@@ -67,23 +86,28 @@ Four distinct CLI flags handle schema evolution (`--sync` is unrelated — it ru
 
 ## GORM model conventions (internal/db/)
 
-Every GORM model in `internal/db/` must follow these rules. Reference: `assets/exp.md`.
+Every GORM model in `internal/db/` must follow these rules. Reference: the `exp` skill (`.opencode/skills/exp/SKILL.md`).
 
 - **Full gotags on every field — no bare fields.** Each field must declare both tags:
   - `gorm` tag: always starts with `column:<snake_case>`; string columns add `size:<n>`; **every column adds `comment:<English description>`**; append constraints as needed (`primaryKey`, `unique`, `not null`, `default`, `index`, ...)
   - `json` tag: snake_case matching the column; `json:"-"` for fields never exposed (e.g. `Password`)
 - **Trailing comment on every field** — `// <description>` matching the gorm `comment` value (see `internal/db/admin.go:12`).
 - **Embed a base model instead of hand-writing ID/timestamps** — `orms.Model[uint]` (ID + created/updated at) or `orms.IDModel[uint]` (ID only). Do not redeclare `ID`, `CreatedAt`, `UpdatedAt` yourself.
-- **Many-to-one association** (from `assets/exp.md`): embed the referenced struct plus the FK column, with the FK constraint and a comment:
+- **Embedded prefixed structs** (from the `exp` skill; this project does **not** use the many-to-one struct+FK embedding pattern): group related columns into a plain struct embedded with a column prefix — see `internal/db/user.go` (`GoogleInfo`/`TelegramInfo`):
 
   ```go
   type User struct {
-      User   User   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user"` // User
-      UserID uint   `gorm:"column:user_id;comment:User" json:"user_id"`               // User ID
+      orms.Model[uint]
+      Username   string       `gorm:"column:username;size:50;unique;comment:Username" json:"username"` // Username
+      GoogleInfo GoogleInfo   `gorm:"embedded;embeddedPrefix:google_" json:"-"`                        // Google login info
   }
+
+  type GoogleInfo struct {
+      Email *string `gorm:"column:email;unique;size:256;comment:Google email" json:"email"` // Google email
+  } //	@name	GoogleInfo
   ```
 
-- **JSON-persisted fields** (`orms.Dict[T]` / `orms.List[T]`): declare the column as `gorm:"type:json;comment:..."` (per `assets/exp.md`, a `Dict`'s type must be `json`).
+- **JSON-persisted fields** (`orms.Dict[T]` / `orms.List[T]`): declare the column as `gorm:"type:json;comment:..."` (per the `exp` skill, a `Dict`'s type must be `json`).
 - **Register new models** in `internal/db/db.go` → add to the `Models` var → `Migrate()` runs `orms.MustAutoMigrate` over them.
 
 Example matching existing style:
@@ -112,7 +136,7 @@ type User struct {
 
 ## Shared Nuxt modules (web/packages/natholdallas/)
 
-Every package under `web/packages/natholdallas/` is a **Nuxt module** (each exposes a `defineNuxtModule` in its `index.ts`). They are **optional** — an app only loads the ones it lists in its `nuxt.config.ts` `modules` and declares as `@natholdallas/*` `workspace:*` deps. This directory is a **git submodule** (shared across projects), so prefer keeping app-specific behavior in the project rather than editing the modules here.
+Every package under `web/packages/natholdallas/` is a **Nuxt module** (each exposes a `defineNuxtModule` in its `index.ts`). They are **optional** — an app only loads the ones it lists in its `nuxt.config.ts` `modules` and declares as `@natholdallas/*` `workspace:*` deps. This directory is a **git submodule** (shared across projects). **Treat it as read-only: prefer keeping app-specific behavior in the project rather than editing the modules here. If a change to the submodule is genuinely unavoidable, tell the maintainer first** — changes belong in the upstream `nuxt-modules.git` repo and are committed there, then the submodule pointer is bumped, not patched in-place here.
 
 - **`alova`** — registers the alova runtime auto-imports (`lib/`). Provides the runtime side (alova instance, `Api`, `Apis`) that the generated SDK in `app/lib/sdk/` builds on. Used by both apps.
 - **`i18n`** — wraps `@nuxtjs/i18n`. Ships the **globally stored shared translation keys** in `locale/*.ts` (`zh_cn`, `en_us`, `zh_tw`, `ja_jp`). **Do NOT modify these** — they are the global key set. To change or add translations, edit the **project's own i18n files** (`web/apps/<app>/app/locale/*.ts`), which import and spread the shared dict (e.g. `import zh from '@natholdallas/i18n/locale/zh_cn'` then `...zh`) and layer app-specific keys on top. The submodule locales should stay untouched so every project gets the same base keys.
@@ -167,6 +191,6 @@ build → deploy
 - Frontend `nuxt.config.ts` imports from `@natholdallas/*` workspace packages — these come from the git submodule
 - The `internal/conf` package `init()` function runs on import (loads flags and app config before `main()`)
 - The generated SDK (`web/apps/*/app/lib/sdk/`) and the swagger spec (`docs/`) are both **gitignored** — always regenerate via `./main.sh docs`, never commit them
-- `swag` is pinned to **v2.0.0-rc5** in `go.mod` (`github.com/swaggo/swag/v2`) and installed by `./main.sh init` via `go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5`. **Gotcha:** the `docs()` failure message inside `main.sh` still says `@v1.16.6` — trust `go.mod`, not that message. If `swag --version` differs, reinstall with the v2 command above
+- `swag` is pinned to **v2.0.0-rc5** in `go.mod` (`github.com/swaggo/swag/v2`) and installed by `./main.sh init` via `go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5`. If `swag --version` differs, reinstall with the v2 command above
 - `stripSchemaPrefix` only strips names whose remainder starts uppercase, so the shared `Admin` model (whose name happens to start with the `Adm` prefix) is preserved; don't introduce app DTOs whose stripped name would collide with a shared model used in the same app
-- Every new DB model must have **complete gotags** (`gorm:"column:...;comment:..."` + `json` tag) and a trailing comment on **every field** — see the "GORM model conventions" section above and `assets/exp.md`
+- Every new DB model must have **complete gotags** (`gorm:"column:...;comment:..."` + `json` tag) and a trailing comment on **every field** — see the "GORM model conventions" section above and the `exp` skill

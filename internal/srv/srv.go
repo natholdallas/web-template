@@ -31,7 +31,7 @@ func Setup() {
 	app.Use("/", static.New(conf.App.RWeb, static.Config{
 		Next: internal.NginxMiddleware,
 	}))
-	app.Use("/media", static.New(conf.App.RMedia, static.Config{
+	app.Use(conf.App.MediaRoute, static.New(conf.App.RMedia, static.Config{
 		Next: internal.NginxMiddleware,
 	}))
 	app.Get("/favicon.ico", static.New("./assets/favicon.ico"))

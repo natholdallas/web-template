@@ -26,6 +26,7 @@ export default {
   'urls.index': 'Home',
   'urls.admin': 'Admin',
   'urls.user': 'Users',
+  'urls.media': 'Media',
   'urls.settings': 'Settings',
   'urls.entrance': 'Entrance',
 
@@ -45,6 +46,20 @@ export default {
   'settings.locale': 'Language',
   'settings.locale.desc': 'Choose your preferred language',
   'settings.desc': 'Manage your account, security and preferences',
+
+  // media
+  'media.desc': 'Manage static assets uploaded to the platform',
+  'media.preview': 'Preview',
+  'media.name': 'Filename',
+  'media.kind': 'Kind',
+  'media.size': 'Size',
+  'media.kind.image': 'Image',
+  'media.kind.video': 'Video',
+  'media.kind.file': 'File',
+  'upload': 'Upload',
+  'open': 'Open',
+  'err.invalid.media': 'Invalid media file',
+  'err.upload.failed': 'Upload failed',
 
   'dashboard.title': 'Dashboard',
   'dashboard.total.admins': 'Total Admins',

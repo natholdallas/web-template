@@ -18,5 +18,12 @@ func Setup(api fiber.Router) {
 	api.Group("/profile", jwt.Middleware).
 		Get("/me", FindProfile).
 		Put("/me", UpdateProfile).
-		Put("/password", ResetPassword)
+		Put("/password", ResetPassword).
+		Put("/bind/google", BindGoogle).
+		Put("/bind/telegram", BindTelegram).
+		Delete("/bind/:platform", UnbindPlatform)
+	api.Group("/media", jwt.Middleware).
+		Get("", ListMedia).
+		Post("", UploadMedia).
+		Delete("/:id", RemoveMedia)
 }

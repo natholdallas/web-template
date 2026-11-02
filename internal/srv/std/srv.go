@@ -10,4 +10,6 @@ func Setup(api fiber.Router) {
 		Get("/:code", FindRate)
 	api.Group("/webhook").
 		All("/wechat", WechatWebhook)
+	api.Group("/config").
+		Get("", FindConfig)
 }

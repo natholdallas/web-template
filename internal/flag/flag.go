@@ -16,6 +16,7 @@ func Run() {
 	flags.Run(conf.Flag.CrtDB, CrtDB)
 	flags.Run(conf.Flag.MigDB, MigDB)
 	flags.Run(conf.Flag.SynDB, SynDB)
+	flags.Run(conf.Flag.RstTable, RstTable)
 	flags.Run(conf.Flag.Adm, Adm)
 	flags.Run(conf.Flag.Usr, Usr)
 	flags.Run(conf.Flag.Sync, Sync)

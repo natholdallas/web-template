@@ -36,6 +36,7 @@ const drawer = ref(mdAndUp.value)
         <VListItem prepend-icon="mdi-home" :title="$t('urls.index')" to="/" />
         <VListItem prepend-icon="mdi-account-supervisor" :title="$t('urls.admin')" to="/admin" />
         <VListItem prepend-icon="mdi-account" :title="$t('urls.user')" to="/user" />
+        <VListItem prepend-icon="mdi-image-multiple" :title="$t('urls.media')" to="/media" />
         <VListItem prepend-icon="mdi-cog" :title="$t('urls.settings')" to="/settings" />
       </VList>
     </VNavigationDrawer>

@@ -64,7 +64,7 @@ Api.NewEvent(-1, fallback)
 export type ResetPasswordIn = GenResetPasswordInT & { confirm: string }
 export const ResetPasswordIn: ResetPasswordIn = { ...GenResetPasswordIn, confirm: '' }
 
-export { Auth, AuthIn, Profile, ProfileIn } from './models'
+export { Auth, AuthIn, Profile, ProfileIn, Config, GoogleAuthIn, Media, TelegramAuth } from './models'
 `
 
 const admWiring = `

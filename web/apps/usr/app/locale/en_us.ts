@@ -38,6 +38,23 @@ export default {
   'settings.dark.mode': 'Dark Mode',
   'settings.dark.mode.desc': 'Toggle between dark and light theme',
 
+  // oauth
+  'settings.oauth': 'Login Methods',
+  'settings.oauth.desc': 'Bind third-party accounts to sign in with them',
+  'oauth.divider': 'or',
+  'oauth.google': 'Google',
+  'oauth.telegram': 'Telegram',
+  'oauth.bind': 'Bind',
+  'oauth.unbind': 'Unbind',
+  'oauth.bound': 'Bound',
+  'oauth.bind.desc': 'Not bound yet',
+  'oauth.disabled': 'No third-party login configured',
+  'oauth.failed': 'Authorization failed, please try again',
+  'sign.in.telegram': 'Continue with Telegram',
+  'err.oauth.failed': 'OAuth failed',
+  'err.invalid.media': 'Invalid media file',
+  'err.upload.failed': 'Upload failed',
+
   'urls.index': 'Home',
   'urls.settings': 'Settings',
   'urls.entrance': 'Entrance',

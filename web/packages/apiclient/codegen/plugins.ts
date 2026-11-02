@@ -31,10 +31,16 @@ function defaultExpr(field: string, schema: SchemaObject | undefined, ctx: Ctx, 
   const pad = ctx.pad(indent)
   void field
   if (!schema) return 'undefined'
+  const comp = schema as SchemaObject & { allOf?: any; oneOf?: any; anyOf?: any }
+  // swag sometimes wraps a plain $ref in `allOf: [{$ref}]`; resolve it to the
+  // referenced model factory so nested objects get real default values.
+  const aloneRef = (comp.allOf ?? comp.oneOf ?? comp.anyOf)?.[0]?.$ref as string | undefined
+  const aloneName = aloneRef ? getRefName(aloneRef) : undefined
   if (isSchema(schema) && '$ref' in schema) {
     const refName = getRefName((schema as any).$ref)
     return ctx.schemas[refName] ? refName : 'undefined'
   }
+  if (aloneName && ctx.schemas[aloneName]) return aloneName
   if (!isSchema(schema)) return 'undefined'
   if (schema.default !== undefined) return JSON.stringify(schema.default)
   if (schema.enum?.length) return JSON.stringify(schema.enum[0])
@@ -257,6 +263,26 @@ export const requiredResponses = createPlugin((prefixes: string[]) => ({
   },
 }))
 
+// Collect $ref targets referenced by a schema. Used to order model factories
+// so dependencies are declared before their consumers (alphabetical order
+// breaks `const` block-scoped references like `Config.oauth: OauthConfig`).
+function schemaDeps(name: string, schemas: Record<string, SchemaObject>): string[] {
+  const deps = new Set<string>()
+  const visit = (v: unknown) => {
+    if (!isSchema(v)) return
+    if (isSchema(v) && '$ref' in v) {
+      const refName = getRefName((v as any).$ref)
+      if (schemas[refName]) deps.add(refName)
+      return
+    }
+    for (const key of ['allOf', 'oneOf', 'anyOf'] as const) (v as any)[key]?.forEach(visit)
+    if ((v as any).items) visit((v as any).items)
+    for (const p of Object.values((v as any).properties ?? {})) visit(p)
+  }
+  visit(schemas[name])
+  return [...deps]
+}
+
 /**
  * Generate `defaults.ts` with const model factories referencing the generated
  * interfaces, so form models / local storage / table crud keep working.
@@ -277,10 +303,25 @@ export const modelDefaults = createPlugin((outputDir: string, prefixes: string[]
         pad: (n) => '  '.repeat(n),
       }
 
-      const body = entries
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([name, schema]) => {
-          const s = schema as SchemaObject
+      // Depth-first, dependency-before-consumer emission order.
+      const byName = new Map(entries)
+      const state = new Map<string, number>() // 0=unseen 1=visiting 2=done
+      const order: string[] = []
+      const visit = (name: string) => {
+        const st = state.get(name) ?? 0
+        if (st === 2 || st === 1) return // done or cycle-guard
+        state.set(name, 1)
+        for (const dep of schemaDeps(name, schemas).sort()) {
+          if (byName.has(dep)) visit(dep)
+        }
+        state.set(name, 2)
+        order.push(name)
+      }
+      for (const [name] of entries.slice().sort(([a], [b]) => a.localeCompare(b))) visit(name)
+
+      const body = order
+        .map((name) => {
+          const s = schemas[name] as SchemaObject
           const props = s.properties ?? {}
           const lines = Object.entries(props).map(([k, v]) => `  ${k}: ${defaultExpr(k, v as SchemaObject, ctx, 1)}`)
           return `export type ${name} = G.${name}\nexport const ${name}: ${name} = {\n${lines.join(',\n')}\n}`

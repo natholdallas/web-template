@@ -44,7 +44,10 @@ prd = [
 web = "web/apps/usr/dist/public"
 log = "logs"
 cache = "webtplmst"
-media = "media"
+media = "media"                              # local media storage dir
+media-route = "/media"                       # same-origin URL route for media (nginx off)
+media-url = ""                               # optional media CDN/domain base, e.g. https://media.example.com
+media-max-size = 10                          # max single file upload size (MB)
 
 [db]
 name = "webtplmst"
@@ -88,6 +91,17 @@ apiclient = "assets/wechat/apiclient_key.pem" # WeChat API private key certifica
 [exchangerate]
 site = "https://v6.exchangerate-api.com/v6/{id}/latest" # Requires API key, see https://exchangerate-api.com
 currencies = []                                         # Currencies, e.g. CNY, USD
+
+[oauth.google]
+enabled = false             # enable Google sign-in / bind
+client-id = ""              # Google OAuth 2.0 client ID
+client-secret = ""          # Google OAuth 2.0 client secret
+redirect-uri = "http://localhost:3000/oauth/google" # must match the authorized redirect URI
+
+[oauth.telegram]
+enabled = false             # enable Telegram sign-in / bind
+bot-token = ""              # Telegram bot token (from @BotFather)
+bot-username = ""           # Telegram bot username, e.g. "myapp_bot"
 
 [resty]
 insecure-skip-verify = false # Skip insecure verify

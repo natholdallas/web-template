@@ -38,6 +38,23 @@ export default {
   'settings.dark.mode': '深色模式',
   'settings.dark.mode.desc': '切换深色和浅色主题',
 
+  // oauth
+  'settings.oauth': '登录方式',
+  'settings.oauth.desc': '绑定第三方账号，即可用对应平台快速登录',
+  'oauth.divider': '或',
+  'oauth.google': 'Google',
+  'oauth.telegram': 'Telegram',
+  'oauth.bind': '绑定',
+  'oauth.unbind': '解绑',
+  'oauth.bound': '已绑定',
+  'oauth.bind.desc': '尚未绑定',
+  'oauth.disabled': '未配置第三方登录',
+  'oauth.failed': '授权失败，请重试',
+  'sign.in.telegram': '使用 Telegram 登录',
+  'err.oauth.failed': 'OAuth 登录失败',
+  'err.invalid.media': '无效的媒体文件',
+  'err.upload.failed': '上传失败',
+
   'urls.index': '首页',
   'urls.settings': '设置',
   'urls.entrance': '登录',

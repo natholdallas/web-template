@@ -1,0 +1,38 @@
+# media.xxxx.com — Caddy 静态文件服务（自动 HTTPS）
+#
+# 对应 nginx 示例 assets/nginx/media.domain.example.conf 的 Caddy 版。
+# Caddy 会自动申请/续期 Let's Encrypt 证书并重定向 HTTP→HTTPS，无需手动配 TLS。
+#
+# 用法：
+#   1. 把下面的站点块写入服务器 /etc/caddy/Caddyfile（或 conf.d/*.Caddyfile）
+#   2. 确保 media.xxxx.com 的 DNS A/AAAA 记录指向服务器，且开放 80/443
+#   3. 把 root 改为服务器上 resources.media 的实际目录
+#   4. systemctl reload caddy  (或 caddy reload --config /etc/caddy/Caddyfile)
+#
+# 再在 conf.toml 里设置 resources.media-url = "https://media.xxxx.com"，
+# 前端就会用这个域名拼媒体 URL。外链边后后端 /media 路由仍然可用（开发/内网）。
+
+media.xxxx.com {
+	# resources.media 在服务器上的实际目录
+	root * /var/www/webtplmst/media
+
+	encode zstd gzip
+	header Cache-Control "public, max-age=2592000, immutable"
+	file_server
+}
+
+# ── 如果不想用独立域名，也可以在主站 Caddyfile 里顺带提供 /media 静态目录 ──
+#
+# 前提：conf.toml app.nginx = true（后端自己的 /media 静态中间件会被跳过，
+# 改由 web 服务器接管）；root 需指向 resources.media 的父目录。
+#
+# www.example.com {
+#   handle /media/* {
+#     root * /var/www/webtplmst   # resources.media 的父目录
+#     encode zstd gzip
+#     file_server
+#   }
+#   handle {
+#     reverse_proxy 127.0.0.1:8080
+#   }
+# }

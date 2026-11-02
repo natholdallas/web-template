@@ -64,10 +64,22 @@ type AppConf struct {
 	RedisAddr  string `validate:"required"`
 
 	// resources
-	RWeb   string `validate:"required"`
-	RLog   string `validate:"required"`
-	RCache string `validate:"required"`
-	RMedia string `validate:"required"`
+	RWeb         string `validate:"required"`
+	RLog         string `validate:"required"`
+	RCache       string `validate:"required"`
+	RMedia       string `validate:"required"`
+	MediaRoute   string
+	MediaURL     string
+	MediaMaxSize int
+
+	// oauth (google / telegram login)
+	OauthGoogleEnabled      bool
+	OauthGoogleClientID     string
+	OauthGoogleClientSecret string
+	OauthGoogleRedirectURI  string
+	OauthTelegramEnabled    bool
+	OauthTelegramBotToken   string
+	OauthTelegramBotName    string
 
 	// smtp
 	SMTPHost     string
@@ -114,6 +126,16 @@ func (a *AppConf) MkdirAll() {
 	os.MkdirAll(a.RCache, 0o777)
 }
 
+// MediaBase returns the public media base URL: the configured media domain
+// (e.g. https://media.example.com) when set, otherwise the same-origin
+// /media route path. Used to build absolute media URLs for the frontend.
+func (a *AppConf) MediaBase() string {
+	if a.MediaURL != "" {
+		return a.MediaURL
+	}
+	return a.MediaRoute
+}
+
 func LoadApp() {
 	vipers.MustConfig(Flag.ConfName, Flag.ConfPath, Flag.ConfType)
 
@@ -150,6 +172,18 @@ func LoadApp() {
 	App.RLog = strs.TrimEnd(vipers.Get("resources.log", "log"), strs.Slash)
 	App.RCache = strs.TrimEnd(vipers.String("resources.cache"), strs.Slash)
 	App.RMedia = strs.TrimEnd(vipers.Get("resources.media", "media"), strs.Slash)
+	App.MediaRoute = strs.TrimEnd(vipers.Get("resources.media-route", "/media"), strs.Slash)
+	App.MediaURL = strs.TrimEnd(vipers.Get("resources.media-url", ""), strs.Slash)
+	App.MediaMaxSize = vipers.Get("resources.media-max-size", 10)
+
+	// oauth
+	App.OauthGoogleEnabled = vipers.Get("oauth.google.enabled", false)
+	App.OauthGoogleClientID = vipers.String("oauth.google.client-id")
+	App.OauthGoogleClientSecret = vipers.String("oauth.google.client-secret")
+	App.OauthGoogleRedirectURI = vipers.String("oauth.google.redirect-uri")
+	App.OauthTelegramEnabled = vipers.Get("oauth.telegram.enabled", false)
+	App.OauthTelegramBotToken = vipers.String("oauth.telegram.bot-token")
+	App.OauthTelegramBotName = vipers.String("oauth.telegram.bot-username")
 
 	// smtp
 	App.SMTPHost = vipers.String("smtp.host")

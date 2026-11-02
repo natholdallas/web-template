@@ -15,6 +15,17 @@ const (
 	InvalidVidSuffixes = "err.invalid.suffixes.vid"
 	InvalidData        = "err.invalid.data"
 	NotImplement       = "err.not.implement"
+	InvalidMedia       = "err.invalid.media"
+	UploadFailed       = "err.upload.failed"
+	OauthFailed        = "err.oauth.failed"
+)
+
+// media kinds
+const (
+	MediaKindImage = "image"
+	MediaKindVideo = "video"
+	MediaKindFile  = "file"
+	UploadFormFile = "file" // multipart field name
 )
 
 // custom

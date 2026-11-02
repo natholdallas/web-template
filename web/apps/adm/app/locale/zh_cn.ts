@@ -26,6 +26,7 @@ export default {
   'urls.index': '首页',
   'urls.admin': '管理员账号管理',
   'urls.user': '用户管理',
+  'urls.media': '媒体管理',
   'urls.settings': '设置',
   'urls.entrance': '登录',
 
@@ -45,6 +46,20 @@ export default {
   'settings.locale': '语言',
   'settings.locale.desc': '选择您的首选语言',
   'settings.desc': '管理您的账号、安全与偏好设置',
+
+  // media
+  'media.desc': '管理平台上传的静态资源',
+  'media.preview': '预览',
+  'media.name': '文件名',
+  'media.kind': '类型',
+  'media.size': '大小',
+  'media.kind.image': '图片',
+  'media.kind.video': '视频',
+  'media.kind.file': '文件',
+  'upload': '上传',
+  'open': '打开',
+  'err.invalid.media': '无效的媒体文件',
+  'err.upload.failed': '上传失败',
 
   'dashboard.title': '仪表盘',
   'dashboard.total.admins': '管理员总数',

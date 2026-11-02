@@ -35,4 +35,8 @@ func Setup(api fiber.Router) {
 		Post("/:id/reset-password", ResetAdminPassword)
 	api.Group("/stat", jwt.Middleware).
 		Get("", GetStats)
+	api.Group("/media", jwt.Middleware).
+		Get("", ListMedia).
+		Post("", UploadMedia).
+		Delete("/:id", RemoveMedia)
 }
