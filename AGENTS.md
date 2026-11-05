@@ -79,9 +79,15 @@ Four distinct CLI flags handle schema evolution (`--sync` is unrelated — it ru
 
 - **CORS prefix matching:** `AllowOriginsFunc` uses `strs.AnyPrefix`, not exact match — e.g. `http://localhost` also matches `http://localhost:3000`
 - **Log rotation:** `lumberjack` writes to `<RLog>/app.log` (10MB, 7 backups, 28 days)
-- **Lint:** after any backend code change, run `golangci-lint run --fix ./...` from the repo root (equivalent to running the frontend apps' per-app `pnpm lint`). golangci-lint v2 (2.13.2) is installed at `~/.local/share/go/bin/golangci-lint`. Config: `.golangci.yml` (revive `use-any` forces `any` over `interface{}`, gofumpt/gci auto-format with a `Prefix(webtplmst)` import group)
+- **Lint — must run after any backend Go change and be completely clean before reporting done** (the team's nvim — AstroNvim/astrolsp with `gopls` + `staticcheck = true` — surfaces exactly these diagnostics, so a clean run here equals a zero-diagnostic editor buffer):
+  - `go build ./...` — must compile
+  - `go vet ./...`
+  - `~/.local/share/go/bin/staticcheck ./...`
+  - `gopls check <each edited .go file>` — exact parity with the editor buffer; this is what reports "should use range loop", "`err` shadows declaration at ...", "use `min`/`max`", "use `strings.Builder`/`WriteString`", and similar hints. If `gopls check` is clean, the nvim buffer will be too.
+  - `golangci-lint run --fix ./...` — golangci-lint v2 (2.13.2) is installed at `~/.local/share/go/bin/golangci-lint`; Config: `.golangci.yml` (revive `use-any` forces `any` over `interface{}`, gofumpt/gci auto-format with a `Prefix(webtplmst)` import group)
+  - Fix everything each tool reports and re-run until the output is clean; never finish a change with leftover diagnostics.
 - **No `_ = expr` blank assignments** — never write code that discards a value/error with `_ = xxx` (e.g. `_ = db.AutoMigrate(...)`). Handle the error/result properly instead (check it, log it, or propagate it).
-- **No Go tests exist** — there is no `*_test.go` anywhere in the repo (the old `internal/pwd` package is gone; password helpers now come from `natools4go/pwd`). Don't assume a test suite; the only verification is `golangci-lint` + `go build`.
+- **No Go tests exist** — there is no `*_test.go` anywhere in the repo (the old `internal/pwd` package is gone; password helpers now come from `natools4go/pwd`). Don't assume a test suite; the only verification is the Go lint suite (see **Lint** above) + `go build`.
 - **`go mod` has a `replace`** directive for telegram-bot-api (redirects to a fork)
 
 ## GORM model conventions (internal/db/)
