@@ -5,8 +5,8 @@
 # gofumpt formatter is unreliable (see .golangci.yml), so formatting is checked
 # with the standalone binaries, which are deterministic and agree with `gopls`.
 #
-# Usage:  ./hack/lint.sh          (check)
-#         ./hack/lint.sh --fix    (apply formatting fixes first)
+# Usage:  ./scripts/lint.sh          (check)
+#         ./scripts/lint.sh --fix    (apply formatting fixes first)
 set -uo pipefail
 cd "$(dirname "$(readlink -f "$0")")/.." || exit 1
 
@@ -28,14 +28,14 @@ unformatted=$("$GOBIN/gofumpt" -l . 2>/dev/null | grep -v '^$' || true)
 if [ -n "$unformatted" ]; then
   bad "gofumpt wants to rewrite:"
   echo "$unformatted"
-  echo "run: ./hack/lint.sh --fix"
+  echo "run: ./scripts/lint.sh --fix"
 else
   ok "gofumpt: clean"
 fi
 
 unsorted=$("$GOBIN/gci" diff -s standard -s default -s 'Prefix(webtplmst)' . 2>/dev/null || true)
 if [ -n "$unsorted" ]; then
-  bad "gci wants to reorder imports (run ./hack/lint.sh --fix)"
+  bad "gci wants to reorder imports (run ./scripts/lint.sh --fix)"
 else
   ok "gci: clean"
 fi

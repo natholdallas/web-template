@@ -79,8 +79,8 @@ Four distinct CLI flags handle schema evolution (`--sync` is unrelated — it ru
 
 - **CORS origin matching:** `AllowOriginsFunc` compares origins **exactly** against `cors.dev` / `cors.prd` (`slices.Contains`). Prefix matching was removed because it accepted `https://example.com.attacker.net` for a whitelisted `https://example.com`. List every allowed origin in full.
 - **Log rotation:** `lumberjack` writes to `<RLog>/app.log` (10MB, 7 backups, 28 days)
-- **Lint — must run after any backend Go change and be completely clean before reporting done** (the team's nvim — AstroNvim/astrolsp with `gopls` + `staticcheck = true` — surfaces exactly these diagnostics, so a clean run here equals a zero-diagnostic editor buffer). **Run `./hack/lint.sh`**, which chains all of it:
-  - `gofumpt -l .` — must print nothing; `gci diff -s standard -s default -s 'Prefix(webtplmst)' .` — must print nothing. These standalone binaries are the **authoritative** format gate: golangci-lint 2.14's built-in `gofumpt` formatter disagrees with them (it flags already-formatted files, and the flagged set changes between runs), so `formatters` is deliberately absent from `.golangci.yml`. `./hack/lint.sh --fix` applies both.
+- **Lint — must run after any backend Go change and be completely clean before reporting done** (the team's nvim — AstroNvim/astrolsp with `gopls` + `staticcheck = true` — surfaces exactly these diagnostics, so a clean run here equals a zero-diagnostic editor buffer). **Run `./scripts/lint.sh`**, which chains all of it:
+  - `gofumpt -l .` — must print nothing; `gci diff -s standard -s default -s 'Prefix(webtplmst)' .` — must print nothing. These standalone binaries are the **authoritative** format gate: golangci-lint 2.14's built-in `gofumpt` formatter disagrees with them (it flags already-formatted files, and the flagged set changes between runs), so `formatters` is deliberately absent from `.golangci.yml`. `./scripts/lint.sh --fix` applies both.
   - `go build ./...` — must compile
   - `go vet ./...`
   - `~/.local/share/go/bin/staticcheck ./...`
