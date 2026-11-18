@@ -45,6 +45,8 @@ srv_user=""
 srv_host=""
 ssh_target=""                        # ssh target
 SUDO=""                              # remote command prefix (root skips sudo)
+build_mode="build"                   # build | deploy (drives placeholder-env strictness)
+allow_placeholder_env=false          # set by deploy --allow-placeholder-env
 
 success() { echo -e "\033[0;32m[SUCCESS]\033[0m $1"; }
 info() { echo -e "\033[1;36m[INFO]\033[0m $1"; }
@@ -62,7 +64,7 @@ remote_util() {
     error "remote_util: missing target directory (2nd arg required)."
     return 1
   fi
-  if $use_rsync; then
+  if [ "$use_rsync" = true ]; then
     info "use rsync to sync files..."
     rsync -avP "$src" "$ssh_target:$target"
   else
@@ -155,14 +157,96 @@ dev() {
 }
 
 # Build backend + SDK (server-independent). Run once per deploy.
+#
+# docs/ is gitignored, and internal/srv/swg imports package docs, so a clean
+# clone cannot compile until `swag init` has run. Swagger (and therefore the SDK)
+# is generated first, then `go build` and `pnpm gen:api` run in parallel.
 build_core() {
   info "Building backend & SDK"
-  local p1 rc=0
+
+  if command -v swag >/dev/null 2>&1; then
+    swag fmt >/dev/null || warn "swag fmt failed (continuing)"
+    swag init --parseDependency --parseInternal || {
+      error "swag init failed, aborting build."
+      return 1
+    }
+  else
+    [ -f docs/docs.go ] || {
+      error "docs/docs.go missing and swag is not installed — run ./main.sh init."
+      return 1
+    }
+    warn "swag not installed, reusing existing docs/ (may be stale)."
+  fi
+
+  local rc=0 p1
   go build -o bin/backend &
   p1=$!
-  run_in_dir "web" pnpm gen:api || warn "SDK generation failed"
+  # SDK generation is part of the build: the frontends import ~/lib/sdk, so a
+  # failure here must fail the build rather than ship a stale SDK. index.ts is
+  # removed first because the customIndex plugin skips existing files.
+  rm -f web/apps/*/app/lib/sdk/index.ts
+  run_in_dir "web" pnpm gen:api || rc=1
   wait "$p1" || rc=1
   return $rc
+}
+
+# Resolve the effective value of an env var for an app: explicit app_env entry
+# first, then the app's .env.production, then nothing.
+# usage: effective_env <app> <path> <VAR>
+effective_env() {
+  local app="$1" path="$2" var="$3" k
+  # Guard the associative-array expansion: under `set -u` an empty app_env can
+  # abort the whole function in some bash versions.
+  if [ "${#app_env[@]}" -gt 0 ]; then
+    for k in "${!app_env[@]}"; do
+      if [[ "$k" == "$srv_name:$app:$var" ]]; then
+        printf '%s' "${app_env[$k]}"
+        return 0
+      fi
+    done
+  fi
+  if [ -f "$path/.env.production" ]; then
+    local line
+    line=$(grep -E "^${var}=" "$path/.env.production" | tail -1)
+    if [ -n "$line" ]; then
+      printf '%s' "${line#*=}"
+    fi
+  fi
+}
+
+# Guard against shipping a bundle that points at a placeholder API base.
+#
+# When domains[api] is empty and no app_env override exists, the build falls
+# back to .env.production. That file ships with localhost/example.com, which
+# would make a deployed frontend call the visitor's own machine. `deploy`
+# refuses unless the operator opts out.
+# usage: check_public_env <app> <path> <deploy|build>
+check_public_env() {
+  local app="$1" path="$2" mode="$3" base
+  base=$(effective_env "$app" "$path" "NUXT_PUBLIC_API_BASE")
+
+  # `same-origin` is the explicit "talk to the current origin" opt-in: the
+  # generated SDK uses it as the baseURL, so it must be empty, not the literal.
+  if [ "$base" = "same-origin" ]; then
+    return 0
+  fi
+
+  case "$base" in
+  "" | *localhost* | *127.0.0.1* | *example.com* | *example.org* | *example.net*)
+    local msg="app '$app' would ship NUXT_PUBLIC_API_BASE='${base:-<unset>}'"
+    if [ "$mode" = "deploy" ] && [ "$allow_placeholder_env" != true ]; then
+      error "$msg"
+      printf '  Fix it in one of these ways:\n' >&2
+      printf '    1. set domains[] api endpoint in main.sh\n' >&2
+      printf '    2. add app_env["%s:%s:NUXT_PUBLIC_API_BASE"]="https://api.your-domain"\n' "$srv_name" "$app" >&2
+      printf '    3. set it to "same-origin" when the frontend and API share a host\n' >&2
+      printf '  Or re-run with --allow-placeholder-env to deploy anyway.\n' >&2
+      return 1
+    fi
+    warn "$msg — fine for local dev, not for production."
+    ;;
+  esac
+  return 0
 }
 
 # Build every app in parallel, exporting the selected server's env overrides.
@@ -181,6 +265,14 @@ build_front() {
       [[ "$k" == "$srv_name:$name:"* ]] && envs+=("${k#"$srv_name:$name:"}=${app_env[$k]}")
     done
     auto_envs "$name" envs
+    # `same-origin` is a main.sh keyword, not a URL: translate it to an empty
+    # base so the SDK resolves requests against the current origin.
+    for k in "${!envs[@]}"; do
+      if [ "${envs[$k]}" = "NUXT_PUBLIC_API_BASE=same-origin" ]; then
+        envs[$k]="NUXT_PUBLIC_API_BASE="
+      fi
+    done
+    check_public_env "$name" "$path" "$build_mode" || return 1
     info "  building $name ($path)"
     (cd "$path" && env "${envs[@]}" "${cmd_args[@]}") &
     pids+=($!)
@@ -195,22 +287,24 @@ build_front() {
   return $rc
 }
 
-# Backend + SDK + frontends for the selected server, in parallel.
+# Backend + SDK, then frontends for the selected server.
+#
+# These run in sequence, not in parallel: `pnpm generate` imports the generated
+# SDK, so building the frontends while gen:api rewrites app/lib/sdk races and can
+# fail or bake in a half-written SDK.
 build() {
-  local p rc=0
   select_server || return 1
-  build_core &
-  p=$!
-  build_front || rc=1
-  wait "$p" || rc=1
-  return $rc
+  build_core || return 1
+  build_front
 }
 
 deploy() {
   local skip_build=false force_service=false arg
+  build_mode="deploy"
   for arg in "$@"; do
     case "$arg" in
     --skip-build) skip_build=true ;;
+    --allow-placeholder-env) allow_placeholder_env=true ;;
     --force-service)
       if [ "$deploy_mode" != "systemctl" ]; then
         warn "--force-service only applies in deploy_mode=systemctl, ignored"
@@ -242,12 +336,19 @@ deploy() {
       rc=1
       continue
     }
+    local server_rc=0
     case "$deploy_mode" in
-    tmux) deploy_tmux "$skip_build" || rc=1 ;;
-    systemctl) deploy_systemctl "$skip_build" "$force_service" || rc=1 ;;
+    tmux) deploy_tmux "$skip_build" || server_rc=1 ;;
+    systemctl) deploy_systemctl "$skip_build" "$force_service" || server_rc=1 ;;
     *) error "Unknown deploy_mode '$deploy_mode' (tmux|systemctl)" && return 1 ;;
     esac
-    install_webconf || rc=1
+    # Do not touch live web-server config for a server whose deploy failed:
+    # that would reconfigure nginx/caddy to serve a half-updated tree.
+    if [ $server_rc -eq 0 ]; then
+      install_webconf || rc=1
+    else
+      rc=1
+    fi
   done
   [ $rc -eq 0 ] && success "Deployed to all servers."
   return $rc
@@ -427,27 +528,62 @@ synconf() {
 }
 
 copyfile() {
+  local force=false arg
+  for arg in "${@:2}"; do
+    case "$arg" in
+    --force) force=true ;;
+    esac
+  done
+
   if [ -f ./assets/conf.toml ]; then
-    cp ./assets/conf.toml ./conf.toml
+    # conf.toml holds the jwt secrets and every credential. Overwriting it with
+    # the template wipes them and the app refuses to start, so only write when
+    # the file is absent (or --force was passed).
+    if [ -f ./conf.toml ] && [ "$force" = false ]; then
+      warn "conf.toml already exists, keeping it (use 'copyfile --force' to overwrite)."
+    else
+      cp ./assets/conf.toml ./conf.toml
+      info "Wrote conf.toml from template — fill in jwt.secret.adm / jwt.secret.usr."
+    fi
   else
     info "No assets/conf.toml template, skipping (create conf.toml manually)."
   fi
-  local entry name path cmd out_dir
+
+  local entry name path cmd out_dir dev_env prod_env
+  dev_env=./assets/nuxt.env
+  prod_env=./assets/nuxt.env.production
   for entry in "${apps[@]}"; do
     IFS='|' read -r name path cmd out_dir <<<"$entry"
-    cp ./assets/nuxt.env "$path/.env"
-    cp ./assets/nuxt.env "$path/.env.production"
+    cp "$dev_env" "$path/.env"
+    # Production gets its own template so a dev build's localhost API base can
+    # never leak into a deployed bundle.
+    if [ -f "$prod_env" ]; then
+      cp "$prod_env" "$path/.env.production"
+    else
+      cp "$dev_env" "$path/.env.production"
+      warn "$prod_env missing, .env.production copied from the dev template."
+    fi
   done
 }
 
 init() {
   command -v gowatch >/dev/null 2>&1 || go install github.com/silenceper/gowatch@latest
+  # Install swag when missing, then keep going: aborting here used to skip
+  # submodule init, docs, go mod tidy and pnpm install on a fresh clone, so the
+  # "first" init always failed and had to be run twice.
   if ! command -v swag >/dev/null 2>&1; then
-    go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5
-    return 1
+    info "Installing swag..."
+    go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc5 || {
+      error "swag install failed."
+      return 1
+    }
+    command -v swag >/dev/null 2>&1 || {
+      error "swag not found on PATH after install (check GOBIN/GOBIN)."
+      return 1
+    }
   fi
   git submodule update --init --recursive
-  docs
+  docs || return 1
   go mod tidy
   run_in_dir "web" pnpm install
 }
@@ -457,6 +593,10 @@ docs() {
   swag fmt || return 1
   swag init --parseDependency --parseInternal || return 1
   info "Regenerating frontend SDK"
+  # The customIndex codegen plugin only emits index.ts when the file does not
+  # exist yet; an existing one is left untouched, so wiring changes in
+  # alova.config.ts would never reach the apps. Clear it before regenerating.
+  rm -f web/apps/*/app/lib/sdk/index.ts
   run_in_dir "web" pnpm gen:api
 }
 
@@ -516,6 +656,10 @@ renewal() {
       -o -name "*.tsx" -o -name "*.vue" -o -name "*.nuxtrc" \
       -o -name "*.env" -o -name ".gitmodules" \) \
       -exec "${SED_CMD[@]}" "s/${pname_esc}/${new_name_esc}/g" {} +
+    # The sudoers file name is shared by every project on a server and must stay
+    # fixed (see sudoers_name above), so undo the rename the global replace just
+    # applied to it.
+    "${SED_CMD[@]}" "s/^sudoers_name=.*/sudoers_name=\"webtplmstx\"           # \/etc\/sudoers.d file name (shared \& fixed — do not rename)/" main.sh
     # initialize git repository
     git init
     git submodule add https://github.com/natholdallas/nuxt-modules.git web/packages/natholdallas
@@ -553,11 +697,24 @@ serverlog() {
     arg="$3"
   fi
   select_server "$server" || return 1
-  local lines="${arg:-100}"
-  if [ "$arg" = "once" ]; then
-    ssh -t "$ssh_target" "$SUDO journalctl -u $pname -n $lines"
-  else
+  # `once` is a mode, not a line count: resolve it before defaulting `lines`,
+  # otherwise journalctl received "-n once" and errored out.
+  local follow=true lines=100
+  case "$arg" in
+  once) follow=false ;;
+  "") : ;;
+  *)
+    if [[ "$arg" =~ ^[0-9]+$ ]]; then
+      lines="$arg"
+    else
+      warn "Unknown serverlog argument '$arg' (expected 'once' or a line count)."
+    fi
+    ;;
+  esac
+  if [ "$follow" = true ]; then
     ssh -t "$ssh_target" "$SUDO journalctl -u $pname -n $lines -f"
+  else
+    ssh -t "$ssh_target" "$SUDO journalctl -u $pname -n $lines"
   fi
 }
 
@@ -899,10 +1056,12 @@ initremote) initremote "$@" ;;
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "deploy" "Build once, deploy to every server in servers[]"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--skip-build" "Deploy without rebuilding (checks .built-for marker)"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--force-service" "Overwrite existing service file (systemctl mode)"
+  printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--allow-placeholder-env" "Deploy even if the API base is still localhost/example.com"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "synconf" "Sync config to server [server]"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "webconf" "Install/reload nginx or caddy site config [server]"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "server" "Target server (default: ${servers[0]%%|*})"
-  printf "  ${C_CMD}%-18s${C_RST}     %s\n" "copyfile" "Copy config to local"
+  printf "  ${C_CMD}%-18s${C_RST}     %s\n" "copyfile" "Copy config to local (keeps an existing conf.toml)"
+  printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--force" "Overwrite conf.toml (wipes jwt secrets)"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "servers" "List available servers/apps (see registries)"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "init" "Init project & install dependencies"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "renewal" "Renew project (irreversible)"

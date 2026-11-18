@@ -36,7 +36,9 @@ func MigDB() {
 
 func SynDB() {
 	fmt.Println("sync database schema")
-	orms.SyncDB(db.Tx, db.Models...)
+	if err := orms.SyncTablesHard(db.Tx, db.Models...); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func RstTable() {
@@ -47,7 +49,7 @@ func RstTable() {
 func Usr() {
 	fmt.Println("add user script")
 	username := ask.Read[string]("username")
-	password := ask.Read[string]("password")
+	password := readPassword()
 	hash, err := pwd.Hash(password)
 	if err != nil {
 		fmt.Println(err)
@@ -64,7 +66,7 @@ func Usr() {
 func Adm() {
 	fmt.Println("add admin script")
 	username := ask.Read[string]("username")
-	password := ask.Read[string]("password")
+	password := readPassword()
 	hash, err := pwd.Hash(password)
 	if err != nil {
 		fmt.Println(err)
@@ -76,6 +78,17 @@ func Adm() {
 	} else {
 		fmt.Println("success")
 	}
+}
+
+// readPassword prompts without echoing. ask.Read echoes input, which would print
+// the new credential to the terminal and leave it in scrollback.
+func readPassword() string {
+	password, err := ask.ReadPassword("password")
+	if err != nil {
+		fmt.Println("read password:", err)
+		return ""
+	}
+	return password
 }
 
 func Sync() {

@@ -20,10 +20,26 @@ import { ResetPasswordIn as GenResetPasswordIn } from './models'
 import type { ResetPasswordIn as GenResetPasswordInT } from './models'
 
 const retried = new Set<string>()
+// Bound the retry bookkeeping: keys are per distinct URL+params, so an unbounded
+// set grows for the whole session and a stale key can force an early sign-out.
+const RETRY_TTL = 30000
+const MAX_RETRIED = 200
+
+function retryKey(method: Method) {
+  return \`\${method.type}:\${method.url}:\${JSON.stringify(method.config.params ?? {})}\`
+}
+
+function markRetried(key: string) {
+  if (retried.size >= MAX_RETRIED) retried.clear()
+  retried.add(key)
+  setTimeout(() => retried.delete(key), RETRY_TTL)
+}
 
 function ok(_response: Response, method: Method, data: unknown) {
   const t = useNuxtApp().$i18n.t
-  if (method.type !== 'GET') toast.success(t('success'))
+  // Auth calls are not user-visible actions: a toast on every login, refresh and
+  // logout is noise.
+  if (method.type !== 'GET' && !method.url.startsWith('/usr/api/v1/auth/')) toast.success(t('success'))
   return data
 }
 
@@ -33,12 +49,12 @@ async function unauthorized(_response: Response, method: Method) {
     auth.$signOut()
     throw new Error('refresh failed')
   }
-  const key = \`\${method.type}:\${method.url}:\${JSON.stringify(method.config.params ?? {})}\`
+  const key = retryKey(method)
   if (retried.has(key)) {
     auth.$signOut()
     throw new Error('retry failed')
   }
-  retried.add(key)
+  markRetried(key)
   if (await auth.$refresh()) {
     return method.send(true)
   }
@@ -53,7 +69,9 @@ function fallback(response: Response, _method: Method, v: unknown) {
     if (code) toast.warning(t(code))
     else if (message) toast.error(message)
   }
-  throw response.statusText
+  // Throw a real Error so callers can read \`err.message\`; a bare string leaves it
+  // undefined in every catch block.
+  throw new Error(response.statusText)
 }
 
 Api.NewEvent(200, ok)
@@ -69,10 +87,24 @@ export { Auth, AuthIn, Profile, ProfileIn, Config, GoogleAuthIn, Media, Telegram
 
 const admWiring = `
 const retried = new Set<string>()
+// Bound the retry bookkeeping (see the usr wiring for the rationale).
+const RETRY_TTL = 30000
+const MAX_RETRIED = 200
+
+function retryKey(method: Method) {
+  return \`\${method.type}:\${method.url}:\${JSON.stringify(method.config.params ?? {})}\`
+}
+
+function markRetried(key: string) {
+  if (retried.size >= MAX_RETRIED) retried.clear()
+  retried.add(key)
+  setTimeout(() => retried.delete(key), RETRY_TTL)
+}
 
 function ok(_response: Response, method: Method, data: unknown) {
   const t = useNuxtApp().$i18n.t
-  if (method.type !== 'GET') {
+  // Skip auth endpoints: login/refresh/logout already give clear feedback.
+  if (method.type !== 'GET' && !method.url.startsWith('/adm/api/v1/auth/')) {
     useSnackBar().success(t('success'))
   }
   return data
@@ -84,12 +116,12 @@ async function unauthorized(_response: Response, method: Method) {
     auth.$signOut()
     throw new Error('refresh failed')
   }
-  const key = \`\${method.type}:\${method.url}:\${JSON.stringify(method.config.params ?? {})}\`
+  const key = retryKey(method)
   if (retried.has(key)) {
     auth.$signOut()
     throw new Error('retry failed')
   }
-  retried.add(key)
+  markRetried(key)
   if (await auth.$refresh()) {
     return method.send(true)
   }
@@ -107,7 +139,8 @@ function fallback(response: Response, _method: Method, v: unknown) {
       useSnackBar().warn(message)
     }
   }
-  throw response.statusText
+  // Throw a real Error so \`err.message\` is populated in catch blocks.
+  throw new Error(response.statusText)
 }
 
 Api.NewEvent(200, ok)

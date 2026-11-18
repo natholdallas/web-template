@@ -46,12 +46,14 @@ type AppConf struct {
 	CorsPrd []string
 
 	// database
+	// Required-ness is driver-dependent, so only the universally required fields
+	// carry a tag here; Validate checks host/credentials for server-based drivers.
 	DBName        string `validate:"required"`
-	DBQuery       string `validate:"required"`
-	DBPort        string `validate:"required"`
-	DBHost        string `validate:"required"`
-	DBUsername    string `validate:"required"`
-	DBPassword    string `validate:"required"`
+	DBQuery       string
+	DBPort        string
+	DBHost        string
+	DBUsername    string
+	DBPassword    string
 	DBAutoMigrate bool
 	DBAutoCreate  bool
 	DBDriver      string `validate:"required"`

@@ -7,6 +7,16 @@ export default defineNuxtConfig({
   ssr: false,
   compatibilityDate: '2026-05-27',
 
+  // Declare the runtime config shape so `useRuntimeConfig().public.apiBase` is
+  // typed as a string. The value itself comes from NUXT_PUBLIC_API_BASE at build
+  // time (main.sh derives it from domains[]/app_env); an empty default means
+  // "same origin", which is what a reverse-proxied deployment wants.
+  runtimeConfig: {
+    public: {
+      apiBase: '',
+    },
+  },
+
   // dev
   devtools: {
     enabled: false,

@@ -22,7 +22,10 @@ import (
 //	@Router		/adm/api/v1/profile/me [get]
 func FindProfile(c fiber.Ctx) error {
 	claims := jwt.Claims(c)
-	v := orms.IFirst[db.Admin](db.Tx, claims.ID)
+	v, err := orms.First[db.Admin](db.Tx, claims.ID)
+	if err != nil {
+		return &fext.Fail{Code: internal.RecordNotFound, Status: fiber.StatusNotFound}
+	}
 	return c.JSON(v)
 }
 

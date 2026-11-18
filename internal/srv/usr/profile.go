@@ -38,7 +38,10 @@ type Profile struct {
 //	@Router		/usr/api/v1/profile/me [get]
 func FindProfile(c fiber.Ctx) error {
 	claims := jwt.Claims(c)
-	v := orms.QM[Profile, db.User](db.Tx).IFirst(claims.ID)
+	v, err := orms.QM[Profile, db.User](db.Tx).First(claims.ID)
+	if err != nil {
+		return &fext.Fail{Code: internal.RecordNotFound, Status: fiber.StatusNotFound}
+	}
 	return c.JSON(v)
 }
 

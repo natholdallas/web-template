@@ -84,7 +84,7 @@
 > (32-char strings, required — the app won't start without them). Generate them with:
 >
 > ```bash
-> ./bin/backend --remake-secret
+> ./bin/backend --gensec
 > ```
 
 ### Scaffold a New Project
@@ -315,7 +315,7 @@ web-templates/
 
 # Task scripts
 ./bin/backend --sync         # Run cron task scripts (e.g. sync exchange rates)
-./bin/backend --remake-secret # Regenerate JWT secrets
+./bin/backend --gensec # Regenerate JWT secrets
 ```
 
 ---

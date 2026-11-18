@@ -14,7 +14,9 @@ func Setup(api fiber.Router) {
 	api.Group("/auth").
 		Post("/login", Login).
 		Post("/refresh", Refresh).
-		Post("/logout", Logout)
+		Post("/logout", Logout).
+		Post("/google", SignInGoogle).
+		Post("/telegram", SignInTelegram)
 	api.Group("/profile", jwt.Middleware).
 		Get("/me", FindProfile).
 		Put("/me", UpdateProfile).

@@ -56,7 +56,14 @@ func ListAdmin(c fiber.Ctx) error {
 //	@Success	200	{object}	db.Admin
 //	@Router		/adm/api/v1/admin/{id} [get]
 func FindAdmin(c fiber.Ctx) error {
-	v := orms.IFirst[db.Admin](db.Tx, c.Params("id"))
+	id, err := internal.ParseID(c)
+	if err != nil {
+		return err
+	}
+	v, err := orms.First[db.Admin](db.Tx, id)
+	if err != nil {
+		return &fext.Fail{Code: internal.RecordNotFound, System: err, Status: fiber.StatusNotFound}
+	}
 	return c.JSON(v)
 }
 
@@ -122,6 +129,10 @@ func CreateAdmin(c fiber.Ctx) error {
 //	@Failure	400	{object}	Fail
 //	@Router		/adm/api/v1/admin/{id} [put]
 func UpdateAdmin(c fiber.Ctx) error {
+	id, err := internal.ParseID(c)
+	if err != nil {
+		return err
+	}
 	d, err := fext.BodyVarser[AdminUpdateIn](c)
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
@@ -134,7 +145,7 @@ func UpdateAdmin(c fiber.Ctx) error {
 		}
 		values["password"] = hash
 	}
-	if err := orms.UpdatesByID[db.Admin](db.Tx, c.Params("id"), values); err != nil {
+	if err := orms.UpdatesByID[db.Admin](db.Tx, id, values); err != nil {
 		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
 	}
 	return nil
@@ -152,8 +163,16 @@ func UpdateAdmin(c fiber.Ctx) error {
 //	@Success	200
 //	@Router		/adm/api/v1/admin/{id} [delete]
 func RemoveAdmin(c fiber.Ctx) error {
-	if err := orms.Delete[db.Admin](db.Tx, c.Params("id")); err != nil {
+	id, err := internal.ParseID(c)
+	if err != nil {
+		return err
+	}
+	affected, err := orms.DeleteByID[db.Admin](db.Tx, id)
+	if err != nil {
 		return &fext.Fail{Code: internal.RemoveFailed, Message: err.Error()}
+	}
+	if affected == 0 {
+		return &fext.Fail{Code: internal.RecordNotFound, Status: fiber.StatusNotFound}
 	}
 	return nil
 }
@@ -176,12 +195,16 @@ type ResetAdminPasswordOut struct {
 //	@Failure		400	{object}	Fail
 //	@Router			/adm/api/v1/admin/{id}/reset-password [post]
 func ResetAdminPassword(c fiber.Ctx) error {
+	id, err := internal.ParseID(c)
+	if err != nil {
+		return err
+	}
 	plain := rands.Char(20)
 	hash, err := pwd.Hash(plain)
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	if err := orms.UpdatesByID[db.Admin](db.Tx, c.Params("id"), map[string]any{"password": hash}); err != nil {
+	if err := orms.UpdatesByID[db.Admin](db.Tx, id, map[string]any{"password": hash}); err != nil {
 		return &fext.Fail{Code: internal.UpdateFailed, Message: err.Error()}
 	}
 	return c.JSON(ResetAdminPasswordOut{Password: plain})

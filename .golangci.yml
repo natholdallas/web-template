@@ -32,10 +32,17 @@ linters-settings:
       - "ST1003" # Explicitly specify style check ST1003
 
 # 3. Formatting configuration corresponding to gopls gofumpt = true
+#
+# NOTE: golangci-lint >= 2.14 can report phantom "gofumpt" issues when both
+# `gci` and `gofumpt` are enabled: gci rewrites the import block, then gofumpt
+# validates its own (pre-gci) view of the file. Verify with the standalone tools,
+# which are the authoritative check and agree with each other:
+#
+#   gofumpt -l . ; gci diff --skip-generated -s standard -s default -s 'Prefix(webtplmst)' .
 formatters:
   enable:
     - gofumpt # Enable gofumpt formatting
-    - gci # Used alongside gci to replicate gopls automatic multi-group import sorting
+    - gci # Replicates gopls automatic multi-group import sorting
   settings:
     gci:
       sections:

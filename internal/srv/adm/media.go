@@ -1,11 +1,13 @@
 package adm
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/natholdallas/natools4go/fext"
 	"github.com/natholdallas/natools4go/orms"
+	"gorm.io/gorm"
 
 	"webtplmst/internal/db"
 	"webtplmst/internal/srv/internal"
@@ -86,7 +88,14 @@ func UploadMedia(c fiber.Ctx) error {
 //	@Failure	400	{object}	Fail
 //	@Router		/adm/api/v1/media/{id} [delete]
 func RemoveMedia(c fiber.Ctx) error {
-	if err := orms.Delete[db.Media](db.Tx, c.Params("id")); err != nil {
+	id, err := internal.ParseID(c)
+	if err != nil {
+		return err
+	}
+	if err := db.RemoveByID(db.Tx, id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &fext.Fail{Code: internal.RecordNotFound, Status: fiber.StatusNotFound}
+		}
 		return &fext.Fail{Code: internal.RemoveFailed, System: err}
 	}
 	return nil

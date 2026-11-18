@@ -54,8 +54,14 @@ func (a *Auth) GenPair(userID string) (Pair, error) {
 	if err != nil {
 		return Pair{}, err
 	}
-	if db.Rx != nil {
-		db.Rx.Set(db.Rc, a.redisKey(jti), userID, a.RefreshTTL)
+	if db.Rx == nil {
+		return Pair{}, errors.New("redis unavailable")
+	}
+	// A refresh token that is not recorded in Redis can never be redeemed:
+	// VerifyRefresh looks the jti up and treats a miss as revoked. Failing here
+	// is better than handing the client a token that is dead on arrival.
+	if err := db.Rx.Set(db.Rc, a.redisKey(jti), userID, a.RefreshTTL).Err(); err != nil {
+		return Pair{}, fmt.Errorf("store refresh token: %w", err)
 	}
 	return Pair{access, refresh}, nil
 }

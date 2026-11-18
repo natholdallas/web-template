@@ -5,11 +5,16 @@ export const useAppStore = defineStore('app', () => {
   const loaded = ref(false)
 
   // Fetch the public backend config once (login providers, media base).
+  // Failures are non-fatal: the page still renders, OAuth buttons just stay hidden.
   async function $load() {
     if (loaded.value) return
-    const data = await Apis.Config.find({ meta: { silent: true } })
-    Object.assign(cfg.value, data)
-    loaded.value = true
+    try {
+      const data = await Apis.Config.find({ meta: { silent: true } })
+      Object.assign(cfg.value, data)
+      loaded.value = true
+    } catch {
+      loaded.value = false
+    }
   }
 
   // Resolve a stored media path (or already-absolute URL) to a full URL using
@@ -17,12 +22,12 @@ export const useAppStore = defineStore('app', () => {
   function mediaUrl(path: string): string {
     if (!path) return ''
     if (/^https?:\/\//.test(path)) return path
-    const base = (cfg.value.media || '/media').trim()
     const p = path.replace(/^\/+/, '')
-    if (/^https?:\/\//.test(base)) return base + '/' + p
-    const apiBase = useRuntimeConfig().public.apiBase || ''
-    const route = base.startsWith('/') ? base : '/' + base
-    return apiBase + route + '/' + p
+    const base = (cfg.value.media || '/media').trim().replace(/\/+$/, '')
+    if (/^https?:\/\//.test(base)) return `${base}/${p}`
+    const apiBase = (useRuntimeConfig().public.apiBase || '').replace(/\/+$/, '')
+    const route = base.startsWith('/') ? base : `/${base}`
+    return `${apiBase}${route}/${p}`
   }
 
   // Build the Google authorization URL. state distinguishes login vs bind.

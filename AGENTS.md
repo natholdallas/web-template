@@ -5,11 +5,11 @@
 - **`./main.sh`** — unified CLI for all operations (not `go build`, not `make`)
 - **Server & app registries** (`main.sh` top section): `apps[]`, `servers[]`, `app_env[]` drive every build/deploy command. Edit them to add/remove servers or frontend apps — no code changes needed (see "Configuration" below).
 - `./main.sh dev [restart|stop]` — starts tmux session: window 0 = Go hot-reload (gowatch), then one window per app in `apps[]` (`pnpm dev`); `restart`/`stop` kill the session
-- `./main.sh build` — backend + SDK (`build_core`) and frontends for the **default server** (`build_front`) run in parallel
-- `./main.sh deploy [--skip-build] [--force-service]` — builds backend+SDK **once**, then for **EACH server in `servers[]`**: rebuilds every app with that server's env, zips, rsyncs, and (re)starts the service. **Target mode (`tmux` | `systemctl`, default `systemctl`) is chosen by editing `deploy_mode` at the top of `main.sh`** — there is no `deploy-tmux`/`deploy-systemctl` subcommand or `--use-systemctl` flag. `--skip-build` reuses artifacts and warns (via each app's `dist/.built-for` marker) when they were built for a different server
+- `./main.sh build` — backend + SDK (`build_core`, sequential: swag → `go build` ∥ `gen:api`) and **then** the frontends for the **default server** (`build_front`). They are sequential on purpose: `pnpm generate` imports the generated SDK, so building while `gen:api` rewrites `app/lib/sdk` races
+- `./main.sh deploy [--skip-build] [--force-service] [--allow-placeholder-env]` — builds backend+SDK **once**, then for **EACH server in `servers[]`**: rebuilds every app with that server's env, zips, rsyncs, and (re)starts the service. **Target mode (`tmux` | `systemctl`, default `systemctl`) is chosen by editing `deploy_mode` at the top of `main.sh`** — there is no `deploy-tmux`/`deploy-systemctl` subcommand or `--use-systemctl` flag. `--skip-build` reuses artifacts and warns (via each app's `dist/.built-for` marker) when they were built for a different server. `--allow-placeholder-env` bypasses the guard that otherwise aborts when an app would ship `localhost`/`example.com` as its API base
 - `./main.sh servers` — list available servers/apps from the registries
 - `./main.sh docs` — `swag fmt && swag init --parseDependency --parseInternal`, then regenerates the frontend SDK via `pnpm gen:api` (alova/wormhole)
-- `./main.sh copyfile` — copies `assets/conf.toml` → `conf.toml` and `assets/nuxt.env` → each app's `.env` **and** `.env.production`
+- `./main.sh copyfile [--force]` — copies `assets/conf.toml` → `conf.toml` **only when absent** (an existing `conf.toml` holds the JWT secrets; `--force` overwrites it), then `assets/nuxt.env` → each app's `.env` and `assets/nuxt.env.production` → each app's `.env.production`
 - `./main.sh init` — first-time: installs gowatch/swag, inits submodules, `go mod tidy`, `pnpm install`
 - `./main.sh synconf [server]` — rsync `conf.toml` to the mode-appropriate remote dir of `[server]` (default: first server in `servers[]`)
 - `./main.sh webconf [server]` — when `web_server != none`, generate & install the nginx/caddy site config on `[server]` from `domains[]` and reload it (no redeploy). `deploy` also runs this automatically after each server.
@@ -61,7 +61,7 @@ web/packages/apiclient/   — build-time SDK codegen tool, not a Nuxt module (se
 - **Secrets required:** `secret.adm` and `secret.usr` (validated, 32-char strings). Generate with `./bin/backend --gensec`, which **prints** new secrets — you must paste them into `conf.toml` yourself
 - **Hot-reload:** `gowatch -o bin/backend` (gowatch installed via `go install github.com/silenceper/gowatch@latest`)
 - **Go tabs** — 4-space tab indent (`.editorconfig`)
-- **CLI flags** (defined in `internal/conf/flag.go`, dispatched in `internal/flag/flag.go`): `--adm`, `--usr`, `--db-reset`, `--db-create`, `--db-migrate`, `--db-sync`, `--db-reset-table`, `--sync` (task script), `--mock`, `--gensec`. **Gotcha:** `--db-reset-table` is defined but **not wired into `flag.Run()`** — it's currently a no-op
+- **CLI flags** (defined in `internal/conf/flag.go`, dispatched in `internal/flag/flag.go`): `--adm`, `--usr`, `--db-reset`, `--db-create`, `--db-migrate`, `--db-sync`, `--db-reset-table`, `--sync` (task script), `--mock`, `--gensec`. `--db-sync` maps to `orms.SyncTablesHard` (add missing columns, drop removed ones, reorder); `--db-reset-table` maps to `orms.ResetTables`
 - **Auto-migrate:** `db.Connect()` runs `db.Migrate()` on startup when `db.auto-migrate = true`
 
 ### Database migration layers
@@ -128,7 +128,7 @@ type User struct {
 
 ## Frontend specifics
 
-- **Package manager:** pnpm@12.3.4 (enforced in `web/package.json`)
+- **Package manager:** pnpm@12.21.0 (enforced in `web/package.json` `packageManager`)
 - **Workspace packages:** `apps/*` (Nuxt apps), `packages/*` (build-time tooling — currently `apiclient`, the SDK codegen), `packages/natholdallas/*` (shared Nuxt modules, git submodule)
 - **Prod build:** `pnpm generate` (SSG / static generation via `nuxt generate --dotenv .env.production`), not `nuxt build`. Root script `pnpm gen` (`pnpm -F adm -F usr --parallel generate`) runs both apps' SSG in parallel — distinct from `pnpm gen:api` (SDK generation)
 - **SSR disabled:** both apps set `ssr: false`
@@ -136,19 +136,22 @@ type User struct {
 - **ESLint:** auto-generated by Nuxt (`.nuxt/eslint.config.mjs`), imported by root config. Check per-app directory.
 - **Lint:** after writing frontend code, run `pnpm lint` (or `pnpm lint:fix` to autofix) from `web/` — the root script is `pnpm -r --no-bail run lint`, so it runs each app's own `lint`/`lint:fix` (`eslint .` / `eslint . --fix`) across every app under `web/apps/` (adm, usr); packages without a lint script are skipped. **All `warn` and `error` findings must be fixed before finishing** (run `pnpm lint` after writing code, fix every warning/error — `pnpm lint:fix` for auto-fixables, then manually fix the rest; re-run until clean). Each app has its own `eslint.config.mjs` importing that app's generated `.nuxt/eslint.config.mjs` (adm additionally disables `vue/valid-v-slot` for Vuetify dotted slot names, and both apps ignore the generated `app/lib/sdk`); `.nuxt/` must exist first (`postinstall` runs `nuxt prepare`).
 - **Env vars:** `NUXT_PUBLIC_API_BASE` (backend URL), `NUXT_PUBLIC_SITE_URL`, `ENABLE_PWA`, `ENABLE_SEO`
-- **Env files:** `.env` (dev), `.env.production` (prod). Both copied from `assets/nuxt.env` by `./main.sh copyfile`.
+- **Env files:** `.env` (dev) from `assets/nuxt.env`, `.env.production` (prod) from `assets/nuxt.env.production`, both copied by `./main.sh copyfile`. `deploy` **refuses** to ship a bundle whose `NUXT_PUBLIC_API_BASE` is still `localhost`/`example.com` unless `--allow-placeholder-env` is passed; set the override to `same-origin` for a single-host (reverse-proxied) deployment.
 - **Shared packages:** git submodule at `web/packages/natholdallas` → `https://github.com/natholdallas/nuxt-modules.git`
 - **Test utils:** configured via `.nuxtrc`: `setups.@nuxt/test-utils="4.2.0"` — test with `nuxi test` from app dir
 
 ## Shared Nuxt modules (web/packages/natholdallas/)
 
-Every package under `web/packages/natholdallas/` is a **Nuxt module** (each exposes a `defineNuxtModule` in its `index.ts`). They are **optional** — an app only loads the ones it lists in its `nuxt.config.ts` `modules` and declares as `@natholdallas/*` `workspace:*` deps. This directory is a **git submodule** (shared across projects). **Treat it as read-only: prefer keeping app-specific behavior in the project rather than editing the modules here. If a change to the submodule is genuinely unavoidable, tell the maintainer first** — changes belong in the upstream `nuxt-modules.git` repo and are committed there, then the submodule pointer is bumped, not patched in-place here.
+Every package under `web/packages/natholdallas/` is a **Nuxt module** (each exposes a `defineNuxtModule` in its `index.ts`). They are **optional** — an app only loads the ones it lists in its `nuxt.config.ts` `modules` and declares as `@natholdallas/*` `workspace:*` deps. This directory is a **git submodule** (shared across projects) pointing at `nuxt-modules.git`. Changes are committed inside the submodule and the pointer is bumped in this repo — keep both commits together so a checkout is never left with a dangling pointer. Two rules keep apps healthy:
+
+- **Modules must not assign `runtimeConfig.public.*`.** Module setup runs after `nuxt.config.ts`, so doing so silently overrides the app. `apiBase` is declared by each app and fed by `main.sh` from `domains[]`/`app_env`.
+- **Modules declare everything they import.** Packages used only by app-level components belong in the app; otherwise apps end up relying on hoisted phantom dependencies.
 
 - **`alova`** — registers the alova runtime auto-imports (`lib/`). Provides the runtime side (alova instance, `Api`, `Apis`) that the generated SDK in `app/lib/sdk/` builds on. Used by both apps.
 - **`i18n`** — wraps `@nuxtjs/i18n`. Ships the **globally stored shared translation keys** in `locale/*.ts` (`zh_cn`, `en_us`, `zh_tw`, `ja_jp`). **Do NOT modify these** — they are the global key set. To change or add translations, edit the **project's own i18n files** (`web/apps/<app>/app/locale/*.ts`), which import and spread the shared dict (e.g. `import zh from '@natholdallas/i18n/locale/zh_cn'` then `...zh`) and layer app-specific keys on top. The submodule locales should stay untouched so every project gets the same base keys.
-- **`infra`** — bundles the common infra modules: `@nuxtjs/seo`, `@nuxt/icon`, `@vite-pwa/nuxt`, `@nuxtjs/device`, `@vueuse/nuxt`, `dayjs-nuxt`, `nuxt-og-image`, `@nuxt/eslint`, `@nuxt/test-utils`. Enables Nuxt 4 compatibility (`compatibilityVersion: 4`, typed pages, vite env API), sets PWA/dayjs defaults and a `public.apiBase` runtime default. Also auto-imports shared components (`PwaProvider`) and composables (`crud`, `routes`, `interval`). Used by both apps (adm via `vuetify`, usr via `shadcn`).
+- **`infra`** — bundles the common infra modules: `@nuxtjs/seo`, `@nuxt/icon`, `@vite-pwa/nuxt`, `@nuxtjs/device`, `@vueuse/nuxt`, `dayjs-nuxt`, `nuxt-og-image`, `@nuxt/eslint`, `@nuxt/test-utils`. Enables Nuxt 4 compatibility (`compatibilityVersion: 4`, typed pages, vite env API) and sets PWA/dayjs defaults. It does **not** touch `runtimeConfig.public.apiBase` — each app declares that itself (bundle analysis is opt-in via `ANALYZE=true`). Also auto-imports shared components (`PwaProvider`) and composables (`crud`, `routes`, `interval`). Used by both apps (adm via `vuetify`, usr via `shadcn`).
 - **`pinia`** — wraps `@pinia/nuxt`; enables Pinia stores (`useAuthStore`, ...). Used by both apps (the SDK's `beforeRequest` reads the access token from `useAuthStore()`).
-- **`shadcn`** — the shadcn-vue module (usr app): depends on `@natholdallas/i18n`, bundles `shadcn-nuxt` + Tailwind v4 (`@tailwindcss/vite`) + radix/reka-ui + vee-validate/zod, and registers `Uix`-prefixed module components (`Form`, `DataTable`, `Field`, `Modal`, ...).
+- **`shadcn`** — the shadcn-vue module (usr app): depends on `@natholdallas/i18n`, bundles `shadcn-nuxt` + Tailwind v4 (`@tailwindcss/vite`) + reka-ui + vee-validate/zod, and registers `Uix`-prefixed module components (`Form`, `DataTable`, `Field`, `Modal`, ...). Chart/carousel/input-otp packages (`@unovis/vue`, `embla-carousel-vue`, `vue-input-otp`) are declared by the **app**, since only app-level components use them.
 - **`tailwindcss`** — Tailwind v4 CSS-first module (postcss/vite plugin + sass), for apps that don't use the shadcn/vuetify bundles. Optional, not currently used.
 - **`tauri`** — Tauri v2 integration (`@tauri-apps/api`); used by both apps (each declares `dev:tauri`/`package` scripts).
 - **`unocss`** — UnoCSS module (wraps `@unocss/nuxt` + presets, ships an example `uno.config.ts`). Optional, not currently used.

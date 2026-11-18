@@ -1,6 +1,8 @@
 package db
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 
 	"github.com/natholdallas/natools4go/orms"
@@ -23,11 +25,30 @@ type Media struct {
 } //	@name	Media
 
 // AfterDelete removes the physical file when the record is deleted.
-func (s *Media) AfterDelete(tx *gorm.DB) error {
-	if s.Path != "" {
-		return os.Remove(s.LocalPath())
+//
+// GORM calls hooks on the value being deleted. Deleting by primary key
+// (orms.DeleteByID, tx.Delete(&Media{}, id)) passes a zero-valued instance, so
+// Lookup/Remove must load the row first — see RemoveByID.
+func (s *Media) AfterDelete(_ *gorm.DB) error {
+	if s.Path == "" {
+		return nil
+	}
+	if err := os.Remove(s.LocalPath()); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		// The row is already gone; a missing file is fine, anything else is not.
+		return err
 	}
 	return nil
+}
+
+// RemoveByID deletes a media record and its file. It loads the row first so the
+// AfterDelete hook receives a populated Path; deleting straight by primary key
+// would leave the file orphaned on disk.
+func RemoveByID(tx *gorm.DB, id uint) error {
+	v, err := orms.First[Media](tx, id)
+	if err != nil {
+		return err
+	}
+	return tx.Delete(&v).Error
 }
 
 // LocalPath returns the absolute path of the file on disk.

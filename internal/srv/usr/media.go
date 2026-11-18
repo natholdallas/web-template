@@ -90,15 +90,19 @@ func UploadMedia(c fiber.Ctx) error {
 //	@Failure	400	{object}	Fail
 //	@Router		/usr/api/v1/media/{id} [delete]
 func RemoveMedia(c fiber.Ctx) error {
+	id, err := internal.ParseID(c)
+	if err != nil {
+		return err
+	}
 	claims := jwt.Claims(c)
-	v := orms.IFirst[db.Media](db.Tx, c.Params("id"))
-	if v.ID == 0 {
-		return &fext.Fail{Code: internal.RecordNotFound}
+	v, err := orms.First[db.Media](db.Tx, id)
+	if err != nil {
+		return &fext.Fail{Code: internal.RecordNotFound, Status: fiber.StatusNotFound}
 	}
 	if v.UserID != strs.ParseUint[uint](claims.ID) {
 		return &fext.Fail{Status: fiber.StatusForbidden}
 	}
-	if err := orms.Delete[db.Media](db.Tx, v.ID); err != nil {
+	if err := db.RemoveByID(db.Tx, v.ID); err != nil {
 		return &fext.Fail{Code: internal.RemoveFailed, System: err}
 	}
 	return nil
