@@ -1,4 +1,4 @@
-// Package user to setup user route
+// Package usr registers the user API routes.
 package usr
 
 import (

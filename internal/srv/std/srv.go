@@ -1,4 +1,4 @@
-// Package base to setup base route
+// Package std registers the public (unauthenticated) API routes.
 package std
 
 import (

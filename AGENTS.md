@@ -77,18 +77,19 @@ Four distinct CLI flags handle schema evolution (`--sync` is unrelated — it ru
 
 `--db-create` (`db.AutoCreate()`) creates the database if missing. The GORM model set is the single source of truth — registered in `db.Models` (`internal/db/db.go`), which `Migrate`, `SyncDB`, and `ResetTables` all iterate. GORM's own `AutoMigrate` only ever appends new columns (at the end) and never drops or reorders, which is why `--db-sync`/`--db-reset-table` exist.
 
-- **CORS prefix matching:** `AllowOriginsFunc` uses `strs.AnyPrefix`, not exact match — e.g. `http://localhost` also matches `http://localhost:3000`
+- **CORS origin matching:** `AllowOriginsFunc` compares origins **exactly** against `cors.dev` / `cors.prd` (`slices.Contains`). Prefix matching was removed because it accepted `https://example.com.attacker.net` for a whitelisted `https://example.com`. List every allowed origin in full.
 - **Log rotation:** `lumberjack` writes to `<RLog>/app.log` (10MB, 7 backups, 28 days)
-- **Lint — must run after any backend Go change and be completely clean before reporting done** (the team's nvim — AstroNvim/astrolsp with `gopls` + `staticcheck = true` — surfaces exactly these diagnostics, so a clean run here equals a zero-diagnostic editor buffer):
+- **Lint — must run after any backend Go change and be completely clean before reporting done** (the team's nvim — AstroNvim/astrolsp with `gopls` + `staticcheck = true` — surfaces exactly these diagnostics, so a clean run here equals a zero-diagnostic editor buffer). **Run `./hack/lint.sh`**, which chains all of it:
+  - `gofumpt -l .` — must print nothing; `gci diff -s standard -s default -s 'Prefix(webtplmst)' .` — must print nothing. These standalone binaries are the **authoritative** format gate: golangci-lint 2.14's built-in `gofumpt` formatter disagrees with them (it flags already-formatted files, and the flagged set changes between runs), so `formatters` is deliberately absent from `.golangci.yml`. `./hack/lint.sh --fix` applies both.
   - `go build ./...` — must compile
   - `go vet ./...`
   - `~/.local/share/go/bin/staticcheck ./...`
+  - `~/.local/share/go/bin/golangci-lint run ./...` — analysis linters only (govet/staticcheck/unused/revive/misspell); `revive use-any` forces `any` over `interface{}`
   - `gopls check <each edited .go file>` — exact parity with the editor buffer; this is what reports "should use range loop", "`err` shadows declaration at ...", "use `min`/`max`", "use `strings.Builder`/`WriteString`", and similar hints. If `gopls check` is clean, the nvim buffer will be too.
-  - `golangci-lint run --fix ./...` — golangci-lint v2 (2.13.2) is installed at `~/.local/share/go/bin/golangci-lint`; Config: `.golangci.yml` (revive `use-any` forces `any` over `interface{}`, gofumpt/gci auto-format with a `Prefix(webtplmst)` import group)
   - Fix everything each tool reports and re-run until the output is clean; never finish a change with leftover diagnostics.
 - **No `_ = expr` blank assignments** — never write code that discards a value/error with `_ = xxx` (e.g. `_ = db.AutoMigrate(...)`). Handle the error/result properly instead (check it, log it, or propagate it).
-- **No Go tests exist** — there is no `*_test.go` anywhere in the repo (the old `internal/pwd` package is gone; password helpers now come from `natools4go/pwd`). Don't assume a test suite; the only verification is the Go lint suite (see **Lint** above) + `go build`.
-- **`go mod` has a `replace`** directive for telegram-bot-api (redirects to a fork)
+- **No Go tests exist** — there is no `*_test.go` anywhere in *this* repo (password helpers come from `natools4go/pwd`). Don't assume a test suite here; the verification is the lint suite (see **Lint** above) + `go build`. (`natools4go` itself does have tests — run `go test ./...` there when changing it.)
+- **`go mod` has no `replace` directives** — the old telegram-bot-api fork override was unused (the module is not in the dependency graph) and has been removed. Add one only when a dependency genuinely needs patching, and document why.
 
 ## GORM model conventions (internal/db/)
 

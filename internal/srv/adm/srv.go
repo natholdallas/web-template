@@ -1,4 +1,4 @@
-// Package admin to setup admin route
+// Package adm registers the admin API routes.
 package adm
 
 import (

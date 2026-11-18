@@ -87,7 +87,7 @@ func Refresh(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.SignInFailed, Message: "invalid refresh token"}
 	}
-	if err := authMgr.RevokeRefresh(d.RefreshToken); err != nil {
+	if err = authMgr.RevokeRefresh(d.RefreshToken); err != nil {
 		log.Warn("revoke refresh token failed: ", err)
 	}
 	p, err := authMgr.GenPair(userID)
@@ -183,7 +183,7 @@ func SignInTelegram(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	if err := oauth.CheckTelegramAuth(&d); err != nil {
+	if err = oauth.CheckTelegramAuth(&d); err != nil {
 		return &fext.Fail{Code: internal.OauthFailed, System: err}
 	}
 	v, err := db.FindUserByTelegram(db.Tx, d.ID)

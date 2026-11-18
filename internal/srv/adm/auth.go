@@ -80,7 +80,7 @@ func Refresh(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.SignInFailed, Message: "invalid refresh token"}
 	}
-	if err := authMgr.RevokeRefresh(d.RefreshToken); err != nil {
+	if err = authMgr.RevokeRefresh(d.RefreshToken); err != nil {
 		log.Warn("revoke refresh token failed: ", err)
 	}
 	p, err := authMgr.GenPair(userID)

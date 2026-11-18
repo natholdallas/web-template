@@ -175,7 +175,7 @@ func BindTelegram(c fiber.Ctx) error {
 	if err != nil {
 		return &fext.Fail{Code: internal.InvalidData, Message: err.Error()}
 	}
-	if err := oauth.CheckTelegramAuth(&d); err != nil {
+	if err = oauth.CheckTelegramAuth(&d); err != nil {
 		return &fext.Fail{Code: internal.OauthFailed, System: err}
 	}
 	claims := jwt.Claims(c)

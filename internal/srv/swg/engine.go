@@ -1,3 +1,8 @@
+// Package swg serves the generated OpenAPI document through the Scalar UI.
+//
+// The displayed spec is post-processed to strip the per-app tag and schema
+// prefixes, so the UI shows clean names while docs/swagger.json keeps the
+// prefixed ones that the frontend SDK generator relies on.
 package swg
 
 import (
