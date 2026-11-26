@@ -825,7 +825,7 @@ copy_env() {
 
 copyfile() {
   local force=false arg
-  for arg in "${@:2}"; do
+  for arg in "$@"; do
     case "$arg" in
     --force) force=true ;;
     esac
@@ -901,8 +901,25 @@ docs() {
 }
 
 renewal() {
-  local new_name=$2 SED_CMD=()
-  if [ -z "$2" ]; then
+  local new_name="" skip_backup=false arg SED_CMD=()
+  for arg in "$@"; do
+    case "$arg" in
+    --no-backup) skip_backup=true ;;
+    -*)
+      error "Unknown renewal option: $arg"
+      usage >&2
+      return 1
+      ;;
+    *)
+      if [ -n "$new_name" ]; then
+        error "Unexpected renewal argument: $arg"
+        return 1
+      fi
+      new_name="$arg"
+      ;;
+    esac
+  done
+  if [ -z "$new_name" ]; then
     read -rp "Input new project name: " new_name
   fi
   if [ -z "$new_name" ]; then
@@ -925,7 +942,12 @@ renewal() {
   echo "--------------------------------------------------"
   echo "This script will perform the following IRREVERSIBLE actions:"
   echo -e "1. GLOBAL REPLACE: All occurrences of '$pname' (including main.sh) will be changed to '$new_name'."
-  echo -e "2. GIT RESET: The existing .git directory will be DELETED (history is bundled next to the repo first)."
+  echo -e "2. GIT RESET: The existing .git directory will be DELETED."
+  if [ "$skip_backup" = true ]; then
+    echo -e "   (--no-backup: no git bundle, no conf.toml copy — history and secrets are LOST)"
+  else
+    echo -e "   (history is bundled next to the repo first)"
+  fi
   echo -e "3. RE-INIT: A new git repository will be initialized in this directory."
   echo -e "4. CONFIG: .env files will be recreated from assets/; conf.toml is kept, including its [db] name."
   echo "--------------------------------------------------"
@@ -935,25 +957,29 @@ renewal() {
   if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
     local backup_prefix db_name=""
     backup_prefix="$(dirname "$PWD")/${pname}-pre-renewal-$(date +%Y%m%d-%H%M%S)"
-    if git rev-parse --verify HEAD >/dev/null 2>&1; then
-      if ! git bundle create "${backup_prefix}.bundle" --all >/dev/null; then
-        error "git bundle failed; aborting before .git is deleted."
-        return 1
-      fi
-      info "Git history backed up to ${backup_prefix}.bundle"
+    if [ "$skip_backup" = true ]; then
+      warn "Skipping backups (--no-backup): git history and conf.toml are unrecoverable, and [db] name follows the rename."
     else
-      warn "No commits to bundle; skipping git history backup."
-    fi
-    # The live database is named after the old project; remember it so the
-    # rename does not repoint the app at a database that does not exist.
-    if [ -f conf.toml ]; then
-      db_name=$(sed -n '/^\[db\]/,/^\[/ s/^[[:space:]]*name[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' conf.toml | head -n1)
-      if [ -n "$db_name" ] && [[ ! "$db_name" =~ ^[A-Za-z0-9_$-]+$ ]]; then
-        warn "Unusual database name '$db_name'; leaving [db] name to the rename."
-        db_name=""
+      if git rev-parse --verify HEAD >/dev/null 2>&1; then
+        if ! git bundle create "${backup_prefix}.bundle" --all >/dev/null; then
+          error "git bundle failed; aborting before .git is deleted."
+          return 1
+        fi
+        info "Git history backed up to ${backup_prefix}.bundle"
+      else
+        warn "No commits to bundle; skipping git history backup."
       fi
-      cp conf.toml "${backup_prefix}.conf.toml" || return 1
-      info "conf.toml backed up to ${backup_prefix}.conf.toml"
+      # The live database is named after the old project; remember it so the
+      # rename does not repoint the app at a database that does not exist.
+      if [ -f conf.toml ]; then
+        db_name=$(sed -n '/^\[db\]/,/^\[/ s/^[[:space:]]*name[[:space:]]*=[[:space:]]*"\([^"]*\)".*/\1/p' conf.toml | head -n1)
+        if [ -n "$db_name" ] && [[ ! "$db_name" =~ ^[A-Za-z0-9_$-]+$ ]]; then
+          warn "Unusual database name '$db_name'; leaving [db] name to the rename."
+          db_name=""
+        fi
+        cp conf.toml "${backup_prefix}.conf.toml" || return 1
+        info "conf.toml backed up to ${backup_prefix}.conf.toml"
+      fi
     fi
     # reset git directory
     rm -rf .git
@@ -1108,7 +1134,7 @@ push() {
 # Create a GitHub repo, bind origin, set upstream (never pushes). Usage: README.
 initremote() {
   local visibility=private name="$pname"
-  for arg in "${@:2}"; do
+  for arg in "$@"; do
     case "$arg" in
     --public) visibility=public ;;
     --private) visibility=private ;;
@@ -1897,6 +1923,7 @@ usage() {
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "servers" "List available servers/apps (see deploy.conf)"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "init" "Init project & install dependencies"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "renewal" "Renew project (irreversible)"
+  printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--no-backup" "Skip the git bundle + conf.toml backup (fully irreversible)"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "clean" "Clean project cache"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "serverlog" "Tail remote service log (journalctl -f) [server]"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "once" "Print once then exit"
@@ -1930,7 +1957,7 @@ main() {
   copyfile) copyfile "$@" ;;
   servers) list "$@" ;;
   init) init "$@" ;;
-  renewal) renewal "$@" ;;
+  renewal) renewal "${@:2}" ;;
   clean) clean "$@" ;;
   serverlog) serverlog "$@" ;;
   push) push "$@" ;;

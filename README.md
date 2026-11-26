@@ -92,8 +92,10 @@
 ### Scaffold a New Project
 
 ```bash
-# Rename the template to your project name
-./main.sh renewal my-awesome-project
+# Rename the template to your project name.
+# --no-backup skips the pre-renewal git bundle + conf.toml copy (the clone's
+# template history is not worth keeping; use it only on a throwaway clone).
+./main.sh renewal my-awesome-project --no-backup
 ```
 
 ### Development

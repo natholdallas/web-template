@@ -15,7 +15,7 @@
 - `./main.sh webconf [server]` — when `web_server != none`, generate & install the nginx/caddy site config on `[server]` from the `domain_*` variables and reload it (no redeploy; the previous config is restored if the new one fails validation). `deploy` runs this per server **before** restarting the backend, so a failed web config fails that deploy instead of silently succeeding.
 - `./main.sh serverlog [server] [once|lines]` — tail remote `journalctl -u <name>` (default follows; requires limited sudo)
 - `./main.sh push "msg"` — `git add -A && git commit -m "msg" && git push` (defaults to `upd`)
-- `./main.sh renewal <name>` — renames the entire project (irreversible, see "Project scaffolding"); `name` must satisfy the `pname` pattern and every `*.sh`/`*.conf`/`*.toml`/`*.md`/… file (including `deploy.conf`) is rewritten
+- `./main.sh renewal <name> [--no-backup]` — renames the entire project (irreversible, see "Project scaffolding"); `name` must satisfy the `pname` pattern and every `*.sh`/`*.conf`/`*.toml`/`*.md`/… file (including `deploy.conf`) is rewritten. `--no-backup` skips the pre-renewal git bundle + `conf.toml` copy (used by the `webgx` scaffolder, which starts from a throwaway template clone)
 - `./main.sh initremote [name] [--public|--private]` — create a GitHub repo (private by default), bind `origin`, set upstream (never pushes)
 
 ## Configuration (`deploy.conf`)
@@ -336,7 +336,7 @@ Changing/adding an API = edit the swag annotations + run `./main.sh docs`.
 
 ## Project scaffolding
 
-- **`./main.sh renewal <name>`** — renames the entire project. Refuses to start on a dirty worktree, bundles git history (`<pname>-pre-renewal-<ts>.bundle`) and `conf.toml` next to the repo, then replaces all `webgx` strings (text files by suffix, plus `*.lock`, **and directories** such as the Android package path `com/<pname>/…`), deletes `.git`, removes/re-adds submodule, inits a fresh git repo, and keeps `[db] name` in `conf.toml` so the existing database stays reachable. Prunes build output (`target`, `build`, `.gradle`, `.kotlin`, `dist`, `.nuxt`, …). Copies env files from `assets/`. **Irreversible** — prompts for confirmation.
+- **`./main.sh renewal <name> [--no-backup]`** — renames the entire project. Refuses to start on a dirty worktree, bundles git history (`<pname>-pre-renewal-<ts>.bundle`) and `conf.toml` next to the repo (**`--no-backup` skips both**: nothing is recoverable and `[db] name` follows the rename), then replaces all `webgx` strings (text files by suffix, plus `*.lock`, **and directories** such as the Android package path `com/<pname>/…`), deletes `.git`, removes/re-adds submodule, inits a fresh git repo, and keeps `[db] name` in `conf.toml` so the existing database stays reachable. Prunes build output (`target`, `build`, `.gradle`, `.kotlin`, `dist`, `.nuxt`, …). Copies env files from `assets/`. **Irreversible** — prompts for confirmation.
 
 ## Order of operations
 
