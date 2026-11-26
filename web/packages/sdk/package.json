@@ -1,0 +1,27 @@
+{
+  "name": "@sdk/client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Runtime + generated alova SDK (usr/adm) shared by the frontend apps; generated from docs/swagger.json by packages/apiclient",
+  "exports": {
+    ".": {
+      "types": "./src/runtime.ts",
+      "default": "./src/runtime.ts"
+    },
+    "./usr": {
+      "types": "./src/usr/index.ts",
+      "default": "./src/usr/index.ts"
+    },
+    "./adm": {
+      "types": "./src/adm/index.ts",
+      "default": "./src/adm/index.ts"
+    }
+  },
+  "dependencies": {
+    "alova": "^3.5.5"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  }
+}

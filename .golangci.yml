@@ -1,0 +1,51 @@
+version: "2"
+
+# Linter configuration.
+#
+# WHY `formatters` IS NOT USED HERE
+# ---------------------------------
+# golangci-lint 2.14's `gofumpt` formatter disagrees with the standalone
+# `gofumpt` binary: `golangci-lint run` reports "File is not properly formatted
+# (gofumpt)" for files that `gofumpt -l`, `gofumpt -d` and `golangci-lint fmt`
+# all consider correctly formatted, and the set of reported files changes between
+# runs (cache/concurrency dependent). Enabling both `gci` and `gofumpt` makes it
+# worse.
+#
+# The authoritative formatting gate is therefore the standalone tools, which
+# agree with each other and are deterministic:
+#
+#   gofumpt -l . | grep .            # must print nothing
+#   gci diff -s standard -s default -s 'Prefix(webgx)' .   # must print nothing
+#
+# `golangci-lint run` is kept for the analysis linters below, which are reliable.
+
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - unused
+    - revive
+    - misspell
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        # gopls runs with fieldalignment off; re-enable it only if you want the
+        # memory-layout suggestions back.
+        - fieldalignment
+    revive:
+      rules:
+        # gopls analyses: useany = true, ST1003 naming conventions.
+        - name: use-any
+        - name: var-naming
+    staticcheck:
+      checks:
+        - all
+        - ST1003
+
+issues:
+  # Report every finding in one pass instead of truncating per-linter, so a CI
+  # run surfaces everything rather than the first N of each kind.
+  max-issues-per-linter: 0
+  max-same-issues: 0

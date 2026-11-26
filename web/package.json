@@ -1,0 +1,22 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm check:locale && pnpm -r --no-bail run lint",
+    "lint:fix": "pnpm -r --no-bail run lint:fix",
+    "gen": "pnpm -F adm -F usr --parallel generate",
+    "gen:api": "pnpm --dir packages/apiclient exec alova gen -f",
+    "check:locale": "node scripts/check-locale.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@12.23.0",
+  "dependencies": {
+    "@sdk/apiclient": "workspace:^",
+    "prettier": "^3.10.1"
+  }
+}

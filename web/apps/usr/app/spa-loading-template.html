@@ -1,0 +1,73 @@
+<div class="loading-container">
+  <svg class="spinner" viewBox="0 0 50 50">
+    <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="4"></circle>
+  </svg>
+</div>
+<style>
+  :root {
+    --loader-primary-color: #09090b; /* zinc-950 */
+    --loader-bg-color: #ffffff;
+  }
+
+  :root.dark {
+    --loader-primary-color: #fafafa; /* zinc-50 */
+    --loader-bg-color: #0a0a0a; /* neutral-950 */
+  }
+
+  html,
+  body {
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background-color: var(--loader-bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .spinner {
+    animation: rotate 2s linear infinite;
+    width: 40px;
+    height: 40px;
+  }
+
+  .path {
+    stroke: var(--loader-primary-color);
+    stroke-linecap: round;
+    animation: dash 1.5s ease-in-out infinite;
+  }
+
+  @keyframes rotate {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes dash {
+    0% {
+      stroke-dasharray: 1, 150;
+      stroke-dashoffset: 0;
+    }
+    50% {
+      stroke-dasharray: 90, 150;
+      stroke-dashoffset: -35;
+    }
+    100% {
+      stroke-dasharray: 90, 150;
+      stroke-dashoffset: -124;
+    }
+  }
+</style>
+<script>
+  ;(function () {
+    const m = localStorage.getItem('vueuse-color-scheme') || 'auto'
+    if (m === 'light') {
+      document.documentElement.classList.remove('dark')
+    } else if (m === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else if (m === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark')
+    }
+  })()
+</script>

@@ -1,0 +1,33 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+.vite
+.bin
+dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.fleet
+.idea
+
+# Local env files
+.env
+.env.*
+# !.env.example
+
+# Generated API SDK (alova) — the runtime next to these dirs is committed
+packages/sdk/src/usr
+packages/sdk/src/adm
+
+# Tauri / Android/Kotlin build outputs
+.kotlin

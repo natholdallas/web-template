@@ -1,0 +1,121 @@
+[app]
+name = "webgx"
+port = "8080"
+debug = true       # enable debug
+nginx = false      # enable nginx
+body-limit = 20    # upload size limit (MB)
+swagger = true     # enable swagger
+
+[jwt]
+access-minutes = 15 # access token TTL (minutes)
+refresh-hours = 720 # refresh token TTL (hours, default 30 days)
+
+[jwt.secret]
+adm = "" # admin
+usr = "" # user
+
+[log]
+filename = "app.log" # log filename
+max-size = 10        # max log size (MB)
+max-backups = 7      # max log backups
+max-age = 28         # max log age (days)
+compress = true      # compress log files
+local-time = false   # use local time for log file names
+
+[loglevel]
+gorm = 2  # 1: silent; 2: error; 3: warn; 4: info
+fiber = 1 # 0: trace;  1: debug; 2: info; 3: warn; 4: error; 5: fatal; 6: panic
+
+[cors]
+dev = [
+  "http://127.0.0.1",
+  "http://localhost",
+  "https://127.0.0.1",
+  "https://localhost",
+  "http://127.0.0.1:3000",
+  "http://localhost:3000",
+  "http://127.0.0.1:3001",
+  "http://localhost:3001",
+  # Tauri desktop/mobile webview origins (exact match: no prefix matching)
+  "tauri://localhost",
+  "http://tauri.localhost",
+  "https://tauri.localhost",
+]
+prd = [
+  "http://www.example.com",
+  "http://example.com",
+  "https://www.example.com",
+  "https://example.com",
+  "tauri://localhost",
+  "http://tauri.localhost",
+  "https://tauri.localhost",
+]
+
+[resources]
+web = "web/apps/usr/dist/public"
+log = "logs"
+cache = "webgx"
+media = "media"                              # local media storage dir
+media-route = "/media"                       # same-origin URL route for media (nginx off)
+media-url = ""                               # optional media CDN/domain base, e.g. https://media.example.com
+media-max-size = 10                          # max single file upload size (MB)
+media-avatar-max-size = 2                    # max avatar upload size (MB)
+
+[db]
+name = "webgx"
+host = "localhost"
+port = "3306"
+query = "charset=utf8mb4"
+username = ""
+password = ""
+auto-migrate = true
+auto-create = true
+driver = "mysql"                                   # sqlite, sqlserver, clickhouse, postgresql, mysql, mariadb(use mysql instead of mariadb)
+
+[redis]
+host = "localhost"
+port = "6379"
+index = 0
+
+[smtp]
+host = "smtp.qq.com"
+port = 587          # 465 = implicit TLS, 587 = STARTTLS, 25 = plaintext
+username = ""       # SMTP auth username (empty = use from)
+password = ""       # empty = send without AUTH (local relay)
+from = ""           # sender address in the From header
+tls = "auto"        # auto | ssl | starttls | none (auto: implicit TLS on 465, otherwise STARTTLS when advertised)
+
+[wechat]
+site = "https://api.weixin.qq.com" # WeChat API address
+appid = ""                         # WeChat App ID
+secret = ""                        # WeChat App Secret
+
+[wechat.pay]
+webhook = ""     # WeChat callback URL
+mch = ""         # Merchant ID
+cert = ""        # Certificate serial number
+apiv2secret = "" # v2 private key
+apiv3secret = "" # v3 private key
+public-key = ""  # Public key
+
+[wechat.pem]
+pub = "assets/wechat/pub_key.pem"             # WeChat API public key certificate file
+apiclient = "assets/wechat/apiclient_key.pem" # WeChat API private key certificate file
+
+[exchangerate]
+site = "https://v6.exchangerate-api.com/v6/{id}/latest" # Requires API key, see https://exchangerate-api.com
+currencies = []                                         # Currencies, e.g. CNY, USD
+
+[oauth.google]
+enabled = false             # enable Google sign-in / bind
+client-id = ""              # Google OAuth 2.0 client ID
+client-secret = ""          # Google OAuth 2.0 client secret
+redirect-uri = "http://localhost:3000/oauth/google" # must match the authorized redirect URI
+
+[oauth.telegram]
+enabled = false             # enable Telegram sign-in / bind
+bot-token = ""              # Telegram bot token (from @BotFather)
+bot-username = ""           # Telegram bot username, e.g. "myapp_bot"
+
+[resty]
+insecure-skip-verify = false # Skip insecure verify

@@ -1,0 +1,23 @@
+@use 'vuetify/settings' with (
+  $color-pack: true,
+  // Utilities stay enabled (the default map): they generate the typography
+  // scale (text-body-medium, ...) and the helper classes the admin markup uses
+  // (text-truncate, text-medium-emphasis, d-none/d-sm-block). Tailwind utilities
+  // load after this layer, so they still win on shared property names.
+  $heading-font-family: var(--font-heading),
+  $body-font-family: var(--font-body),
+  $grid-breakpoints: (
+    'xs': 0,
+    'sm': 600px,
+    'md': 840px,
+    'lg': 1145px,
+    'xl': 1545px,
+    'xxl': 2138px,
+  ),
+  $container-max-widths: (
+    'md': 700px,
+    'lg': 1000px,
+    'xl': 1400px,
+    'xxl': 2000px,
+  )
+);

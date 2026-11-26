@@ -1,0 +1,45 @@
+{
+  "name": "adm",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "dev:tauri": "tauri dev",
+    "generate": "nuxt generate --dotenv .env.production",
+    "generate:dev": "nuxt generate",
+    "generate:release": "node scripts/check-release-env.mjs && nuxt generate --dotenv .env.production",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "analyze": "nuxt analyze",
+    "package": "NO_STRIP=true tauri build",
+    "package:debug": "NO_STRIP=true tauri build --debug",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@natholdallas/alova": "workspace:^",
+    "@natholdallas/i18n": "workspace:^",
+    "@natholdallas/infra": "workspace:^",
+    "@natholdallas/pinia": "workspace:^",
+    "@natholdallas/tauri": "workspace:^",
+    "@natholdallas/vuetify": "workspace:^",
+    "@sdk/client": "workspace:^",
+    "@tauri-apps/plugin-opener": "^2.7.3",
+    "@vueuse/core": "^15.1.0",
+    "vue-advanced-cropper": "^2.8.9",
+    "vuetify": "4.3.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.6",
+    "@types/node": "^26.6.10",
+    "nuxt": "^4.7.0",
+    "typescript": "^6.0.3",
+    "vue": "^3.5.46",
+    "vue-router": "^5.5.1",
+    "vue-tsc": "^3.3.14"
+  }
+}

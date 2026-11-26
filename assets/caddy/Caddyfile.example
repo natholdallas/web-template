@@ -1,0 +1,38 @@
+# media.xxxx.com — Caddy static file server (automatic HTTPS)
+#
+# Caddy version of the nginx example at assets/nginx/media.domain.example.conf.
+# Caddy obtains and renews Let's Encrypt certificates and redirects HTTP→HTTPS automatically; no manual TLS setup needed.
+#
+# Usage:
+#   1. Write the site block below into the server's /etc/caddy/Caddyfile (or conf.d/*.conf, with import conf.d/*.conf in the main Caddyfile)
+#   2. Point media.xxxx.com's DNS A/AAAA records at the server and open ports 80/443
+#   3. Set root to the actual resources.media directory on the server
+#   4. systemctl reload caddy  (or caddy reload --config /etc/caddy/Caddyfile)
+#
+# Then set resources.media-url = "https://media.xxxx.com" in conf.toml; the frontend
+# uses that domain for media URLs. The backend /media route keeps working for dev/intranet use.
+
+media.xxxx.com {
+	# actual resources.media directory on the server
+	root * /var/www/webgx/media
+
+	encode zstd gzip
+	header Cache-Control "public, max-age=2592000, immutable"
+	file_server
+}
+
+# ── Alternatively, serve /media from the main site Caddyfile without a dedicated domain ──
+#
+# Requires conf.toml app.nginx = true (the backend skips its own /media static
+# middleware and the web server takes over); root must be the parent of resources.media.
+#
+# www.example.com {
+#   handle /media/* {
+#     root * /var/www/webgx   # parent of resources.media
+#     encode zstd gzip
+#     file_server
+#   }
+#   handle {
+#     reverse_proxy 127.0.0.1:8080
+#   }
+# }

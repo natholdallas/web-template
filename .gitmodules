@@ -1,0 +1,3 @@
+[submodule "web/packages/natholdallas"]
+	path = web/packages/natholdallas
+	url = https://github.com/natholdallas/nuxt-modules.git

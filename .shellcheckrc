@@ -1,0 +1,4 @@
+# ShellCheck reads this file from the script's own directory. nvim-lint runs a
+# bare `shellcheck` (no --external-sources), so the setting must live here.
+external-sources=true
+source-path=SCRIPTDIR

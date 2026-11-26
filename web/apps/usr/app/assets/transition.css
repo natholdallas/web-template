@@ -1,0 +1,84 @@
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.4s;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  filter: blur(1rem);
+}
+
+.layout-enter-active,
+.layout-leave-active {
+  transition: all 0.4s;
+}
+.layout-enter-from,
+.layout-leave-to {
+  filter: grayscale(1);
+}
+
+.expander-enter-active,
+.expander-leave-active {
+  transition: grid-template-rows 0.15s;
+}
+
+.expander-enter-from,
+.expander-leave-to {
+  grid-template-rows: 0fr;
+}
+
+/* .expander-enter-to {
+  grid-template-rows: 1fr;
+} */
+
+.rtl-enter-active,
+.rtl-leave-active {
+  transition: all 0.15s ease-out;
+}
+.rtl-enter-from {
+  transform: translateX(100%);
+}
+.rtl-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+.rtl-enter-to,
+.rtl-leave-from {
+  transform: translateX(0);
+}
+
+/* group-transition */
+.group-transition-move,
+.group-transition-enter-active,
+.group-transition-leave-active {
+  transition: all 0.5s ease;
+}
+.group-transition-enter-from,
+.group-transition-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+.group-transition-leave-active {
+  position: absolute;
+}
+
+/* slide-fade */
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+/* fade */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease-in-out;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}

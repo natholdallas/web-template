@@ -1,0 +1,60 @@
+/* Global admin chrome: nav groups, tables, auth backdrop. */
+
+.nav-group-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(var(--v-theme-on-surface), 0.5);
+}
+
+.nav-item.v-list-item--active {
+  background: rgba(var(--v-theme-primary), 0.12);
+  color: rgb(var(--v-theme-primary));
+}
+.nav-item.v-list-item--active .v-icon {
+  color: inherit;
+}
+.nav-item.v-list-item--active .v-list-item__overlay {
+  opacity: 0;
+}
+
+/* Rail mode: Vuetify only narrows the drawer (`v-navigation-drawer--rail`);
+   the list item keeps its three-column grid, so the icon sits at the left.
+   Collapse the item to the prepend track and drop the title/spacer gap so
+   the icon lands in the middle of the rail. */
+.v-navigation-drawer--rail:not(.v-navigation-drawer--expanded) .nav-item {
+  grid-template-columns: 1fr;
+  grid-template-areas: 'prepend';
+  justify-items: center;
+}
+.v-navigation-drawer--rail:not(.v-navigation-drawer--expanded) .nav-item .v-list-item__content,
+.v-navigation-drawer--rail:not(.v-navigation-drawer--expanded) .nav-item .v-list-item__spacer {
+  display: none;
+}
+
+.adm-table .v-data-table__th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(var(--v-theme-on-surface), 0.55);
+}
+.adm-table tbody tr:hover {
+  background: rgba(var(--v-theme-primary), 0.04);
+}
+.adm-table .v-data-table-footer {
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.08);
+}
+
+.auth-bg {
+  background:
+    radial-gradient(60rem 40rem at 12% 8%, rgba(var(--v-theme-primary), 0.16), transparent 60%),
+    radial-gradient(50rem 36rem at 88% 12%, rgba(var(--v-theme-secondary), 0.14), transparent 55%),
+    rgb(var(--v-theme-background));
+}
+.auth-grid {
+  background-image:
+    linear-gradient(rgba(var(--v-theme-on-surface), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--v-theme-on-surface), 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}

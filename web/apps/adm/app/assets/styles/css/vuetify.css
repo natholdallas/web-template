@@ -1,0 +1,14 @@
+/* Layer order is declared in `nuxt.config.ts` via
+   `vuetify.moduleOptions.cascadeLayers` (the module injects it before any app
+   stylesheet, so a statement here could only append new layers). */
+@layer tailwind-theme;
+@layer tailwind-reset;
+
+@layer vuetify-core;
+@layer vuetify-components;
+@layer vuetify-overrides;
+@layer vuetify-utilities;
+
+@layer tailwind-utilities;
+
+@layer vuetify-final;

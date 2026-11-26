@@ -1,0 +1,36 @@
+// Package internal
+package internal
+
+// common
+const (
+	Unknown            = "err.unknown"
+	RecordNotFound     = "err.record.not.found"
+	CreateFailed       = "err.data.create"
+	UpdateFailed       = "err.data.update"
+	RemoveFailed       = "err.data.remove"
+	SignInFailed       = "err.sign.in.failed"
+	SignUpFailed       = "err.sign.up.failed"
+	OperationFailed    = "err.operation.failed"
+	InvalidImgSuffixes = "err.invalid.suffixes.img"
+	InvalidVidSuffixes = "err.invalid.suffixes.vid"
+	InvalidData        = "err.invalid.data"
+	NotImplement       = "err.not.implement"
+	InvalidMedia       = "err.invalid.media"
+	UploadFailed       = "err.upload.failed"
+	OauthFailed        = "err.oauth.failed"
+	MediaInUse         = "err.media.in.use"
+	TooManyRequests    = "err.too.many.requests"
+)
+
+// media kinds
+const (
+	MediaKindImage = "image"
+	MediaKindVideo = "video"
+	MediaKindFile  = "file"
+	UploadFormFile = "file" // multipart field name
+)
+
+// custom
+const (
+	Example = "err.example"
+)

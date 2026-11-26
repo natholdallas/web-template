@@ -1,0 +1,60 @@
+packages:
+  - apps/*
+  - packages/*
+  - packages/natholdallas/*
+
+publicHoistPattern: ["*"]
+
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  maplibre-gl: true
+  unrs-resolver: true
+  vue-demi: true
+
+minimumReleaseAgeExclude:
+  - "@nuxt/icon@2.5.1"
+  - "@nuxtjs/seo@5.3.14"
+  - nuxtseo-shared@5.3.14
+  - eslint@10.9.1
+  - vue-router@5.3.1
+  - "@lucide/vue@1.80.0"
+  - "@types/node@26.6.10"
+  - vuetify-nuxt-module@1.0.0-rc.7
+
+overrides:
+  cac: 6.7.14
+  oxc-parser: 0.140.0
+  # Security floors for transitive advisories (see pnpm audit --prod).
+  handlebars: 4.7.10
+  simple-git: 4.0.1
+  "@simple-git/argv-parser": 2.0.1
+  shell-quote: 1.11.0
+  launch-editor: 2.14.2
+  proxy-addr: 2.0.8
+  node-forge: 1.4.3
+  undici: 8.12.2
+  seroval: 1.6.11
+  sharp: 0.35.5
+  vue-i18n: 11.4.23
+  "@intlify/core-base": 11.4.23
+  "@intlify/core": 11.4.23
+  "@intlify/shared": 11.4.23
+  devalue: 5.9.3
+  serialize-javascript: 7.1.3
+  source-map-js: 1.2.2
+  fast-uri: 3.1.9
+  fast-xml-parser: 5.12.0
+  decode-uri-component: 0.5.1
+  body-parser: 2.4.0
+  qs: 6.16.1
+  ip-address: 10.7.4
+  glob: 14.0.2
+  minimatch: 11.0.1
+  hono: 4.13.16
+  "@hono/node-server": 2.1.6
+  "@modelcontextprotocol/sdk": 1.32.0
+  "@modelcontextprotocol/server": 2.3.0
+  "brace-expansion@1": 1.1.21
+  "brace-expansion@2": 2.1.7
+  "brace-expansion@>=4": 5.0.12
