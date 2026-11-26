@@ -202,13 +202,6 @@ export default defineNuxtConfig({
   vite: {
     build: {
       chunkSizeWarningLimit: 800,
-      // Rolldown's bundlerTimings check (Vite 8 default) prints a PLUGIN_TIMINGS
-      // block on every build: Vuetify's styles plugin resolves all ~62 CSS
-      // modules and the reported per-callback times overlap, so the numbers are
-      // not actionable. Keep the build, drop the log.
-      rolldownOptions: {
-        checks: { bundlerTimings: false },
-      },
     },
   },
 
