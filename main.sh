@@ -900,6 +900,116 @@ docs() {
   gen_sdk || return 1
 }
 
+# Lint + format gate for the Go backend and the deploy scripts.
+#
+# Formatting is checked with the standalone gofumpt/gci binaries because
+# golangci-lint 2.14's built-in gofumpt formatter is unreliable (see
+# .golangci.yml). Every tool is required: a missing formatter used to print an
+# empty diff and report success, which is worse than failing loudly.
+#
+# Usage: main.sh lint          (check)
+#        main.sh lint --fix    (apply formatting fixes first)
+lint() {
+  local fix=false arg
+  for arg in "$@"; do
+    case "$arg" in
+    --fix) fix=true ;;
+    -*)
+      error "Unknown lint option: $arg"
+      usage >&2
+      return 1
+      ;;
+    *)
+      error "Unexpected lint argument: $arg"
+      usage >&2
+      return 1
+      ;;
+    esac
+  done
+
+  local gobin="${GOBIN:-$HOME/.local/share/go/bin}"
+  local failed=0 missing=0 tool unformatted
+  info "Lint: tool preflight"
+  for tool in gofumpt gci staticcheck golangci-lint; do
+    if [ ! -x "$gobin/$tool" ]; then
+      error "missing $gobin/$tool"
+      missing=1
+    fi
+  done
+  for tool in go shellcheck; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      error "missing $tool on PATH"
+      missing=1
+    fi
+  done
+  if [ "$missing" -ne 0 ]; then
+    error "ABORTING: install the missing tools (see AGENTS.md -> Lint) and re-run"
+    return 1
+  fi
+  success "all tools present"
+
+  if [ "$fix" = true ]; then
+    info "Lint: formatting (gofumpt + gci)"
+    "$gobin/gofumpt" -w . || return 1
+    "$gobin/gci" write -s standard -s default -s 'Prefix(webgx)' . || return 1
+  fi
+
+  info "Lint: formatting check"
+  unformatted=$("$gobin/gofumpt" -l . 2>/dev/null | grep -v '^$' || true)
+  if [ -n "$unformatted" ]; then
+    error "gofumpt wants to rewrite:"
+    echo "$unformatted"
+    error "run: ./main.sh lint --fix"
+    failed=1
+  else
+    success "gofumpt: clean"
+  fi
+
+  if [ -n "$("$gobin/gci" diff -s standard -s default -s 'Prefix(webgx)' . 2>/dev/null || true)" ]; then
+    error "gci wants to reorder imports (run ./main.sh lint --fix)"
+    failed=1
+  else
+    success "gci: clean"
+  fi
+
+  info "Lint: go build"
+  go build ./... || {
+    error "build failed"
+    failed=1
+  }
+
+  info "Lint: go vet"
+  go vet ./... || {
+    error "vet failed"
+    failed=1
+  }
+
+  info "Lint: staticcheck"
+  "$gobin/staticcheck" ./... || {
+    error "staticcheck failed"
+    failed=1
+  }
+
+  info "Lint: golangci-lint"
+  "$gobin/golangci-lint" run ./... || {
+    error "golangci-lint failed"
+    failed=1
+  }
+
+  info "Lint: shellcheck (deploy scripts)"
+  shellcheck -x main.sh || {
+    error "shellcheck failed"
+    failed=1
+  }
+
+  echo
+  if [ "$failed" -ne 0 ]; then
+    error "LINT FAILED"
+    return 1
+  fi
+  success "ALL CHECKS PASSED"
+}
+
 renewal() {
   local new_name="" skip_backup=false arg SED_CMD=()
   for arg in "$@"; do
@@ -1910,6 +2020,8 @@ usage() {
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "restart" "Restart the tmux session"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "stop" "Stop the tmux session"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "docs" "Initialize/Update Swagger docs"
+  printf "  ${C_CMD}%-18s${C_RST}     %s\n" "lint" "Lint + format gate (Go + scripts)"
+  printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--fix" "Apply gofumpt/gci formatting first"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "build" "Build backend + SDK + frontends [server]"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "deploy" "Build once, deploy to every server in servers[]"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--skip-build" "Deploy without rebuilding (checks .built-for marker)"
@@ -1950,6 +2062,7 @@ main() {
   case "$m" in
   dev) dev "$@" ;;
   docs) docs "$@" ;;
+  lint) lint "${@:2}" ;;
   build) build "$@" ;;
   deploy) deploy "${@:2}" ;;
   synconf) synconf "$@" ;;

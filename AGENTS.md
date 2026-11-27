@@ -9,6 +9,7 @@
 - `./main.sh deploy [--skip-build] [--force-service] [--allow-placeholder-env]` — builds backend+SDK **once**, then for **EACH server in `servers[]`**: rebuilds every app with that server's env, zips, rsyncs, and (re)starts the service. **Target mode (`tmux` | `systemctl`, default `systemctl`) is chosen by editing `deploy_mode` in `deploy.conf`** — there is no `deploy-tmux`/`deploy-systemctl` subcommand or `--use-systemctl` flag. `--skip-build` reuses artifacts and **refuses** them (each app's `dist/.built-for` marker records server + API base + site URL) when they no longer match the target or the current env; the placeholder guard runs again in that mode. `--allow-placeholder-env` bypasses the guard that otherwise aborts when an app would ship `localhost`/`example.com` as its API base
 - `./main.sh servers` — list available servers/apps/domains from `deploy.conf`
 - `./main.sh docs` — `swag fmt && swag init --parseDependency --parseInternal`, then regenerates the frontend SDK via `pnpm gen:api` (alova/wormhole)
+- `./main.sh lint [--fix]` — the lint + format gate for the Go backend and `main.sh` itself (gofumpt/gci, `go build`, `go vet`, staticcheck, golangci-lint, shellcheck); `--fix` applies gofumpt/gci first. Fails loudly when a tool is missing
 - `./main.sh copyfile [--force]` — copies `assets/conf.toml` → `conf.toml` **only when absent** (an existing `conf.toml` holds the JWT secrets; `--force` overwrites it), then `assets/nuxt.env` → each app's `.env` and `assets/nuxt.env.production` → each app's `.env.production`
 - `./main.sh init` — first-time: installs gowatch/swag, inits submodules, `pnpm install`, `go mod tidy`, then `docs` (swag needs the workspace installed and the submodule present)
 - `./main.sh synconf [server]` — rsync `conf.toml` to the mode-appropriate remote dir of `[server]` (default: first server in `servers[]`)
@@ -81,14 +82,14 @@ Four distinct CLI flags handle schema evolution (`--sync` is unrelated — it ru
 
 - **CORS origin matching:** `AllowOriginsFunc` compares origins **exactly** against `cors.dev` / `cors.prd` (`slices.Contains`). Prefix matching was removed because it accepted `https://example.com.attacker.net` for a whitelisted `https://example.com`. List every allowed origin in full.
 - **Log rotation:** `lumberjack` writes to `<RLog>/app.log` (10MB, 7 backups, 28 days)
-- **Lint — must run after any backend Go change and be completely clean before reporting done** (the team's nvim — AstroNvim/astrolsp with `gopls` + `staticcheck = true` — surfaces exactly these diagnostics, so a clean run here equals a zero-diagnostic editor buffer). **Run `./scripts/lint.sh`**, which chains all of it:
-  - `gofumpt -l .` — must print nothing; `gci diff -s standard -s default -s 'Prefix(webgx)' .` — must print nothing. These standalone binaries are the **authoritative** format gate: golangci-lint 2.14's built-in `gofumpt` formatter disagrees with them (it flags already-formatted files, and the flagged set changes between runs), so `formatters` is deliberately absent from `.golangci.yml`. `./scripts/lint.sh --fix` applies both.
+- **Lint — must run after any backend Go change and be completely clean before reporting done** (the team's nvim — AstroNvim/astrolsp with `gopls` + `staticcheck = true` — surfaces exactly these diagnostics, so a clean run here equals a zero-diagnostic editor buffer). **Run `./main.sh lint`**, which runs:
+  - `gofumpt -l .` — must print nothing; `gci diff -s standard -s default -s 'Prefix(webgx)' .` — must print nothing. These standalone binaries are the **authoritative** format gate: golangci-lint 2.14's built-in `gofumpt` formatter disagrees with them (it flags already-formatted files, and the flagged set changes between runs), so `formatters` is deliberately absent from `.golangci.yml`. `./main.sh lint --fix` applies both.
   - `go build ./...` — must compile
   - `go vet ./...`
   - `~/.local/share/go/bin/staticcheck ./...`
   - `~/.local/share/go/bin/golangci-lint run ./...` — analysis linters only (govet/staticcheck/unused/revive/misspell); `revive use-any` forces `any` over `interface{}`
-  - `shellcheck -x main.sh scripts/lint.sh` — the deploy scripts are code too. The script **fails** when any of these tools (or `go`/`shellcheck`) is missing instead of reporting a false green.
-  - `gopls check <each edited .go file>` — exact parity with the editor buffer; this is what reports "should use range loop", "`err` shadows declaration at ...", "use `min`/`max`", "use `strings.Builder`/`WriteString`", and similar hints. If `gopls check` is clean, the nvim buffer will be too.
+  - `shellcheck -x main.sh` — the deploy script is code too. `main.sh lint` **fails** when any of these tools (or `go`/`shellcheck`) is missing instead of reporting a false green.
+  - `gopls check <each edited .go file>` (run manually — not part of `main.sh lint`) — exact parity with the editor buffer; this is what reports "should use range loop", "`err` shadows declaration at ...", "use `min`/`max`", "use `strings.Builder`/`WriteString`", and similar hints. If `gopls check` is clean, the nvim buffer will be too.
   - Fix everything each tool reports and re-run until the output is clean; never finish a change with leftover diagnostics.
 - **No `_ = expr` blank assignments** — never write code that discards a value/error with `_ = xxx` (e.g. `_ = db.AutoMigrate(...)`). Handle the error/result properly instead (check it, log it, or propagate it).
 - **No Go tests exist** — there is no `*_test.go` anywhere in *this* repo (password helpers come from `natools4go/pwd`). Don't assume a test suite here; the verification is the lint suite (see **Lint** above) + `go build`. (`natools4go` itself does have tests — run `go test ./...` there when changing it.)
@@ -247,7 +248,7 @@ Flags are defined in `internal/conf/flag.go` and dispatched in `internal/flag/fl
 
 - `orms.UpdatesByID` / `Updates` skip zero values when passed a struct — pass a `map[string]any` when you need to clear/reset.
 - Never put raw user input into `Order` — go through `Sorter.Scope` only.
-- After swagger/SDK changes run `./main.sh docs`; for backend changes run `./scripts/lint.sh --fix` first, then `./scripts/lint.sh`.
+- After swagger/SDK changes run `./main.sh docs`; for backend changes run `./main.sh lint --fix` first, then `./main.sh lint`.
 
 ## Frontend specifics
 
