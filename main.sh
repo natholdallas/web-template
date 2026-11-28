@@ -1226,10 +1226,14 @@ push() {
     warn "Missing commit message, using default 'upd'"
     commit_info=upd
   fi
-  git add -A
-  if ! git commit -m "$commit_info"; then
-    error "Commit failed, aborting push."
-    return 1
+  if [ -z "$(git status --porcelain)" ]; then
+    info "Working tree clean — already committed, skipping commit."
+  else
+    git add -A
+    if ! git commit -m "$commit_info"; then
+      error "Commit failed, aborting push."
+      return 1
+    fi
   fi
   local branch
   branch=$(git branch --show-current 2>/dev/null)
@@ -2040,7 +2044,7 @@ usage() {
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "serverlog" "Tail remote service log (journalctl -f) [server]"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "once" "Print once then exit"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "<lines>" "Number of lines to show (default 100)"
-  printf "  ${C_CMD}%-18s${C_RST}     %s\n" "push" "Commit & push to remote"
+  printf "  ${C_CMD}%-18s${C_RST}     %s\n" "push" "Commit (only if needed) & push to remote"
   printf "  ${C_CMD}%-18s${C_RST}     %s\n" "initremote" "Create GitHub repo (default: private), bind origin, set upstream (no push)"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "[name]" "Repo name (default: $pname)"
   printf "  ${C_DIM}  %-16s${C_RST}         %s\n" "--public" "Create a public repo (default: private)"

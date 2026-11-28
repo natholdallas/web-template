@@ -142,7 +142,7 @@ build → deploy
 ./main.sh serverlog      # Tail remote service logs (journalctl -f)
 ./main.sh serverlog once # Print the log once, then exit
 ./main.sh clean          # Remove node_modules / dist / .nuxt / .output
-./main.sh push "message" # Commit & push everything
+./main.sh push "message" # Commit (only if needed) & push everything
 ```
 
 ---
